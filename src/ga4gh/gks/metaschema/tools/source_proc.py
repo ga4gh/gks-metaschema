@@ -113,7 +113,7 @@ class YamlSchemaProcessor:
         # This can be changed to multiple inheritance very readily if we add a
         # mechanism for indicating preference for overlapping attributes.
         # That functionality is not needed at this time.
-        assert len(self.dependency_map[schema_class]) <= 1
+        assert len(self.dependency_map[schema_class]) <= 1, f'{schema_class} has multiple parents'
         for dependency in self.dependency_map[schema_class]:
             self.process_schema_class(dependency)
             processed_dependency = self.processed_schema[self.schema_def_keyword][dependency]
