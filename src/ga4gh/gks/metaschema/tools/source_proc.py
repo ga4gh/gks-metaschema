@@ -132,6 +132,8 @@ class YamlSchemaProcessor:
         # Mix in inherited properties
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
         processed_class_def[req_k] = sorted(list(inherited_required | processed_class_required))
+        if self.strict and not self.class_is_abstract(schema_class):
+            processed_class_def['additionalProperties'] = False
         self.processed_classes.add(schema_class)
 
     @staticmethod
