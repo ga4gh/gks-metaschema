@@ -12,14 +12,14 @@ SCHEMA_DEF_KEYWORD_BY_VERSION = {
 }
 
 
-ref_re = re.compile(r':ref:`(.*?)(<.*>)?`')
-link_re = re.compile(r'`(.*)\<(.*)\>`_')
-
+ref_re = re.compile(r':ref:`(.*?)(\s?<.*>)?`')
+link_re = re.compile(r'`(.*?)\s?\<(.*)\>`_')
 
 class YamlSchemaProcessor:
 
     def __init__(self, raw_schema):
         self.raw_schema = raw_schema
+        self.strict = self.raw_schema.get('strict', False)
         self.processed_schema = copy.deepcopy(raw_schema)
         self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[self.raw_schema['$schema']]
         self.dependency_map = defaultdict(set)
@@ -143,10 +143,17 @@ class YamlSchemaProcessor:
 
     def clean_for_js(self):
         self.for_js.pop('namespaces', None)
+        self.for_js.pop('strict', None)
         for schema_class, schema_definition in self.for_js.get(self.schema_def_keyword, dict()).items():
             if self.class_is_abstract(schema_class):
                 schema_definition.pop('heritable_properties', None)
                 schema_definition.pop('heritable_required', None)
                 schema_definition.pop('header_level', None)
             if 'description' in schema_definition:
-                schema_definition['description'] = self._scrub_rst_markup(schema_definition['description'])
+                schema_definition['description'] = \
+                    self._scrub_rst_markup(schema_definition['description'])
+            if 'properties' in schema_definition:
+                for p, p_def in schema_definition['properties'].items():
+                    if 'description' in p_def:
+                        p_def['description'] = \
+                            self._scrub_rst_markup(p_def['description'])
