@@ -4,7 +4,7 @@ import copy
 import json
 import yaml
 import re
-from collections import defaultdict
+from pathlib import Path
 
 SCHEMA_DEF_KEYWORD_BY_VERSION = {
     "http://json-schema.org/draft-07/schema": "definitions",
@@ -15,14 +15,17 @@ SCHEMA_DEF_KEYWORD_BY_VERSION = {
 ref_re = re.compile(r':ref:`(.*?)(\s?<.*>)?`')
 link_re = re.compile(r'`(.*?)\s?\<(.*)\>`_')
 
+
 class YamlSchemaProcessor:
 
-    def __init__(self, raw_schema):
-        self.raw_schema = raw_schema
+    def __init__(self, schema_fp):
+        self.schema_fp = Path(schema_fp)
+        self.raw_schema = self.load_schema(schema_fp)
+        self.imports = dict()
+        self.import_dependencies()
         self.strict = self.raw_schema.get('strict', False)
-        self.processed_schema = copy.deepcopy(raw_schema)
+        self.processed_schema = copy.deepcopy(self.raw_schema)
         self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[self.raw_schema['$schema']]
-        self.dependency_map = defaultdict(set)
         self.defs = self.processed_schema.get(self.schema_def_keyword, None)
         self.raw_defs = self.raw_schema.get(self.schema_def_keyword, None)
         self.processed_classes = set()
@@ -30,41 +33,42 @@ class YamlSchemaProcessor:
         self.for_js = copy.deepcopy(self.processed_schema)
         self.clean_for_js()
 
-    def _get_refs(self, schema_class):
-        return [item['$ref'].split('/')[-1] for item in self.defs[schema_class]['oneOf'] if '$ref' in item]
+    @staticmethod
+    def load_schema(schema_fp):
+        with open(schema_fp) as f:
+            schema = yaml.load(f, Loader=yaml.SafeLoader)
+        return schema
 
-    def _map_dependencies(self, schema_class, refs):
-        for ref in refs:
-            self.dependency_map[ref].add(schema_class)
-            if self.class_is_abstract(ref):
-                child_refs = self._get_refs(ref)
-                self._map_dependencies(ref, child_refs)
+    def import_dependencies(self):
+        for dependency in self.raw_schema.get('imports', list()):
+            fp = Path(self.raw_schema['imports'][dependency])
+            if not fp.is_absolute():
+                base_path = self.schema_fp.parent
+                fp = base_path.joinpath(fp)
+            self.imports[dependency] = YamlSchemaProcessor(fp)
 
     def process_schema(self):
         if self.defs is None:
             return
-        for schema_class in self.defs:
-            if 'heritable_properties' in self.defs[schema_class]:
-                assert 'oneOf' in self.defs[schema_class]  # Expected schema pattern
-                refs = self._get_refs(schema_class)
-                self._map_dependencies(schema_class, refs)
 
         for schema_class in self.defs:
             self.process_schema_class(schema_class)
 
     def class_is_abstract(self, schema_class):
-        one_of_items = self.raw_schema[self.schema_def_keyword][schema_class].get('oneOf', [])
+        schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
+        one_of_items = schema_class_def.get('oneOf', [])
         if len(one_of_items) > 0 and '$ref' in one_of_items[0]:
+            assert 'properties' not in schema_class_def
             return True
         return False
 
     def class_is_passthrough(self, schema_class):
         if not self.class_is_abstract(schema_class):
             return False
-        raw_class_definition = self.raw_defs[schema_class]
+        raw_class_definition = self.get_local_or_inherited_class(schema_class, raw=True)
         if 'heritable_properties' not in raw_class_definition \
                 and 'properties' not in raw_class_definition \
-                and len(list(self.dependency_map[schema_class])) == 1:
+                and raw_class_definition[0].get('inherits'):
             return True
         return False
 
@@ -99,6 +103,29 @@ class YamlSchemaProcessor:
                 self.process_property_tree(raw_item, processed_item)
         return
 
+    def get_local_or_inherited_class(self, schema_class, raw=False):
+        components = schema_class.split(':')
+        if len(components) == 1:
+            inherited_class_name = components[0]
+            if raw:
+                inherited_class = self.raw_schema[self.schema_def_keyword][inherited_class_name]
+            else:
+                self.process_schema_class(inherited_class_name)
+                inherited_class = self.processed_schema[self.schema_def_keyword][inherited_class_name]
+            proc = self
+        elif len(components) == 2:
+            inherited_class_name = components[1]
+            proc = self.imports[components[0]]
+            if raw:
+                inherited_class = \
+                    proc.raw_schema[proc.schema_def_keyword][inherited_class_name]
+            else:
+                inherited_class = \
+                    proc.processed_schema[proc.schema_def_keyword][inherited_class_name]
+        else:
+            raise ValueError
+        return inherited_class, proc
+
     def process_schema_class(self, schema_class):
         raw_class_def = self.raw_schema[self.schema_def_keyword][schema_class]
         if schema_class in self.processed_classes:
@@ -109,16 +136,14 @@ class YamlSchemaProcessor:
         processed_class_def = self.processed_schema[self.schema_def_keyword][schema_class]
         inherited_properties = dict()
         inherited_required = set()
-        # The below assertion is in place to limit support to single inheritance.
-        # This can be changed to multiple inheritance very readily if we add a
-        # mechanism for indicating preference for overlapping attributes.
-        # That functionality is not needed at this time.
-        assert len(self.dependency_map[schema_class]) <= 1, f'{schema_class} has multiple parents'
-        for dependency in self.dependency_map[schema_class]:
-            self.process_schema_class(dependency)
-            processed_dependency = self.processed_schema[self.schema_def_keyword][dependency]
-            inherited_properties |= processed_dependency['heritable_properties']
-            inherited_required |= set(processed_dependency['heritable_required'])
+        inherits = processed_class_def.get('inherits', None)
+        if inherits is not None:
+            inherited_class, _ = self.get_local_or_inherited_class(inherits)
+            # extract properties / heritable_properties and required / heritable_required from inherited_class
+            # currently assumes inheritance from abstract classes only–will break otherwise
+            inherited_properties |= inherited_class['heritable_properties']
+            inherited_required |= set(inherited_class['heritable_required'])
+
         if self.class_is_abstract(schema_class):
             prop_k = 'heritable_properties'
             req_k = 'heritable_required'
@@ -146,7 +171,9 @@ class YamlSchemaProcessor:
     def clean_for_js(self):
         self.for_js.pop('namespaces', None)
         self.for_js.pop('strict', None)
+        self.for_js.pop('imports', None)
         for schema_class, schema_definition in self.for_js.get(self.schema_def_keyword, dict()).items():
+            schema_definition.pop('inherits', None)
             if self.class_is_abstract(schema_class):
                 schema_definition.pop('heritable_properties', None)
                 schema_definition.pop('heritable_required', None)

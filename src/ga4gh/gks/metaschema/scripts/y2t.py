@@ -14,14 +14,12 @@ source_file = pathlib.Path(sys.argv[1])
 defs_path = pathlib.Path.cwd() / 'defs' / str(source_file.stem)[:-7]
 os.makedirs(defs_path)  # error expected if directory already exists – clear with Make
 
-with open(source_file, 'r') as f:
-    schema = yaml.load(f, Loader=yaml.SafeLoader)
 
 i = Inflector()
-proc_schema = YamlSchemaProcessor(schema)
+proc_schema = YamlSchemaProcessor(source_file)
 if proc_schema.defs is None:
     exit(0)
-schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[schema['$schema']]
+schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[proc_schema.raw_schema['$schema']]
 
 
 def resolve_curie(curie):
@@ -77,10 +75,11 @@ def resolve_cardinality(class_property_name, class_property_attributes, class_de
     return f'{min_count}..{max_count}'
 
 
-def get_ancestor_with_attributes(class_name):
-    if proc_schema.class_is_passthrough(class_name):
-        ancestor = list(proc_schema.dependency_map[class_name])[0]
-        return get_ancestor_with_attributes(ancestor)
+def get_ancestor_with_attributes(class_name, proc):
+    if proc.class_is_passthrough(class_name):
+        raw_def, proc = proc.get_local_or_inherited_class(class_name, raw=True)
+        ancestor = raw_def.get('inherits')
+        return get_ancestor_with_attributes(ancestor, proc)
     return class_name
 
 
@@ -98,14 +97,12 @@ for class_name, class_definition in proc_schema.defs.items():
             continue
         else:
             raise ValueError(class_name, class_definition)
-        deps = list(proc_schema.dependency_map[class_name])
-        if len(deps) == 1:
-            ancestor = get_ancestor_with_attributes(deps[0])
+        ancestor = proc_schema.raw_defs[class_name].get('inherits')
+        if ancestor:
+            ancestor = get_ancestor_with_attributes(ancestor, proc_schema)
             inheritance = f"\nSome {class_name} attributes are inherited from :ref:`{ancestor}`.\n"
-        elif len(deps) == 0:
-            inheritance = ""
         else:
-            raise ValueError
+            inheritance = ""
         print(f"""
 **Information Model**
 {inheritance}
