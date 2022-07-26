@@ -57,11 +57,7 @@ class YamlSchemaProcessor:
 
     def class_is_abstract(self, schema_class):
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
-        one_of_items = schema_class_def.get('oneOf', [])
-        if len(one_of_items) > 0 and '$ref' in one_of_items[0]:
-            assert 'properties' not in schema_class_def
-            return True
-        return False
+        return 'properties' not in schema_class_def and not self.class_is_primitive(schema_class)
 
     def class_is_passthrough(self, schema_class):
         if not self.class_is_abstract(schema_class):
@@ -74,7 +70,8 @@ class YamlSchemaProcessor:
         return False
 
     def class_is_primitive(self, schema_class):
-        schema_class_type = self.raw_schema[self.schema_def_keyword][schema_class].get('type', 'abstract')
+        schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
+        schema_class_type = schema_class_def.get('type', 'abstract')
         if schema_class_type not in ['abstract', 'object']:
             return True
         return False
