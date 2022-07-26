@@ -13,8 +13,8 @@ def test_mv_is_passthrough():
     assert processor.class_is_passthrough('MolecularVariation')
 
 
-def test_loc_not_passthrough():
-    assert not processor.class_is_passthrough('Location')
+def test_se_not_passthrough():
+    assert not processor.class_is_passthrough('SequenceExpression')
 
 
 def test_yaml_target_match():

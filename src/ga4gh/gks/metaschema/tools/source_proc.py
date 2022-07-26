@@ -18,8 +18,9 @@ link_re = re.compile(r'`(.*?)\s?\<(.*)\>`_')
 
 class YamlSchemaProcessor:
 
-    def __init__(self, schema_fp):
+    def __init__(self, schema_fp, imported=False):
         self.schema_fp = Path(schema_fp)
+        self.imported = imported
         self.raw_schema = self.load_schema(schema_fp)
         self.imports = dict()
         self.import_dependencies()
@@ -45,7 +46,7 @@ class YamlSchemaProcessor:
             if not fp.is_absolute():
                 base_path = self.schema_fp.parent
                 fp = base_path.joinpath(fp)
-            self.imports[dependency] = YamlSchemaProcessor(fp)
+            self.imports[dependency] = YamlSchemaProcessor(fp, imported=True)
 
     def process_schema(self):
         if self.defs is None:
@@ -96,6 +97,9 @@ class YamlSchemaProcessor:
                     new_k = k[:-6]
                     processed_node[new_k] = self.resolve_curie(v)
                     del (processed_node[k])
+                elif k == '$ref' and v.startswith('#/') and self.imported:
+                    # TODO: fix below hard-coded name convention, yuck.
+                    processed_node[k] = str(self.schema_fp.stem.split('-')[0]) + '.json' + v
                 else:
                     self.process_property_tree(raw_node[k], processed_node[k])
         elif isinstance(raw_node, list):
@@ -138,11 +142,11 @@ class YamlSchemaProcessor:
         inherited_required = set()
         inherits = processed_class_def.get('inherits', None)
         if inherits is not None:
-            inherited_class, _ = self.get_local_or_inherited_class(inherits)
+            inherited_class, proc = self.get_local_or_inherited_class(inherits)
             # extract properties / heritable_properties and required / heritable_required from inherited_class
             # currently assumes inheritance from abstract classes only–will break otherwise
             inherited_properties |= inherited_class['heritable_properties']
-            inherited_required |= set(inherited_class['heritable_required'])
+            inherited_required |= set(inherited_class.get('heritable_required', list()))
 
         if self.class_is_abstract(schema_class):
             prop_k = 'heritable_properties'
@@ -155,6 +159,13 @@ class YamlSchemaProcessor:
         processed_class_required = set(processed_class_def.get(req_k, []))
         self.process_property_tree(raw_class_properties, processed_class_properties)
         # Mix in inherited properties
+        for prop, prop_attribs in processed_class_properties.items():
+            if 'extends' in prop_attribs:
+                # assert that the extended property is in inherited properties
+                assert prop_attribs['extends'] in inherited_properties
+                processed_class_properties[prop] = copy.deepcopy(inherited_properties[prop_attribs['extends']])
+                processed_class_properties[prop].update(prop_attribs)
+                processed_class_properties[prop].pop('extends')
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
         processed_class_def[req_k] = sorted(list(inherited_required | processed_class_required))
         if self.strict and not self.class_is_abstract(schema_class):

@@ -19,7 +19,6 @@ imports:
 namespaces:
   gks.core: core.json#/$defs/
 
-
 definitions:
   # VRS definitions are presented top-down.  Everything rolls up to
   # Variation, which is a polymorphic abstraction of many kinds of
@@ -295,16 +294,6 @@ definitions:
     oneOf:
       - $ref: "#/definitions/ChromosomeLocation"
       - $ref: "#/definitions/SequenceLocation"
-    heritable_properties:
-      _id:
-        $ref: "#/definitions/CURIE"
-        description: >-
-          Location Id. MUST be unique within document.
-      type:
-        type: string
-        description: >-
-          The Location class type. MUST match child class type.
-    heritable_required: ["type"]
     discriminator:
       propertyName: type
 
@@ -515,7 +504,7 @@ definitions:
         type: string
         description: >-
           The SequenceExpression class type. MUST match child class type.
-    heritable_required: ["type"]
+    heritable_required: [ "type" ]
 
   LiteralSequenceExpression:
     description: >-
