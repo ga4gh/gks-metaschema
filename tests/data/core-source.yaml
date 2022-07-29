@@ -3,6 +3,8 @@ title: GA4GH-GKS-Core-Definitions
 type: object
 strict: true
 
+namespaces:
+
 $defs:
   Entity:
     description: >-
@@ -13,7 +15,7 @@ $defs:
       - $ref: "#/$defs/ExtensibleEntity"
       - $ref: "#/$defs/ValueEntity"
     heritable_properties:
-      _id:
+      id:
         $ref: "#/$defs/CURIE"
         description: >-
           The 'logical' identifier of the entity in the system of record, e.g. a UUID. This 'id' is 
@@ -35,21 +37,75 @@ $defs:
       are not extensible and MUST NOT have optional properties.
     oneOf:
       - $ref: "#/$defs/Proposition"
-    discriminator:
-      propertyName: type
+
+  DomainEntity:
+    inherits: ValueEntity
+    description: >-
+      An abstract :ref:`ValueEntity` class extended to capture specific domain entities by reference
+      to an external identifier.
+    heritable_required:
+      [ "id" ]
 
   ExtensibleEntity:
     inherits: Entity
     description: >-
       ExtensibleEntity is the root class for classes that instantiate Extensible Objects. Extensible
       Objects are extensible using the extensions property and MAY have optional properties.
-    oneOf:
-      - $ref: "#/$defs/"
     heritable_properties:
+      label:
+        type: string
       extensions:
         type: array
         items:
           $ref: "#/$defs/Extension"
+      record_metadata:
+        $ref: "#/$defs/RecordMetadata"
+
+  RecordMetadata:
+    inherits: ExtensibleEntity
+    description: >-
+      A re-usable structure that encapsulates provenance metadata that applies to a specific
+      concrete record of information as encoded in a particular system, as opposed to 
+      provenance of the abstract information content/knowledge the record represents.
+    properties:
+      type:
+        type: string
+        const: RecordMetadata
+        default: RecordMetadata
+        description: MUST be "RecordMetadata".
+      is_version_of:
+        $ref: "#/$defs/CURIE"
+      version:
+        type: string
+
+  LabeledEntity:
+    inherits: ExtensibleEntity
+    description: Write this later.
+    properties:
+      type:
+        type: string
+        const: LabeledEntity
+        default: LabeledEntity
+        description: MUST be "LabeledEntity".
+
+  Extension:
+    description: >-
+      The Extension class provides VODs with a means to extend descriptions
+      with other attributes unique to a content provider. These extensions
+      are not expected to be natively understood under VRSATILE, but may be
+      used for pre-negotiated exchange of message attributes when needed.
+    properties:
+      type:
+        type: string
+        const: Extension
+        description: MUST be "Extension".
+      name:
+        type: string
+        description: A name for the Extension
+      value:
+        type: [ "number", "string", "boolean", "object", "array", "null" ]
+        description: Any primitive or structured object
+    required: [ "name" ]
 
   CURIE:
     description: >-
@@ -59,3 +115,68 @@ $defs:
     type: string
     pattern: '^\w[^:]*:.+$'
     example: "ensembl:ENSG00000139618"
+
+  Disease:
+    inherits: DomainEntity
+    description: >-
+      A reference to a Disease as defined by an authority. For human diseases,
+      the use of `MONDO <https://registry.identifiers.org/registry/mondo>`_
+      as the disease authority is RECOMMENDED.
+    properties:
+      type:
+        type: string
+        const: Disease
+        default: Disease
+        description: MUST be "Disease".
+      disease_id:
+        extends: id
+        description: >-
+          A :ref:`CURIE` reference to a disease concept.
+
+  Phenotype:
+    inherits: DomainEntity
+    description: >-
+      A reference to a Phenotype as defined by an authority. For human phenotypes,
+      the use of `HPO <https://registry.identifiers.org/registry/hpo>`_
+      as the disease authority is RECOMMENDED.
+    properties:
+      type:
+        type: string
+        const: Phenotype
+        default: Phenotype
+        description: MUST be "Phenotype".
+      phenotype_id:
+        extends: id
+        description: >-
+          A :ref:`CURIE` reference to a phenotype concept.
+
+  Gene:
+    inherits: DomainEntity
+    description: >-
+      A reference to a Gene as defined by an authority. For human genes,
+      the use of `hgnc <https://registry.identifiers.org/registry/hgnc>`_
+      as the gene authority is RECOMMENDED.
+    type: object
+    properties:
+      type:
+        type: string
+        const: "Gene"
+        default: "Gene"
+        description: MUST be "Gene"
+      gene_id:
+        $ref: "#/$defs/CURIE"
+        description: >-
+          A CURIE reference to a Gene concept
+
+  Condition:
+    description: A set of phenotype and/or disease concepts that constitute a condition.
+    inherits: ValueEntity
+    properties:
+      members:
+        type: array
+        items:
+          anyOf:
+            - $ref: "#/$defs/Disease"
+            - $ref: "#/$defs/Phenotype"
+        minItems: 1
+    required: [ "members" ]

@@ -142,7 +142,7 @@ class YamlSchemaProcessor:
             inherited_class, proc = self.get_local_or_inherited_class(inherits)
             # extract properties / heritable_properties and required / heritable_required from inherited_class
             # currently assumes inheritance from abstract classes only–will break otherwise
-            inherited_properties |= inherited_class['heritable_properties']
+            inherited_properties |= copy.deepcopy(inherited_class['heritable_properties'])
             inherited_required |= set(inherited_class.get('heritable_required', list()))
 
         if self.class_is_abstract(schema_class):
@@ -160,9 +160,14 @@ class YamlSchemaProcessor:
             if 'extends' in prop_attribs:
                 # assert that the extended property is in inherited properties
                 assert prop_attribs['extends'] in inherited_properties
-                processed_class_properties[prop] = copy.deepcopy(inherited_properties[prop_attribs['extends']])
+                extended_property = prop_attribs['extends']
+                processed_class_properties[prop] = inherited_properties[extended_property]
                 processed_class_properties[prop].update(prop_attribs)
                 processed_class_properties[prop].pop('extends')
+                inherited_properties.pop(extended_property)
+                if extended_property in inherited_required:
+                    inherited_required.remove(extended_property)
+                    processed_class_required.add(prop)
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
         processed_class_def[req_k] = sorted(list(inherited_required | processed_class_required))
         if self.strict and not self.class_is_abstract(schema_class):
@@ -194,3 +199,4 @@ class YamlSchemaProcessor:
                     if 'description' in p_def:
                         p_def['description'] = \
                             self._scrub_rst_markup(p_def['description'])
+        assert True

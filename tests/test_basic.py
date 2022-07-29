@@ -20,3 +20,9 @@ def test_se_not_passthrough():
 def test_yaml_target_match():
     d2 = processor.for_js
     assert d2 == target
+
+
+def test_yaml_create():
+    p = YamlSchemaProcessor('data/core-source.yaml')
+    p.js_yaml_dump(open('data/core.yaml', 'w'))
+    assert True

@@ -14,7 +14,7 @@ type: object
 strict: true
 
 imports:
-  gks.core: "core-source.yaml"
+  gks.core: core-source.yaml
 
 namespaces:
   gks.core: core.json#/$defs/
@@ -95,7 +95,7 @@ definitions:
           MUST be "Allele"
       location:
         oneOf:
-          - $ref: "#/definitions/CURIE"
+          - $ref_curie: gks.core:CURIE
           - $ref: "#/definitions/Location"
         description: >-
           Where Allele is located
@@ -128,7 +128,7 @@ definitions:
         items:
           oneOf:
             - $ref: "#/definitions/Allele"
-            - $ref: "#/definitions/CURIE"
+            - $ref_curie: gks.core:CURIE
         description: >-
           List of Alleles, or references to Alleles, that comprise this Haplotype.
     required: [ "members" ]
@@ -171,7 +171,7 @@ definitions:
         uniqueItems: true
         items:
           oneOf:
-            - $ref: "#/definitions/CURIE"
+            - $ref_curie: gks.core:CURIE
             - $ref: "#/definitions/Variation"
         description: >-
           List of Variation objects or identifiers. Attribute is
@@ -201,7 +201,7 @@ definitions:
           - $ref: "#/definitions/MolecularVariation"
           - $ref: "#/definitions/Feature"
           - $ref: "#/definitions/SequenceExpression"
-          - $ref: "#/definitions/CURIE"
+          - $ref_curie: gks.core:CURIE
         description: >-
           Subject of the Copy Number object
       copies:
@@ -309,7 +309,7 @@ definitions:
         default: "ChromosomeLocation"
         description: MUST be "ChromosomeLocation"
       species_id:
-        $ref: "#/definitions/CURIE"
+        $ref_curie: gks.core:CURIE
         default: "taxonomy:9606"
         description: >-
           :ref:`CURIE` representing a species from the
@@ -338,7 +338,7 @@ definitions:
         default: "SequenceLocation"
         description: MUST be "SequenceLocation"
       sequence_id:
-        $ref: "#/definitions/CURIE"
+        $ref_curie: gks.core:CURIE
         description: >-
           A VRS :ref:`Computed Identifier <computed-identifiers>`
           for the reference :ref:`Sequence`.
@@ -507,6 +507,7 @@ definitions:
     heritable_required: [ "type" ]
 
   LiteralSequenceExpression:
+    inherits: SequenceExpression
     description: >-
       An explicit expression of a Sequence.
     type: object
@@ -522,6 +523,7 @@ definitions:
     required: [ "sequence" ]
 
   DerivedSequenceExpression:
+    inherits: SequenceExpression
     description: >-
       An approximate expression of a sequence that is derived from
       a referenced sequence location. Use of this class
@@ -548,6 +550,7 @@ definitions:
     required: [ "location", "reverse_complement" ]
 
   RepeatedSequenceExpression:
+    inherits: SequenceExpression
     description: >-
       An expression of a sequence comprised of a tandem repeating subsequence.
     type: object
@@ -631,7 +634,7 @@ definitions:
           - $ref: "#/definitions/Haplotype"
         description: >-
           A :ref:`MolecularVariation` at a :ref:`Genotype` locus.
-    required: [ "copies", "variation" ]
+    required: [ "copies", "variation", "type" ]
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Feature
@@ -651,24 +654,6 @@ definitions:
         description: >-
           The Feature class type. MUST match child class type.
     heritable_required: [ "type" ]
-
-  Gene:
-    description: >-
-      A reference to a Gene as defined by an authority. For human genes,
-      the use of `hgnc <https://registry.identifiers.org/registry/hgnc>`_
-      as the gene authority is RECOMMENDED.
-    type: object
-    properties:
-      type:
-        type: string
-        const: "Gene"
-        default: "Gene"
-        description: MUST be "Gene"
-      gene_id:
-        $ref: "#/definitions/CURIE"
-        description: >-
-          A CURIE reference to a Gene concept
-    required: [ "gene_id" ]
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Numerics, Comparators, and Ranges
