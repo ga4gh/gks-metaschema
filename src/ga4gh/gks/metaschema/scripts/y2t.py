@@ -44,11 +44,14 @@ def resolve_type(class_property_definition):
             return f':ref:`{identifier}`'
         else:
             return f'`{identifier} <{ref}>`_'
-    elif 'oneOf' in class_property_definition:
+    elif 'oneOf' in class_property_definition or 'anyOf' in class_property_definition:
+        kw = 'oneOf'
+        if 'anyOf' in class_property_definition:
+            kw = 'anyOf'
         deprecated_types = class_property_definition.get('deprecated', list())
         resolved_deprecated = list()
         resolved_active = list()
-        for property_type in class_property_definition['oneOf']:
+        for property_type in class_property_definition[kw]:
             resolved_type = resolve_type(property_type)
             if property_type in deprecated_types:
                 resolved_deprecated.append(resolved_type + f' (deprecated)')
