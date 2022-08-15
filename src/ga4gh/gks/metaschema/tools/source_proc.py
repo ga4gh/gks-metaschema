@@ -14,7 +14,7 @@ SCHEMA_DEF_KEYWORD_BY_VERSION = {
 
 ref_re = re.compile(r':ref:`(.*?)(\s?<.*>)?`')
 link_re = re.compile(r'`(.*?)\s?\<(.*)\>`_')
-
+curie_re = re.compile(r'(\S+):(\S+)')
 
 class YamlSchemaProcessor:
 
@@ -22,6 +22,8 @@ class YamlSchemaProcessor:
         self.schema_fp = Path(schema_fp)
         self.imported = imported
         self.raw_schema = self.load_schema(schema_fp)
+        self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[self.raw_schema['$schema']]
+        self.raw_defs = self.raw_schema.get(self.schema_def_keyword, None)
         self.imports = dict()
         self.import_dependencies()
         self.strict = self.raw_schema.get('strict', False)
@@ -29,9 +31,7 @@ class YamlSchemaProcessor:
 
     def _init_from_raw(self):
         self.processed_schema = copy.deepcopy(self.raw_schema)
-        self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[self.raw_schema['$schema']]
         self.defs = self.processed_schema.get(self.schema_def_keyword, None)
-        self.raw_defs = self.raw_schema.get(self.schema_def_keyword, None)
         self.processed_classes = set()
         self.process_schema()
         self.for_js = copy.deepcopy(self.processed_schema)
@@ -64,10 +64,16 @@ class YamlSchemaProcessor:
             self.raw_defs.update(other.raw_defs)
 
         # revise all class.inherits attributes from CURIE to local defs
-        raise NotImplementedError
+        for cls in defined_classes:
+            cls_inherits_prop = self.raw_defs[cls].get('inherits', '')
+            if curie_re.match(cls_inherits_prop):
+                self.raw_defs[cls]['inherits'] = cls_inherits_prop.split(':')[1]
 
         # clear imports
         self.imports = dict()
+
+        # update title
+        self.raw_schema['title'] = self.raw_schema['title'] + '-Merged-Imports'
 
         # reprocess raw_schema
         self._init_from_raw()
