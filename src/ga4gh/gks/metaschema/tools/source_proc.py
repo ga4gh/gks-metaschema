@@ -161,13 +161,25 @@ class YamlSchemaProcessor:
                 # assert that the extended property is in inherited properties
                 assert prop_attribs['extends'] in inherited_properties
                 extended_property = prop_attribs['extends']
+                # fix $ref and oneOf $ref inheritance
+                if "$ref" in prop_attribs:
+                    if 'oneOf' in inherited_properties[extended_property]:
+                        inherited_properties[extended_property].pop("oneOf")
+                    elif 'anyOf' in inherited_properties[extended_property]:
+                        inherited_properties[extended_property].pop("anyOf")
+                if "oneOf" in prop_attribs or "anyOf" in prop_attribs:
+                    if "$ref" in inherited_properties[extended_property]:
+                        inherited_properties[extended_property].pop("$ref")
+                # merge and clean up inherited properties
                 processed_class_properties[prop] = inherited_properties[extended_property]
                 processed_class_properties[prop].update(prop_attribs)
                 processed_class_properties[prop].pop('extends')
                 inherited_properties.pop(extended_property)
+                # update required field
                 if extended_property in inherited_required:
                     inherited_required.remove(extended_property)
                     processed_class_required.add(prop)
+
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
         processed_class_def[req_k] = sorted(list(inherited_required | processed_class_required))
         if self.strict and not self.class_is_abstract(schema_class):

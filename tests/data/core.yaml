@@ -137,11 +137,11 @@ $defs:
         const: Phenotype
         default: Phenotype
         description: MUST be "Phenotype".
-      gene_id:
+      phenotype_id:
         $ref: '#/$defs/CURIE'
         description: A CURIE reference to a phenotype concept.
     required:
-    - gene_id
+    - phenotype_id
     - type
     additionalProperties: false
   Gene:
