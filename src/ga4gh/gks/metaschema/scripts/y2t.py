@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """convert input .yaml to .rst artifacts"""
 
-import yaml
 import os
 import sys
 import pathlib
@@ -22,21 +21,11 @@ if proc_schema.defs is None:
 schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[proc_schema.raw_schema['$schema']]
 
 
-def resolve_curie(curie):
-    namespace, identifier = curie.split(':')
-    base_url = schema['namespaces'][namespace]
-    return base_url + identifier
-
-
 def resolve_type(class_property_definition):
     if 'type' in class_property_definition:
         if class_property_definition['type'] == 'array':
             return resolve_type(class_property_definition['items'])
         return class_property_definition['type']
-    elif '$ref_curie' in class_property_definition:
-        curie = class_property_definition['$ref_curie']
-        identifier = curie.split(':')[-1]
-        return f'`{identifier} <{resolve_curie(curie)}>`_'
     elif '$ref' in class_property_definition:
         ref = class_property_definition['$ref']
         identifier = ref.split('/')[-1]

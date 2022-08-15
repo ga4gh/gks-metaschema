@@ -25,6 +25,9 @@ class YamlSchemaProcessor:
         self.imports = dict()
         self.import_dependencies()
         self.strict = self.raw_schema.get('strict', False)
+        self._init_from_raw()
+
+    def _init_from_raw(self):
         self.processed_schema = copy.deepcopy(self.raw_schema)
         self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[self.raw_schema['$schema']]
         self.defs = self.processed_schema.get(self.schema_def_keyword, None)
@@ -33,6 +36,53 @@ class YamlSchemaProcessor:
         self.process_schema()
         self.for_js = copy.deepcopy(self.processed_schema)
         self.clean_for_js()
+
+    def merge_imported(self):
+        # register all import namespaces and create process order
+        # note: relying on max_recursion_depth errors and not checking for cyclic imports
+        self.import_locations = dict()
+        self.import_processors = dict()
+        self.import_process_order = list()
+        self._register_merge_import(self)
+
+        # check that all classes defined in imports are unique
+        defined_classes = self.processed_classes
+        for key in self.import_process_order:
+            other = self.import_processors[key]
+            assert len(defined_classes & other.processed_classes) == 0
+            defined_classes.update(other.processed_classes)
+
+        for key in self.import_process_order:
+            self.raw_schema['namespaces'][key] = f'#/{self.schema_def_keyword}/'
+            other = self.import_processors[key]
+            other_ns = other.raw_schema.get('namespaces', list())
+            if other_ns:
+                for ns in other_ns:
+                    if ns not in self.import_process_order:
+                        # Handle external refs that do not match imports
+                        self.raw_schema['namespaces'][key] = other.raw_schema['namespaces'][key]
+            self.raw_defs.update(other.raw_defs)
+
+        # revise all class.inherits attributes from CURIE to local defs
+        raise NotImplementedError
+
+        # clear imports
+        self.imports = dict()
+
+        # reprocess raw_schema
+        self._init_from_raw()
+
+    def _register_merge_import(self, proc):
+        for name, other in proc.imports.items():
+            self._register_merge_import(other)
+            if name in self.import_locations:
+                # check that all imports from imported point to same locations
+                assert self.import_locations[name] == other.schema_fp
+            else:
+                self.import_locations[name] = other.schema_fp
+                self.import_processors[name] = other
+                self.import_process_order.append(name)
+        return
 
     @staticmethod
     def load_schema(schema_fp):
