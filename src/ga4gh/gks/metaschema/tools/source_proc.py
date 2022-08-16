@@ -17,6 +17,7 @@ link_re = re.compile(r'`(.*?)\s?\<(.*)\>`_')
 curie_re = re.compile(r'(\S+):(\S+)')
 defs_re = re.compile(r'#/(\$defs|definitions)/.*')
 
+
 class YamlSchemaProcessor:
 
     def __init__(self, schema_fp, imported=False):
@@ -31,12 +32,42 @@ class YamlSchemaProcessor:
         self._init_from_raw()
 
     def _init_from_raw(self):
+        self.has_children = self.build_raw_ref_dict()
         self.processed_schema = copy.deepcopy(self.raw_schema)
         self.defs = self.processed_schema.get(self.schema_def_keyword, None)
         self.processed_classes = set()
         self.process_schema()
         self.for_js = copy.deepcopy(self.processed_schema)
         self.clean_for_js()
+
+    def build_raw_ref_dict(self):
+        class_mapping = dict()
+        # For all classes:
+        #   If an abstract class, register oneOf enumerations
+        #   If it inherits from a class, register the inheritance
+        for cls, cls_def in self.raw_defs.items():
+            cls_url = f'#/{self.schema_def_keyword}/{cls}'
+            if self.class_is_abstract(cls) and 'oneOf' in cls_def:
+                maps_to = class_mapping.get(cls_url, set())
+                for record in cls_def['oneOf']:
+                    if not isinstance(record, dict):
+                        continue
+                    assert len(record) == 1
+                    if '$ref' in record:
+                        mapped = record['$ref']
+                    elif '$ref_curie' in record:
+                        mapped = self.resolve_curie(record['$ref_curie'])
+                    maps_to.add(mapped)
+                class_mapping[cls_url] = maps_to
+            if 'inherits' in cls_def:
+                target = cls_def['inherits']
+                if ':' in target:
+                    continue  # Ignore mappings from definitions in other sources
+                target_url = f'#/{self.schema_def_keyword}/{target}'
+                maps_to = class_mapping.get(target_url, set())
+                maps_to.add(cls_url)
+                class_mapping[target_url] = maps_to
+        return class_mapping
 
     def merge_imported(self):
         # register all import namespaces and create process order
@@ -80,6 +111,7 @@ class YamlSchemaProcessor:
         self.raw_schema['title'] = self.raw_schema['title'] + '-Merged-Imports'
 
         # reprocess raw_schema
+        self.raw_defs = self.raw_schema.get(self.schema_def_keyword, None)
         self._init_from_raw()
 
     def _check_local_defs_property(self, obj):
@@ -272,6 +304,15 @@ class YamlSchemaProcessor:
         string = string.replace('\n', ' ')
         return string
 
+    def concretize_class_ref(self, cls_url):
+        children = self.has_children.get(cls_url, None)
+        if children is None:
+            return {cls_url}
+        out = set()
+        for child in children:
+            out.update(self.concretize_class_ref(child))
+        return out
+
     def clean_for_js(self):
         self.for_js.pop('namespaces', None)
         self.for_js.pop('strict', None)
@@ -293,5 +334,21 @@ class YamlSchemaProcessor:
                     if 'description' in p_def:
                         p_def['description'] = \
                             self._scrub_rst_markup(p_def['description'])
+                    if '$ref' in p_def:
+                        descendents = self.concretize_class_ref(p_def['$ref'])
+                        if descendents != {p_def['$ref']}:
+                            p_def.pop('$ref')
+                            p_def['oneOf'] = self._build_ref_list(descendents)
+                    if 'oneOf' in p_def:
+                        # do the same check for each member
+                        ref_list = p_def['oneOf']
+                        descendents = set()
+                        for ref in ref_list:
+                            descendents.update(self.concretize_class_ref(ref['$ref']))
+                        p_def['oneOf'] = self._build_ref_list(descendents)
         for cls in abstract_class_removals:
             self.for_js[self.schema_def_keyword].pop(cls)
+
+    @staticmethod
+    def _build_ref_list(cls_urls):
+        return [{'$ref': url} for url in sorted(cls_urls)]
