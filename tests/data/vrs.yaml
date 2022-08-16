@@ -30,17 +30,22 @@ definitions:
     description: A Variation of multiple molecules in the context of a system, e.g.
       a genome, sample, or homologous chromosomes.
     oneOf:
-    - $ref: '#/definitions/CopyNumber'
     - $ref: '#/definitions/Genotype'
+    - $ref: '#/definitions/AbsoluteCopyNumber'
+    - $ref: '#/definitions/RelativeCopyNumber'
     discriminator:
       propertyName: type
   Allele:
+    ga4gh_prefix: VA
     description: The state of a molecule at a Location.
     type: object
     properties:
-      _id: &id001
-        $ref: '#/definitions/CURIE'
-        description: Variation Id. MUST be unique within document.
+      id:
+        $ref: core.json#/$defs/CURIE
+        description: The 'logical' identifier of the entity in the system of record,
+          and MUST be represented as a CURIE. This 'id' is unique within a given system,
+          but may also refer to an 'id' for the shared concept in  another system
+          (represented by namespace, accordingly).
       type:
         type: string
         const: Allele
@@ -48,13 +53,11 @@ definitions:
         description: MUST be "Allele"
       location:
         oneOf:
-        - $ref: '#/definitions/CURIE'
+        - $ref: core.json#/$defs/CURIE
         - $ref: '#/definitions/Location'
         description: Where Allele is located
       state:
-        oneOf:
-        - $ref: '#/definitions/SequenceState'
-        - $ref: '#/definitions/SequenceExpression'
+        $ref: '#/definitions/SequenceExpression'
         description: An expression of the sequence state
         deprecated:
         - $ref: '#/definitions/SequenceState'
@@ -64,11 +67,17 @@ definitions:
     - type
     additionalProperties: false
   Haplotype:
+    ga4gh_prefix: HT
     description: A set of non-overlapping Allele members that co-occur on the same
       molecule.
     type: object
     properties:
-      _id: *id001
+      id:
+        $ref: core.json#/$defs/CURIE
+        description: The 'logical' identifier of the entity in the system of record,
+          and MUST be represented as a CURIE. This 'id' is unique within a given system,
+          but may also refer to an 'id' for the shared concept in  another system
+          (represented by namespace, accordingly).
       type:
         type: string
         const: Haplotype
@@ -81,7 +90,7 @@ definitions:
         items:
           oneOf:
           - $ref: '#/definitions/Allele'
-          - $ref: '#/definitions/CURIE'
+          - $ref: core.json#/$defs/CURIE
         description: List of Alleles, or references to Alleles, that comprise this
           Haplotype.
     required:
@@ -89,10 +98,16 @@ definitions:
     - type
     additionalProperties: false
   Text:
+    ga4gh_prefix: VT
     description: A free-text definition of variation.
     type: object
     properties:
-      _id: *id001
+      id:
+        $ref: core.json#/$defs/CURIE
+        description: The 'logical' identifier of the entity in the system of record,
+          and MUST be represented as a CURIE. This 'id' is unique within a given system,
+          but may also refer to an 'id' for the shared concept in  another system
+          (represented by namespace, accordingly).
       type:
         type: string
         const: Text
@@ -107,10 +122,16 @@ definitions:
     - type
     additionalProperties: false
   VariationSet:
+    ga4gh_prefix: VS
     description: An unconstrained set of Variation members.
     type: object
     properties:
-      _id: *id001
+      id:
+        $ref: core.json#/$defs/CURIE
+        description: The 'logical' identifier of the entity in the system of record,
+          and MUST be represented as a CURIE. This 'id' is unique within a given system,
+          but may also refer to an 'id' for the shared concept in  another system
+          (represented by namespace, accordingly).
       type:
         type: string
         const: VariationSet
@@ -121,7 +142,7 @@ definitions:
         uniqueItems: true
         items:
           oneOf:
-          - $ref: '#/definitions/CURIE'
+          - $ref: core.json#/$defs/CURIE
           - $ref: '#/definitions/Variation'
         description: List of Variation objects or identifiers. Attribute is required,
           but MAY be empty.
@@ -129,75 +150,90 @@ definitions:
     - members
     - type
     additionalProperties: false
-  CopyNumber:
+  AbsoluteCopyNumber:
+    ga4gh_prefix: ACN
     type: object
     description: The absolute count of discrete copies of a MolecularVariation, Feature,
       SequenceExpression, or a CURIE reference within a system (e.g. genome, cell,
       etc.).
     properties:
-      _id: *id001
+      id:
+        $ref: core.json#/$defs/CURIE
+        description: The 'logical' identifier of the entity in the system of record,
+          and MUST be represented as a CURIE. This 'id' is unique within a given system,
+          but may also refer to an 'id' for the shared concept in  another system
+          (represented by namespace, accordingly).
       type:
         type: string
-        const: CopyNumber
-        default: CopyNumber
-        description: MUST be "CopyNumber"
-      subject:
+        const: AbsoluteCopyNumber
+        default: AbsoluteCopyNumber
+        description: MUST be "AbsoluteCopyNumber".
+      location:
         oneOf:
-        - $ref: '#/definitions/MolecularVariation'
-        - $ref: '#/definitions/Feature'
-        - $ref: '#/definitions/SequenceExpression'
-        - $ref: '#/definitions/CURIE'
-        description: Subject of the Copy Number object
+        - $ref: core.json#/$defs/CURIE
+        - $ref: '#/definitions/Location'
+        description: The location within the system.
       copies:
         oneOf:
         - $ref: '#/definitions/Number'
         - $ref: '#/definitions/IndefiniteRange'
         - $ref: '#/definitions/DefiniteRange'
-        description: The integral number of copies of the subject in a system
-    allOf:
-    - if:
-        properties:
-          copies:
-            $ref: '#/definitions/Number'
-      then:
-        properties:
-          copies:
-            properties:
-              value:
-                minimum: 0
-    - if:
-        properties:
-          copies:
-            $ref: '#/definitions/IndefiniteRange'
-      then:
-        properties:
-          copies:
-            properties:
-              value:
-                minimum: 0
-    - if:
-        properties:
-          copies:
-            $ref: '#/definitions/DefiniteRange'
-      then:
-        properties:
-          copies:
-            properties:
-              min:
-                minimum: 0
-              max:
-                minimum: 0
+        description: The integral number of copies of the subject in a system.
     required:
     - copies
-    - subject
+    - location
+    - type
+    additionalProperties: false
+  RelativeCopyNumber:
+    ga4gh_prefix: RCN
+    type: object
+    maturity: draft
+    description: The relative copies of a MolecularVariation, Feature, SequenceExpression,
+      or a CURIE reference against an unspecified baseline in a system (e.g. genome,
+      cell, etc.).
+    properties:
+      id:
+        $ref: core.json#/$defs/CURIE
+        description: The 'logical' identifier of the entity in the system of record,
+          and MUST be represented as a CURIE. This 'id' is unique within a given system,
+          but may also refer to an 'id' for the shared concept in  another system
+          (represented by namespace, accordingly).
+      type:
+        type: string
+        const: RelativeCopyNumber
+        default: RelativeCopyNumber
+        description: MUST be "RelativeCopyNumber"
+      location:
+        oneOf:
+        - $ref: core.json#/$defs/CURIE
+        - $ref: '#/definitions/Location'
+        description: The location within the system.
+      relative_copy_class:
+        type: string
+        enum:
+        - complete loss
+        - partial loss
+        - copy neutral
+        - low-level gain
+        - high-level gain
+        description: MUST be one of "complete loss", "partial loss", "copy neutral",
+          "low-level gain" or "high-level gain".
+    required:
+    - location
+    - relative_copy_class
     - type
     additionalProperties: false
   Genotype:
-    description: A set of trans-phased MolecularVariation members, with associated
-      copy counts, across a specified number of genomic locus `copies`.
+    ga4gh_prefix: GT
+    description: A quantified set of _in-trans_ MolecularVariation at a genomic locus.
     type: object
     properties:
-      _id: *id001
+      id:
+        $ref: core.json#/$defs/CURIE
+        description: The 'logical' identifier of the entity in the system of record,
+          and MUST be represented as a CURIE. This 'id' is unique within a given system,
+          but may also refer to an 'id' for the shared concept in  another system
+          (represented by namespace, accordingly).
       type:
         type: string
         const: Genotype
@@ -211,7 +247,7 @@ definitions:
           $ref: '#/definitions/GenotypeMember'
         description: Each GenotypeMember in `members` describes a MolecularVariation
           and the count of that variation at the locus.
-      copies:
+      count:
         oneOf:
         - $ref: '#/definitions/Number'
         - $ref: '#/definitions/IndefiniteRange'
@@ -221,7 +257,7 @@ definitions:
           If greater than the total counts, this implies additional  MolecularVariation
           that are expected to exist but are not explicitly indicated.
     required:
-    - copies
+    - count
     - members
     - type
     additionalProperties: false
@@ -233,166 +269,30 @@ definitions:
     discriminator:
       propertyName: type
   ChromosomeLocation:
+    ga4gh_prefix: CL
     description: A Location on a chromosome defined by a species and chromosome name.
     type: object
     properties:
-      _id: &id002
-        $ref: '#/definitions/CURIE'
-        description: Location Id. MUST be unique within document.
+      id:
+        $ref: core.json#/$defs/CURIE
+        description: The 'logical' identifier of the entity in the system of record,
+          and MUST be represented as a CURIE. This 'id' is unique within a given system,
+          but may also refer to an 'id' for the shared concept in  another system
+          (represented by namespace, accordingly).
       type:
         type: string
         const: ChromosomeLocation
         default: ChromosomeLocation
         description: MUST be "ChromosomeLocation"
       species_id:
-        $ref: '#/definitions/CURIE'
         default: taxonomy:9606
         description: 'CURIE representing a species from the [NCBI species taxonomy](https://registry.identifiers.org/registry/taxonomy).
           Default: "taxonomy:9606" (human)'
+        $ref: core.json#/$defs/CURIE
       chr:
         type: string
         description: The symbolic chromosome name. For humans, For humans, chromosome
           names MUST be one of 1..22, X, Y (case-sensitive)
-      interval:
-        $ref: '#/definitions/CytobandInterval'
-        description: The chromosome region defined by a CytobandInterval
-    required:
-    - chr
-    - interval
-    - species_id
-    - type
-    additionalProperties: false
-  SequenceLocation:
-    description: A Location defined by an interval on a referenced Sequence.
-    type: object
-    properties:
-      _id: *id002
-      type:
-        type: string
-        const: SequenceLocation
-        default: SequenceLocation
-        description: MUST be "SequenceLocation"
-      sequence_id:
-        $ref: '#/definitions/CURIE'
-        description: A VRS Computed Identifier for the reference Sequence.
-      interval:
-        oneOf:
-        - $ref: '#/definitions/SequenceInterval'
-        - $ref: '#/definitions/SimpleInterval'
-        description: Reference sequence region defined by a SequenceInterval.
-    required:
-    - interval
-    - sequence_id
-    - type
-    additionalProperties: false
-  SequenceInterval:
-    description: A SequenceInterval represents a span on a Sequence. Positions are
-      always represented by contiguous spans using interbase coordinates or coordinate
-      ranges.
-    type: object
-    properties:
-      type:
-        type: string
-        const: SequenceInterval
-        default: SequenceInterval
-        description: MUST be "SequenceInterval"
-      start:
-        oneOf:
-        - $ref: '#/definitions/Number'
-        - $ref: '#/definitions/IndefiniteRange'
-        - $ref: '#/definitions/DefiniteRange'
-        description: The start coordinate or range of the interval. The minimum value
-          of this coordinate or range is 0. MUST represent a coordinate or range less
-          than the value of `end`.
-      end:
-        oneOf:
-        - $ref: '#/definitions/Number'
-        - $ref: '#/definitions/IndefiniteRange'
-        - $ref: '#/definitions/DefiniteRange'
-        description: The end coordinate or range of the interval. The minimum value
-          of this coordinate or range is 0. MUST represent a coordinate or range greater
-          than the value of `start`.
-    allOf:
-    - if:
-        properties:
-          start:
-            $ref: '#/definitions/Number'
-      then:
-        properties:
-          start:
-            properties:
-              value:
-                minimum: 0
-    - if:
-        properties:
-          start:
-            $ref: '#/definitions/IndefiniteRange'
-      then:
-        properties:
-          start:
-            properties:
-              value:
-                minimum: 0
-    - if:
-        properties:
-          start:
-            $ref: '#/definitions/DefiniteRange'
-      then:
-        properties:
-          start:
-            properties:
-              min:
-                minimum: 0
-              max:
-                minimum: 0
-    - if:
-        properties:
-          end:
-            $ref: '#/definitions/Number'
-      then:
-        properties:
-          end:
-            properties:
-              value:
-                minimum: 0
-    - if:
-        properties:
-          end:
-            $ref: '#/definitions/IndefiniteRange'
-      then:
-        properties:
-          end:
-            properties:
-              value:
-                minimum: 0
-    - if:
-        properties:
-          end:
-            $ref: '#/definitions/DefiniteRange'
-      then:
-        properties:
-          end:
-            properties:
-              min:
-                minimum: 0
-              max:
-                minimum: 0
-    required:
-    - end
-    - start
-    - type
-    additionalProperties: false
-  CytobandInterval:
-    description: A contiguous span on a chromosome defined by cytoband features. The
-      span includes the constituent regions described by the start and end cytobands,
-      as well as any intervening regions.
-    type: object
-    properties:
-      type:
-        type: string
-        const: CytobandInterval
-        default: CytobandInterval
-        description: MUST be "CytobandInterval"
       start:
         $ref: '#/definitions/HumanCytoband'
         description: The start cytoband region. MUST specify a region nearer the terminal
@@ -401,12 +301,51 @@ definitions:
         $ref: '#/definitions/HumanCytoband'
         description: The start cytoband region. MUST specify a region nearer the terminal
           end (telomere) of the chromosome q-arm than `start`.
-    example:
-      type: CytobandInterval
-      start: q22.2
-      end: q22.3
+    required:
+    - chr
+    - end
+    - species_id
+    - start
+    - type
+    additionalProperties: false
+  SequenceLocation:
+    ga4gh_prefix: SL
+    description: A Location defined by an interval on a referenced Sequence.
+    type: object
+    properties:
+      id:
+        $ref: core.json#/$defs/CURIE
+        description: The 'logical' identifier of the entity in the system of record,
+          and MUST be represented as a CURIE. This 'id' is unique within a given system,
+          but may also refer to an 'id' for the shared concept in  another system
+          (represented by namespace, accordingly).
+      type:
+        type: string
+        const: SequenceLocation
+        default: SequenceLocation
+        description: MUST be "SequenceLocation"
+      sequence_id:
+        description: A VRS Computed Identifier for the reference Sequence.
+        $ref: core.json#/$defs/CURIE
+      start:
+        oneOf:
+        - $ref: '#/definitions/Number'
+        - $ref: '#/definitions/IndefiniteRange'
+        - $ref: '#/definitions/DefiniteRange'
+        description: The start coordinate or range of the SequenceLocation. The minimum
+          value of this coordinate or range is 0. MUST represent a coordinate or range
+          less than the value of `end`.
+      end:
+        oneOf:
+        - $ref: '#/definitions/Number'
+        - $ref: '#/definitions/IndefiniteRange'
+        - $ref: '#/definitions/DefiniteRange'
+        description: The end coordinate or range of the SequenceLocation. The minimum
+          value of this coordinate or range is 0. MUST represent a coordinate or range
+          greater than the value of `start`.
     required:
     - end
+    - sequence_id
     - start
     - type
     additionalProperties: false
@@ -416,6 +355,7 @@ definitions:
     - $ref: '#/definitions/LiteralSequenceExpression'
     - $ref: '#/definitions/DerivedSequenceExpression'
     - $ref: '#/definitions/RepeatedSequenceExpression'
+    - $ref: '#/definitions/ComposedSequenceExpression'
     discriminator:
       propertyName: type
   LiteralSequenceExpression:
@@ -517,8 +457,34 @@ definitions:
     - seq_expr
     - type
     additionalProperties: false
+  ComposedSequenceExpression:
+    description: An expression of a sequence composed from multiple other Sequence
+      Expressions objects. MUST have at least one component that is not a ref:`LiteralSequenceExpression`.
+      CANNOT be composed from nested composed sequence expressions.
+    additionalProperties: false
+    type: object
+    properties:
+      type:
+        type: string
+        const: ComposedSequenceExpression
+        default: ComposedSequenceExpression
+        description: MUST be "ComposedSequenceExpression"
+      components:
+        type: array
+        uniqueItems: true
+        minItems: 2
+        items:
+          anyOf:
+          - $ref: '#/definitions/LiteralSequenceExpression'
+          - $ref: '#/definitions/RepeatedSequenceExpression'
+          - $ref: '#/definitions/DerivedSequenceExpression'
+        description: An ordered list of SequenceExpression components comprising the
+          expression. MUST NOT have two adjacent LiteralSequenceExpression objects.
+    required:
+    - components
   GenotypeMember:
-    description: A class describing a Genotype `member`.
+    description: A class for expressing the count of a specific MolecularVariation
+      present _in-trans_ at a genomic locus represented by a Genotype.
     type: object
     properties:
       type:
@@ -526,7 +492,7 @@ definitions:
         const: GenotypeMember
         default: GenotypeMember
         description: MUST be "GenotypeMember".
-      copies:
+      count:
         oneOf:
         - $ref: '#/definitions/Number'
         - $ref: '#/definitions/IndefiniteRange'
@@ -538,34 +504,8 @@ definitions:
         - $ref: '#/definitions/Haplotype'
         description: A MolecularVariation at a Genotype locus.
     required:
-    - copies
+    - count
     - variation
-    additionalProperties: false
-  Feature:
-    description: A named entity that can be mapped to a Location. Genes, protein domains,
-      exons, and chromosomes are some examples of common biological entities that
-      may be Features.
-    oneOf:
-    - $ref: '#/definitions/Gene'
-    discriminator:
-      propertyName: type
-  Gene:
-    description: A reference to a Gene as defined by an authority. For human genes,
-      the use of [hgnc](https://registry.identifiers.org/registry/hgnc) as the gene
-      authority is RECOMMENDED.
-    type: object
-    properties:
-      type:
-        type: string
-        const: Gene
-        default: Gene
-        description: MUST be "Gene"
-      gene_id:
-        $ref: '#/definitions/CURIE'
-        description: A CURIE reference to a Gene concept
-    required:
-    - gene_id
-    - type
     additionalProperties: false
   Number:
     description: A simple integer value as a VRS class.
@@ -630,13 +570,6 @@ definitions:
     - type
     - value
     additionalProperties: false
-  CURIE:
-    description: A [W3C Compact URI](https://www.w3.org/TR/curie/) formatted string.
-      A CURIE string has the structure ``prefix``:``reference``, as defined by the
-      W3C syntax.
-    type: string
-    pattern: ^\w[^:]*:.+$
-    example: ensembl:ENSG00000139618
   HumanCytoband:
     description: A character string representing cytobands derived from the *International
       System for Human Cytogenomic Nomenclature* (ISCN) [guidelines](http://doi.org/10.1159/isbn.978-3-318-06861-0).
@@ -656,50 +589,3 @@ definitions:
       \ codes are permitted in Sequences."
     type: string
     pattern: ^[A-Z*\-]*$
-  SequenceState:
-    deprecated: true
-    description: DEPRECATED. A Sequence as a State. This is the State class to use
-      for representing "ref-alt" style variation, including SNVs, MNVs, del, ins,
-      and delins. This class is deprecated. Use LiteralSequenceExpression instead.
-    type: object
-    properties:
-      type:
-        type: string
-        const: SequenceState
-        description: MUST be "SequenceState"
-      sequence:
-        $ref: '#/definitions/Sequence'
-        description: A string of Residues
-    example:
-      type: SequenceState
-      sequence: C
-    required:
-    - sequence
-    - type
-    additionalProperties: false
-  SimpleInterval:
-    deprecated: true
-    description: 'DEPRECATED: A SimpleInterval represents a span of sequence. Positions
-      are always represented by contiguous spans using interbase coordinates. This
-      class is deprecated. Use SequenceInterval instead.'
-    type: object
-    properties:
-      type:
-        type: string
-        const: SimpleInterval
-        description: MUST be "SimpleInterval"
-      start:
-        type: integer
-        description: The start coordinate
-      end:
-        type: integer
-        description: The end coordinate
-    example:
-      type: SimpleInterval
-      start: 11
-      end: 22
-    required:
-    - end
-    - start
-    - type
-    additionalProperties: false
