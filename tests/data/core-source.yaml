@@ -3,30 +3,25 @@ title: GA4GH-GKS-Core-Definitions
 type: object
 strict: true
 
-namespaces:
-
 $defs:
   Entity:
     description: >-
       Entity is the root class of ‘core’ classes model - those that have identifiers and other general 
       metadata like labels, xrefs, urls, descriptions, etc. All core classes descend from and inherit 
       its attributes.
-    oneOf:
-      - $ref: "#/$defs/ExtensibleEntity"
-      - $ref: "#/$defs/ValueEntity"
     heritable_properties:
       id:
-        $ref: "#/$defs/CURIE"
+        type: string
         description: >-
           The 'logical' identifier of the entity in the system of record, e.g. a UUID. This 'id' is 
           unique within a given system. The identified entity may have a different 'id' in a different 
-          system.
+          system, or may refer to an 'id' for the shared concept in another system (e.g. a CURIE).
       type:
         type: string
         description: >-
           The schema class that is instantiated by the data object. Must be the name of a class from 
           the VA schema.
-    heritable_required: ["type"]
+    heritable_required: [ "type" ]
     discriminator:
       propertyName: type
 
@@ -35,8 +30,13 @@ $defs:
     description: >-
       ValueEntity is the root class for classes that instantiate Value Objects. ValueEntity classes
       are not extensible and MUST NOT have optional properties.
-    oneOf:
-      - $ref: "#/$defs/Proposition"
+    heritable_properties:
+      id:
+        $ref: "#/$defs/CURIE"
+        description: >-
+          The 'logical' identifier of the entity in the system of record, and MUST be represented as a CURIE.
+          This 'id' is unique within a given system, but may also refer to an 'id' for the shared concept in 
+          another system (represented by namespace, accordingly).
 
   DomainEntity:
     inherits: ValueEntity
@@ -58,8 +58,6 @@ $defs:
         type: array
         items:
           $ref: "#/$defs/Extension"
-      record_metadata:
-        $ref: "#/$defs/RecordMetadata"
 
   RecordMetadata:
     inherits: ExtensibleEntity
@@ -78,15 +76,23 @@ $defs:
       version:
         type: string
 
-  LabeledEntity:
+  Coding:
     inherits: ExtensibleEntity
-    description: Write this later.
+    description: >-
+      A `coding` is an extensible entity for labeling or otherwise annotating globally 
+      namespaced identifiers known as "codes".
     properties:
       type:
         type: string
-        const: LabeledEntity
-        default: LabeledEntity
-        description: MUST be "LabeledEntity".
+        const: Coding
+        default: Coding
+        description: MUST be "Coding".
+      id:
+        $ref: "#/$defs/CURIE"
+        description: >-
+          The `coding.id` field is used to capture the code as a CURIE.
+      record_metadata:
+        $ref: "#/$defs/RecordMetadata"
 
   Extension:
     description: >-
@@ -128,10 +134,6 @@ $defs:
         const: Disease
         default: Disease
         description: MUST be "Disease".
-      disease_id:
-        extends: id
-        description: >-
-          A :ref:`CURIE` reference to a disease concept.
 
   Phenotype:
     inherits: DomainEntity
@@ -145,10 +147,6 @@ $defs:
         const: Phenotype
         default: Phenotype
         description: MUST be "Phenotype".
-      phenotype_id:
-        extends: id
-        description: >-
-          A :ref:`CURIE` reference to a phenotype concept.
 
   Gene:
     inherits: DomainEntity
@@ -163,10 +161,6 @@ $defs:
         const: "Gene"
         default: "Gene"
         description: MUST be "Gene"
-      gene_id:
-        $ref: "#/$defs/CURIE"
-        description: >-
-          A CURIE reference to a Gene concept
 
   Condition:
     description: A set of phenotype and/or disease concepts that constitute a condition.
@@ -178,5 +172,50 @@ $defs:
           anyOf:
             - $ref: "#/$defs/Disease"
             - $ref: "#/$defs/Phenotype"
-        minItems: 1
+        minItems: 2
     required: [ "members" ]
+
+  Therapeutic:
+    inherits: DomainEntity
+    description: A treatment, therapy, or drug.
+    properties:
+      type:
+        type: string
+        const: Therapeutic
+        default: Therapeutic
+        description: MUST be "Therapeutic".
+
+  TherapeuticsCollection:
+    inherits: ValueEntity
+    description: A collection of therapeutics.
+    heritable_properties:
+      members:
+        type: array
+        description: >-
+          The therapeutics that constitute the described collection.
+        items:
+          $ref: "#/$defs/Therapeutic"
+        minItems: 2
+    heritable_required: [ "members" ]
+
+  CombinationTherapeutics:
+    inherits: TherapeuticsCollection
+    description: >-
+      A collection of therapeutics that are taken during a course of treatment.
+    properties:
+      type:
+        type: string
+        const: CombinationTherapeutics
+        default: CombinationTherapeutics
+        description: MUST be "CombinationTherapeutics"
+
+  SubstituteTherapeutics:
+    inherits: TherapeuticsCollection
+    description: >-
+      A collection of therapeutics that are considered as valid alternative entities.
+    properties:
+      type:
+        type: string
+        const: SubstituteTherapeutics
+        default: SubstituteTherapeutics
+        description: MUST be "SubstituteTherapeutics"
