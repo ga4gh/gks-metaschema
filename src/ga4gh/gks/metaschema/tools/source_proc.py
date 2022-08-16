@@ -15,6 +15,7 @@ SCHEMA_DEF_KEYWORD_BY_VERSION = {
 ref_re = re.compile(r':ref:`(.*?)(\s?<.*>)?`')
 link_re = re.compile(r'`(.*?)\s?\<(.*)\>`_')
 curie_re = re.compile(r'(\S+):(\S+)')
+defs_re = re.compile(r'#/(\$defs|definitions)/.*')
 
 class YamlSchemaProcessor:
 
@@ -69,6 +70,9 @@ class YamlSchemaProcessor:
             if curie_re.match(cls_inherits_prop):
                 self.raw_defs[cls]['inherits'] = cls_inherits_prop.split(':')[1]
 
+            # check all class.properties match expected definitions style
+            self.raw_defs[cls] = self._check_local_defs_property(self.raw_defs[cls])
+
         # clear imports
         self.imports = dict()
 
@@ -77,6 +81,25 @@ class YamlSchemaProcessor:
 
         # reprocess raw_schema
         self._init_from_raw()
+
+    def _check_local_defs_property(self, obj):
+        try:
+            for k, v in obj.items():
+                if isinstance(v, dict):
+                    obj[k] = self._check_local_defs_property(v)
+                elif isinstance(v, list):
+                    l = list()
+                    for element in v:
+                        l.append(self._check_local_defs_property(element))
+                    obj[k] = l
+                elif isinstance(v, str) and k == "$ref":
+                    match = defs_re.match(v)
+                    assert match, v
+                    if match.group(1) != self.schema_def_keyword:
+                        obj[k] = re.sub(re.escape(match.group(1)), self.schema_def_keyword, v)
+        except AttributeError:
+            return obj
+        return obj
 
     def _register_merge_import(self, proc):
         for name, other in proc.imports.items():

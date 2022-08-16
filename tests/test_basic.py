@@ -26,3 +26,8 @@ def test_yaml_create():
     p = YamlSchemaProcessor('data/core-source.yaml')
     p.js_yaml_dump(open('data/core.yaml', 'w'))
     assert True
+
+def test_merged_create():
+    p = YamlSchemaProcessor('data/vrs-source.yaml')
+    p.merge_imported()
+    assert True
