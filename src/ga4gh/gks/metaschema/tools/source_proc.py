@@ -276,12 +276,15 @@ class YamlSchemaProcessor:
         self.for_js.pop('namespaces', None)
         self.for_js.pop('strict', None)
         self.for_js.pop('imports', None)
+        abstract_class_removals = list()
         for schema_class, schema_definition in self.for_js.get(self.schema_def_keyword, dict()).items():
             schema_definition.pop('inherits', None)
             if self.class_is_abstract(schema_class):
                 schema_definition.pop('heritable_properties', None)
                 schema_definition.pop('heritable_required', None)
                 schema_definition.pop('header_level', None)
+                if 'oneOf' not in schema_definition:
+                    abstract_class_removals.append(schema_class)
             if 'description' in schema_definition:
                 schema_definition['description'] = \
                     self._scrub_rst_markup(schema_definition['description'])
@@ -290,4 +293,5 @@ class YamlSchemaProcessor:
                     if 'description' in p_def:
                         p_def['description'] = \
                             self._scrub_rst_markup(p_def['description'])
-        assert True
+        for cls in abstract_class_removals:
+            self.for_js[self.schema_def_keyword].pop(cls)
