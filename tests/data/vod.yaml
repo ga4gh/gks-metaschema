@@ -1,13 +1,13 @@
-$schema: http://json-schema.org/draft/2020-12/schema
+$schema: http://json-schema.org/draft-07/schema
 title: GA4GH-Value-Object-Descriptor-Definitions
 type: object
-$defs:
+definitions:
   ValueObjectDescriptor:
     description: The abstract *Value Object Descriptor* parent class. All attributes
       of this parent class are inherited by descendent classes.
     oneOf:
-    - $ref: '#/$defs/VariationDescriptor'
-    - $ref: '#/$defs/CategoricalVariationDescriptor'
+    - $ref: '#/definitions/VariationDescriptor'
+    - $ref: '#/definitions/CategoricalVariationDescriptor'
   VariationDescriptor:
     description: This descriptor class is used for describing VRS Variation value
       objects.
@@ -31,6 +31,7 @@ $defs:
         description: A primary label for the value object.
       extensions:
         type: array
+        ordered: true
         items:
           $ref: core.json#/$defs/Extension
       description:
@@ -38,12 +39,14 @@ $defs:
         description: A free-text description of the value object.
       xrefs:
         type: array
+        ordered: false
         uniqueItems: true
         items:
           $ref: core.json#/$defs/CURIE
         description: List of CURIEs representing associated concepts.
       alternate_labels:
         type: array
+        ordered: false
         items:
           type: string
         description: List of strings representing alternate labels for the value object.
@@ -66,19 +69,14 @@ $defs:
           RECOMMEND a descendent term of [SO:0001537](http://www.sequenceontology.org/browser/current_release/term/SO:0001537).
         $ref: core.json#/$defs/CURIE
       expressions:
-        $ref: '#/$defs/Expression'
+        $ref: '#/definitions/Expression'
         description: Typically HGVS or ISCN nomenclature expressions. Other systems
           relevant to the description of variation MAY be used.
-      vcf_record:
-        $ref: '#/$defs/VcfRecord'
-        description: A VCF Record of the variant. This SHOULD be a single allele,
-          the VCF genotype (GT) field should be represented in the *allelic_state*
-          attribute.
       gene_context:
         description: A specific gene context that applies to this variant.
         oneOf:
+        - $ref: '#/definitions/GeneDescriptor'
         - $ref: core.json#/$defs/CURIE
-        - $ref: '#/$defs/GeneDescriptor'
       vrs_ref_allele_seq:
         description: A `VRS Sequence`_ corresponding to a "ref allele", describing
           the sequence expected at a `VRS SequenceLocation`_ reference.
@@ -110,6 +108,7 @@ $defs:
         description: A primary label for the value object.
       extensions:
         type: array
+        ordered: true
         items:
           $ref: core.json#/$defs/Extension
       description:
@@ -117,12 +116,14 @@ $defs:
         description: A free-text description of the value object.
       xrefs:
         type: array
+        ordered: false
         uniqueItems: true
         items:
           $ref: core.json#/$defs/CURIE
         description: List of CURIEs representing associated concepts.
       alternate_labels:
         type: array
+        ordered: false
         items:
           type: string
         description: List of strings representing alternate labels for the value object.
@@ -132,10 +133,57 @@ $defs:
         $ref: core.json#/$defs/CURIE
       member_descriptors:
         type: array
+        ordered: false
         items:
           anyOf:
-          - $ref: '#/$defs/DiseaseDescriptor'
-          - $ref: '#/$defs/PhenotypeDescriptor'
+          - $ref: '#/definitions/DiseaseDescriptor'
+          - $ref: '#/definitions/PhenotypeDescriptor'
+    required:
+    - id
+    - type
+    additionalProperties: false
+  GeneDescriptor:
+    description: This descriptor class is used for describing Gene domain entities.
+    properties:
+      id:
+        type: string
+        description: The 'logical' identifier of the entity in the system of record,
+          e.g. a UUID. This 'id' is  unique within a given system. The identified
+          entity may have a different 'id' in a different  system, or may refer to
+          an 'id' for the shared concept in another system (e.g. a CURIE).
+      type:
+        type: string
+        const: GeneDescriptor
+        default: GeneDescriptor
+        description: MUST be "GeneDescriptor".
+      label:
+        type: string
+        description: A primary label for the value object.
+      extensions:
+        type: array
+        ordered: true
+        items:
+          $ref: core.json#/$defs/Extension
+      description:
+        type: string
+        description: A free-text description of the value object.
+      xrefs:
+        type: array
+        ordered: false
+        uniqueItems: true
+        items:
+          $ref: core.json#/$defs/CURIE
+        description: List of CURIEs representing associated concepts.
+      alternate_labels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: List of strings representing alternate labels for the value object.
+      gene:
+        $ref: core.json#/$defs/Gene
+      gene_id:
+        $ref: core.json#/$defs/CURIE
     required:
     - id
     - type
@@ -159,6 +207,7 @@ $defs:
         description: A primary label for the value object.
       extensions:
         type: array
+        ordered: true
         items:
           $ref: core.json#/$defs/Extension
       description:
@@ -166,12 +215,14 @@ $defs:
         description: A free-text description of the value object.
       xrefs:
         type: array
+        ordered: false
         uniqueItems: true
         items:
           $ref: core.json#/$defs/CURIE
         description: List of CURIEs representing associated concepts.
       alternate_labels:
         type: array
+        ordered: false
         items:
           type: string
         description: List of strings representing alternate labels for the value object.
@@ -202,6 +253,7 @@ $defs:
         description: A primary label for the value object.
       extensions:
         type: array
+        ordered: true
         items:
           $ref: core.json#/$defs/Extension
       description:
@@ -209,12 +261,14 @@ $defs:
         description: A free-text description of the value object.
       xrefs:
         type: array
+        ordered: false
         uniqueItems: true
         items:
           $ref: core.json#/$defs/CURIE
         description: List of CURIEs representing associated concepts.
       alternate_labels:
         type: array
+        ordered: false
         items:
           type: string
         description: List of strings representing alternate labels for the value object.
@@ -245,6 +299,7 @@ $defs:
         description: A primary label for the value object.
       extensions:
         type: array
+        ordered: true
         items:
           $ref: core.json#/$defs/Extension
       description:
@@ -252,12 +307,14 @@ $defs:
         description: A free-text description of the value object.
       xrefs:
         type: array
+        ordered: false
         uniqueItems: true
         items:
           $ref: core.json#/$defs/CURIE
         description: List of CURIEs representing associated concepts.
       alternate_labels:
         type: array
+        ordered: false
         items:
           type: string
         description: List of strings representing alternate labels for the value object.
@@ -289,6 +346,7 @@ $defs:
         description: A primary label for the value object.
       extensions:
         type: array
+        ordered: true
         items:
           $ref: core.json#/$defs/Extension
       description:
@@ -296,12 +354,14 @@ $defs:
         description: A free-text description of the value object.
       xrefs:
         type: array
+        ordered: false
         uniqueItems: true
         items:
           $ref: core.json#/$defs/CURIE
         description: List of CURIEs representing associated concepts.
       alternate_labels:
         type: array
+        ordered: false
         items:
           type: string
         description: List of strings representing alternate labels for the value object.
@@ -313,8 +373,9 @@ $defs:
         $ref: core.json#/$defs/CURIE
       member_descriptors:
         type: array
+        ordered: false
         items:
-          $ref: '#/$defs/TherapeuticDescriptor'
+          $ref: '#/definitions/TherapeuticDescriptor'
     required:
     - id
     - type
@@ -349,6 +410,12 @@ $defs:
     - type
     - value
     additionalProperties: false
+  CategoricalVariationDescriptor:
+    description: This descriptor class is used for describing Categorical Variation
+      value objects.
+    type: object
+    oneOf:
+    - $ref: '#/definitions/CanonicalVariationDescriptor'
   CanonicalVariationDescriptor:
     description: This descriptor class is used for describing Canonical Variation
       value objects.
@@ -369,6 +436,7 @@ $defs:
         description: A primary label for the value object.
       extensions:
         type: array
+        ordered: true
         items:
           $ref: core.json#/$defs/Extension
       description:
@@ -376,12 +444,14 @@ $defs:
         description: A free-text description of the value object.
       xrefs:
         type: array
+        ordered: false
         uniqueItems: true
         items:
           $ref: core.json#/$defs/CURIE
         description: List of CURIEs representing associated concepts.
       alternate_labels:
         type: array
+        ordered: false
         items:
           type: string
         description: List of strings representing alternate labels for the value object.
@@ -389,10 +459,11 @@ $defs:
         description: VariationMember instances that fall within the functional domain
           of the Categorical Variation.
         type: array
+        ordered: false
         items:
-          $ref: '#/$defs/VariationMember'
+          $ref: '#/definitions/VariationMember'
       subject_variation_descriptor:
-        $ref: '#/$defs/VariationDescriptor'
+        $ref: '#/definitions/VariationDescriptor'
       canonical_variation_id:
         $ref: core.json#/$defs/CURIE
         description: This MUST be provided if *categorical_variation* is omitted.
@@ -414,8 +485,9 @@ $defs:
         description: MUST be "VariationMember"
       expressions:
         type: array
+        ordered: false
         items:
-          $ref: '#/$defs/Expression'
+          $ref: '#/definitions/Expression'
         minItems: 1
       variation_id:
         $ref: core.json#/$defs/CURIE

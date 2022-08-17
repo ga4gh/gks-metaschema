@@ -29,6 +29,7 @@ class YamlSchemaProcessor:
         self.imports = dict()
         self.import_dependencies()
         self.strict = self.raw_schema.get('strict', False)
+        self.enforce_ordered = self.raw_schema.get('enforce_ordered', self.strict)
         self._init_from_raw()
 
     def _init_from_raw(self):
@@ -198,7 +199,7 @@ class YamlSchemaProcessor:
         base_url = self.processed_schema['namespaces'][namespace]
         return base_url + identifier
 
-    def process_property_tree(self, raw_node, processed_node):
+    def process_property_tree_refs(self, raw_node, processed_node):
         if isinstance(raw_node, dict):
             for k, v in raw_node.items():
                 if k.endswith('_curie'):
@@ -209,10 +210,10 @@ class YamlSchemaProcessor:
                     # TODO: fix below hard-coded name convention, yuck.
                     processed_node[k] = str(self.schema_fp.stem.split('-')[0]) + '.json' + v
                 else:
-                    self.process_property_tree(raw_node[k], processed_node[k])
+                    self.process_property_tree_refs(raw_node[k], processed_node[k])
         elif isinstance(raw_node, list):
             for raw_item, processed_item in zip(raw_node, processed_node):
-                self.process_property_tree(raw_item, processed_item)
+                self.process_property_tree_refs(raw_item, processed_item)
         return
 
     def get_local_or_inherited_class(self, schema_class, raw=False):
@@ -265,9 +266,11 @@ class YamlSchemaProcessor:
         raw_class_properties = raw_class_def.get(prop_k, dict())  # Nested inheritance!
         processed_class_properties = processed_class_def.get(prop_k, dict())
         processed_class_required = set(processed_class_def.get(req_k, []))
-        self.process_property_tree(raw_class_properties, processed_class_properties)
-        # Mix in inherited properties
+        # Process refs
+        self.process_property_tree_refs(raw_class_properties, processed_class_properties)
+
         for prop, prop_attribs in processed_class_properties.items():
+            # Mix in inherited properties
             if 'extends' in prop_attribs:
                 # assert that the extended property is in inherited properties
                 assert prop_attribs['extends'] in inherited_properties
@@ -290,6 +293,10 @@ class YamlSchemaProcessor:
                 if extended_property in inherited_required:
                     inherited_required.remove(extended_property)
                     processed_class_required.add(prop)
+            # Validate required array attribute for GKS specs
+            if self.enforce_ordered and prop_attribs.get('type', '') == 'array':
+                assert 'ordered' in prop_attribs, f'{schema_class}.{prop} missing ordered attribute.'
+                assert isinstance(prop_attribs['ordered'], bool)
 
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
         processed_class_def[req_k] = sorted(list(inherited_required | processed_class_required))
@@ -304,18 +311,10 @@ class YamlSchemaProcessor:
         string = string.replace('\n', ' ')
         return string
 
-    def concretize_class_ref(self, cls_url):
-        children = self.has_children.get(cls_url, None)
-        if children is None:
-            return {cls_url}
-        out = set()
-        for child in children:
-            out.update(self.concretize_class_ref(child))
-        return out
-
     def clean_for_js(self):
         self.for_js.pop('namespaces', None)
         self.for_js.pop('strict', None)
+        self.for_js.pop('enforce_ordered', None)
         self.for_js.pop('imports', None)
         abstract_class_removals = list()
         for schema_class, schema_definition in self.for_js.get(self.schema_def_keyword, dict()).items():
@@ -334,20 +333,35 @@ class YamlSchemaProcessor:
                     if 'description' in p_def:
                         p_def['description'] = \
                             self._scrub_rst_markup(p_def['description'])
-                    if '$ref' in p_def:
-                        descendents = self.concretize_class_ref(p_def['$ref'])
-                        if descendents != {p_def['$ref']}:
-                            p_def.pop('$ref')
-                            p_def['oneOf'] = self._build_ref_list(descendents)
-                    if 'oneOf' in p_def:
-                        # do the same check for each member
-                        ref_list = p_def['oneOf']
-                        descendents = set()
-                        for ref in ref_list:
-                            descendents.update(self.concretize_class_ref(ref['$ref']))
-                        p_def['oneOf'] = self._build_ref_list(descendents)
+                    self.concretize_js_object(p_def)
+
         for cls in abstract_class_removals:
             self.for_js[self.schema_def_keyword].pop(cls)
+
+    def concretize_js_object(self, js_obj):
+        if '$ref' in js_obj:
+            descendents = self.concretize_class_ref(js_obj['$ref'])
+            if descendents != {js_obj['$ref']}:
+                js_obj.pop('$ref')
+                js_obj['oneOf'] = self._build_ref_list(descendents)
+        elif 'oneOf' in js_obj:
+            # do the same check for each member
+            ref_list = js_obj['oneOf']
+            descendents = set()
+            for ref in ref_list:
+                descendents.update(self.concretize_class_ref(ref['$ref']))
+            js_obj['oneOf'] = self._build_ref_list(descendents)
+        elif js_obj.get('type', '') == 'array':
+            self.concretize_js_object(js_obj['items'])
+
+    def concretize_class_ref(self, cls_url):
+        children = self.has_children.get(cls_url, None)
+        if children is None:
+            return {cls_url}
+        out = set()
+        for child in children:
+            out.update(self.concretize_class_ref(child))
+        return out
 
     @staticmethod
     def _build_ref_list(cls_urls):

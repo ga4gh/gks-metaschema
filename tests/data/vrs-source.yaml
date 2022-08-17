@@ -105,8 +105,6 @@ definitions:
         $ref: "#/definitions/SequenceExpression"
         description: >-
           An expression of the sequence state
-        deprecated:
-          - $ref: "#/definitions/SequenceState"
     required: [ "location", "state" ]
 
   Haplotype:
@@ -124,6 +122,7 @@ definitions:
           MUST be "Haplotype"
       members:
         type: array
+        ordered: false
         minItems: 2
         uniqueItems: true
         items:
@@ -170,6 +169,7 @@ definitions:
         description: MUST be "VariationSet"
       members:
         type: array
+        ordered: false
         uniqueItems: true
         items:
           oneOf:
@@ -260,6 +260,7 @@ definitions:
           MUST be "Genotype"
       members:
         type: array
+        ordered: false
         uniqueItems: true
         minItems: 1
         items:
@@ -511,6 +512,7 @@ definitions:
         description: MUST be "ComposedSequenceExpression"
       components:
         type: array
+        ordered: true
         uniqueItems: true
         minItems: 2
         items:
