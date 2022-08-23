@@ -298,6 +298,11 @@ class YamlSchemaProcessor:
                 assert 'ordered' in prop_attribs, f'{schema_class}.{prop} missing ordered attribute.'
                 assert isinstance(prop_attribs['ordered'], bool)
 
+        if self.class_is_abstract(schema_class):
+            assert 'type' not in processed_class_def, schema_class
+        else:
+            assert 'type' in processed_class_def, schema_class
+            assert processed_class_def['type'] == 'object', schema_class
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
         processed_class_def[req_k] = sorted(list(inherited_required | processed_class_required))
         if self.strict and not self.class_is_abstract(schema_class):
