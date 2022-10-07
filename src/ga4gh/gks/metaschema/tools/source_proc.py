@@ -328,6 +328,7 @@ class YamlSchemaProcessor:
                 schema_definition.pop('heritable_properties', None)
                 schema_definition.pop('heritable_required', None)
                 schema_definition.pop('header_level', None)
+                self.concretize_js_object(schema_definition)
                 if 'oneOf' not in schema_definition:
                     abstract_class_removals.append(schema_class)
             if 'description' in schema_definition:
