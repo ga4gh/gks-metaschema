@@ -27,6 +27,7 @@ def test_yaml_create():
     p.js_yaml_dump(open('data/core.yaml', 'w'))
     assert True
 
+
 def test_merged_create():
     p = YamlSchemaProcessor('data/vod-source.yaml')
     p.merge_imported()
