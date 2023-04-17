@@ -1,0 +1,23 @@
+{
+   "$schema": "http://json-schema.org/draft-07/schema",
+   "title": "LiteralSequenceExpression",
+   "type": "object",
+   "description": "An explicit expression of a Sequence.",
+   "properties": {
+      "type": {
+         "type": "string",
+         "const": "LiteralSequenceExpression",
+         "default": "LiteralSequenceExpression",
+         "description": "MUST be \"LiteralSequenceExpression\""
+      },
+      "sequence": {
+         "$ref": "#/definitions/Sequence",
+         "description": "the literal Sequence expressed"
+      }
+   },
+   "required": [
+      "sequence",
+      "type"
+   ],
+   "additionalProperties": false
+}

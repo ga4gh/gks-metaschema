@@ -34,6 +34,7 @@ $defs:
     description: >-
       A categorical variation domain jointly characterized by two or more other categorical 
       variation domains.
+    type: object
     properties:
       type:
         type: string
@@ -58,6 +59,7 @@ $defs:
   CanonicalVariation:
     ga4gh_prefix: CLV
     inherits: CategoricalVariation
+    type: object
     description: >-
       A categorical variation domain characterized by a representative Variation context 
       to which members lift-over, project, translate, or otherwise directly align.

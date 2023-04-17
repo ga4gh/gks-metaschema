@@ -1,0 +1,44 @@
+{
+   "$schema": "http://json-schema.org/draft-07/schema",
+   "title": "GenotypeMember",
+   "type": "object",
+   "description": "A class for expressing the count of a specific MolecularVariation present _in-trans_ at a genomic locus represented by a Genotype.",
+   "properties": {
+      "type": {
+         "type": "string",
+         "const": "GenotypeMember",
+         "default": "GenotypeMember",
+         "description": "MUST be \"GenotypeMember\"."
+      },
+      "count": {
+         "oneOf": [
+            {
+               "$ref": "#/definitions/DefiniteRange"
+            },
+            {
+               "$ref": "#/definitions/IndefiniteRange"
+            },
+            {
+               "$ref": "#/definitions/Number"
+            }
+         ],
+         "description": "The number of copies of the `variation` at a Genotype locus."
+      },
+      "variation": {
+         "oneOf": [
+            {
+               "$ref": "#/definitions/Allele"
+            },
+            {
+               "$ref": "#/definitions/Haplotype"
+            }
+         ],
+         "description": "A MolecularVariation at a Genotype locus."
+      }
+   },
+   "required": [
+      "count",
+      "variation"
+   ],
+   "additionalProperties": false
+}

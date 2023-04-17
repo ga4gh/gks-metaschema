@@ -66,6 +66,7 @@ $defs:
       A re-usable structure that encapsulates provenance metadata that applies to a specific
       concrete record of information as encoded in a particular system, as opposed to 
       provenance of the abstract information content/knowledge the record represents.
+    type: object
     properties:
       type:
         type: string
@@ -82,6 +83,7 @@ $defs:
     description: >-
       A `coding` is an extensible entity for labeling or otherwise annotating globally 
       namespaced identifiers known as "codes".
+    type: object
     properties:
       type:
         type: string
@@ -101,6 +103,7 @@ $defs:
       with other attributes unique to a content provider. These extensions
       are not expected to be natively understood under VRSATILE, but may be
       used for pre-negotiated exchange of message attributes when needed.
+    type: object
     properties:
       type:
         type: string
@@ -129,6 +132,7 @@ $defs:
       A reference to a Disease as defined by an authority. For human diseases,
       the use of `MONDO <https://registry.identifiers.org/registry/mondo>`_
       as the disease authority is RECOMMENDED.
+    type: object
     properties:
       type:
         type: string
@@ -142,6 +146,7 @@ $defs:
       A reference to a Phenotype as defined by an authority. For human phenotypes,
       the use of `HPO <https://registry.identifiers.org/registry/hpo>`_
       as the disease authority is RECOMMENDED.
+    type: object
     properties:
       type:
         type: string
@@ -166,6 +171,7 @@ $defs:
   Condition:
     description: A set of phenotype and/or disease concepts that constitute a condition.
     inherits: ValueEntity
+    type: object
     properties:
       members:
         type: array
@@ -180,6 +186,7 @@ $defs:
   Therapeutic:
     inherits: DomainEntity
     description: A treatment, therapy, or drug.
+    type: object
     properties:
       type:
         type: string
@@ -205,6 +212,7 @@ $defs:
     inherits: TherapeuticsCollection
     description: >-
       A collection of therapeutics that are taken during a course of treatment.
+    type: object
     properties:
       type:
         type: string
@@ -216,6 +224,7 @@ $defs:
     inherits: TherapeuticsCollection
     description: >-
       A collection of therapeutics that are considered as valid alternative entities.
+    type: object
     properties:
       type:
         type: string

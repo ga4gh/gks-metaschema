@@ -1,0 +1,17 @@
+{
+   "$schema": "http://json-schema.org/draft-07/schema",
+   "title": "MolecularVariation",
+   "type": "object",
+   "description": "A variation on a contiguous molecule.",
+   "oneOf": [
+      {
+         "$ref": "#/definitions/Allele"
+      },
+      {
+         "$ref": "#/definitions/Haplotype"
+      }
+   ],
+   "discriminator": {
+      "propertyName": "type"
+   }
+}

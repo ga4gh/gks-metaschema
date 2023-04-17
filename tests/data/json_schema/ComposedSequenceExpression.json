@@ -1,0 +1,38 @@
+{
+   "$schema": "http://json-schema.org/draft-07/schema",
+   "title": "ComposedSequenceExpression",
+   "type": "object",
+   "description": "An expression of a sequence composed from multiple other Sequence Expressions objects. MUST have at least one component that is not a ref:`LiteralSequenceExpression`. CANNOT be composed from nested composed sequence expressions.",
+   "additionalProperties": false,
+   "properties": {
+      "type": {
+         "type": "string",
+         "const": "ComposedSequenceExpression",
+         "default": "ComposedSequenceExpression",
+         "description": "MUST be \"ComposedSequenceExpression\""
+      },
+      "components": {
+         "type": "array",
+         "ordered": true,
+         "uniqueItems": true,
+         "minItems": 2,
+         "items": {
+            "anyOf": [
+               {
+                  "$ref": "#/definitions/LiteralSequenceExpression"
+               },
+               {
+                  "$ref": "#/definitions/RepeatedSequenceExpression"
+               },
+               {
+                  "$ref": "#/definitions/DerivedSequenceExpression"
+               }
+            ]
+         },
+         "description": "An ordered list of SequenceExpression components comprising the expression. MUST NOT have two adjacent LiteralSequenceExpression objects."
+      }
+   },
+   "required": [
+      "components"
+   ]
+}

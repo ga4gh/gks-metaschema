@@ -1,0 +1,58 @@
+{
+   "$schema": "http://json-schema.org/draft-07/schema",
+   "title": "SequenceLocation",
+   "type": "object",
+   "ga4gh_prefix": "SL",
+   "description": "A Location defined by an interval on a referenced Sequence.",
+   "properties": {
+      "id": {
+         "$ref": "core.json#/$defs/CURIE",
+         "description": "The 'logical' identifier of the entity in the system of record, and MUST be represented as a CURIE. This 'id' is unique within a given system, but may also refer to an 'id' for the shared concept in  another system (represented by namespace, accordingly)."
+      },
+      "type": {
+         "type": "string",
+         "const": "SequenceLocation",
+         "default": "SequenceLocation",
+         "description": "MUST be \"SequenceLocation\""
+      },
+      "sequence_id": {
+         "description": "A VRS Computed Identifier for the reference Sequence.",
+         "$ref": "core.json#/$defs/CURIE"
+      },
+      "start": {
+         "oneOf": [
+            {
+               "$ref": "#/definitions/DefiniteRange"
+            },
+            {
+               "$ref": "#/definitions/IndefiniteRange"
+            },
+            {
+               "$ref": "#/definitions/Number"
+            }
+         ],
+         "description": "The start coordinate or range of the SequenceLocation. The minimum value of this coordinate or range is 0. MUST represent a coordinate or range less than the value of `end`."
+      },
+      "end": {
+         "oneOf": [
+            {
+               "$ref": "#/definitions/DefiniteRange"
+            },
+            {
+               "$ref": "#/definitions/IndefiniteRange"
+            },
+            {
+               "$ref": "#/definitions/Number"
+            }
+         ],
+         "description": "The end coordinate or range of the SequenceLocation. The minimum value of this coordinate or range is 0. MUST represent a coordinate or range greater than the value of `start`."
+      }
+   },
+   "required": [
+      "end",
+      "sequence_id",
+      "start",
+      "type"
+   ],
+   "additionalProperties": false
+}

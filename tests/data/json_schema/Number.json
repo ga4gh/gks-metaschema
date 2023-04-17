@@ -1,0 +1,23 @@
+{
+   "$schema": "http://json-schema.org/draft-07/schema",
+   "title": "Number",
+   "type": "object",
+   "description": "A simple integer value as a VRS class.",
+   "properties": {
+      "type": {
+         "type": "string",
+         "const": "Number",
+         "default": "Number",
+         "description": "MUST be \"Number\""
+      },
+      "value": {
+         "type": "integer",
+         "description": "The value represented by Number"
+      }
+   },
+   "required": [
+      "type",
+      "value"
+   ],
+   "additionalProperties": false
+}

@@ -1,0 +1,32 @@
+{
+   "$schema": "http://json-schema.org/draft-07/schema",
+   "title": "IndefiniteRange",
+   "type": "object",
+   "description": "A half-bounded range of numbers represented as a number bound and associated comparator. The bound operator is interpreted as follows: '>=' are all numbers greater than and including `value`, '<=' are all numbers less than and including `value`.",
+   "properties": {
+      "type": {
+         "type": "string",
+         "const": "IndefiniteRange",
+         "default": "IndefiniteRange",
+         "description": "MUST be \"IndefiniteRange\""
+      },
+      "value": {
+         "type": "number",
+         "description": "The bounded value; inclusive"
+      },
+      "comparator": {
+         "type": "string",
+         "enum": [
+            "<=",
+            ">="
+         ],
+         "description": "MUST be one of \"<=\" or \">=\", indicating which direction the range is indefinite"
+      }
+   },
+   "required": [
+      "comparator",
+      "type",
+      "value"
+   ],
+   "additionalProperties": false
+}

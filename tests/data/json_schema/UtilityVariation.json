@@ -1,0 +1,17 @@
+{
+   "$schema": "http://json-schema.org/draft-07/schema",
+   "title": "UtilityVariation",
+   "type": "object",
+   "description": "A collection of Variation subclasses that cannot be constrained to a specific class of biological variation, but are necessary for some applications of VRS.",
+   "oneOf": [
+      {
+         "$ref": "#/definitions/Text"
+      },
+      {
+         "$ref": "#/definitions/VariationSet"
+      }
+   ],
+   "discriminator": {
+      "propertyName": "type"
+   }
+}

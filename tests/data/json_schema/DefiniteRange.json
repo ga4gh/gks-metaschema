@@ -1,0 +1,28 @@
+{
+   "$schema": "http://json-schema.org/draft-07/schema",
+   "title": "DefiniteRange",
+   "type": "object",
+   "description": "A bounded, inclusive range of numbers.",
+   "properties": {
+      "type": {
+         "type": "string",
+         "const": "DefiniteRange",
+         "default": "DefiniteRange",
+         "description": "MUST be \"DefiniteRange\""
+      },
+      "min": {
+         "type": "number",
+         "description": "The minimum value; inclusive"
+      },
+      "max": {
+         "type": "number",
+         "description": "The maximum value; inclusive"
+      }
+   },
+   "required": [
+      "max",
+      "min",
+      "type"
+   ],
+   "additionalProperties": false
+}

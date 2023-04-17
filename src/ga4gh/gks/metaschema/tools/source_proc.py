@@ -5,6 +5,7 @@ import json
 import yaml
 import re
 from pathlib import Path
+import os
 
 SCHEMA_DEF_KEYWORD_BY_VERSION = {
     "http://json-schema.org/draft-07/schema": "definitions",
@@ -193,6 +194,23 @@ class YamlSchemaProcessor:
 
     def js_yaml_dump(self, stream):
         yaml.dump(self.for_js, stream, sort_keys=False)
+
+    def split_defs_to_js(self, fp=None):
+        if fp is None:
+            fp = self.schema_fp.parent / 'json_schema'
+        else:
+            assert isinstance(fp, Path)
+        if not fp.exists():
+            os.mkdir(fp)
+        for cls in self.for_js['definitions'].keys():
+            class_def = self.for_js['definitions'][cls]
+            target_path = fp / f'{cls}.json'
+            out_doc = copy.deepcopy(self.for_js)
+            out_doc.pop('definitions', None)
+            out_doc.update(class_def)
+            out_doc['title'] = cls
+            with open(target_path, 'w') as f:
+                json.dump(out_doc, f, indent=3, sort_keys=False)
 
     def resolve_curie(self, curie):
         namespace, identifier = curie.split(':')

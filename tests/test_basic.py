@@ -32,3 +32,9 @@ def test_merged_create():
     p = YamlSchemaProcessor('data/vod-source.yaml')
     p.merge_imported()
     assert True
+
+
+def test_split_create():
+    p = YamlSchemaProcessor('data/vrs-source.yaml')
+    p.split_defs_to_js()
+    assert True

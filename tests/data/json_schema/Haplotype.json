@@ -1,0 +1,41 @@
+{
+   "$schema": "http://json-schema.org/draft-07/schema",
+   "title": "Haplotype",
+   "type": "object",
+   "ga4gh_prefix": "HT",
+   "description": "A set of non-overlapping Allele members that co-occur on the same molecule.",
+   "properties": {
+      "id": {
+         "$ref": "core.json#/$defs/CURIE",
+         "description": "The 'logical' identifier of the entity in the system of record, and MUST be represented as a CURIE. This 'id' is unique within a given system, but may also refer to an 'id' for the shared concept in  another system (represented by namespace, accordingly)."
+      },
+      "type": {
+         "type": "string",
+         "const": "Haplotype",
+         "default": "Haplotype",
+         "description": "MUST be \"Haplotype\""
+      },
+      "members": {
+         "type": "array",
+         "ordered": false,
+         "minItems": 2,
+         "uniqueItems": true,
+         "items": {
+            "oneOf": [
+               {
+                  "$ref": "#/definitions/Allele"
+               },
+               {
+                  "$ref": "core.json#/$defs/CURIE"
+               }
+            ]
+         },
+         "description": "List of Alleles, or references to Alleles, that comprise this Haplotype."
+      }
+   },
+   "required": [
+      "members",
+      "type"
+   ],
+   "additionalProperties": false
+}
