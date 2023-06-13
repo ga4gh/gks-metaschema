@@ -372,9 +372,13 @@ class YamlSchemaProcessor:
             # do the same check for each member
             ref_list = js_obj['oneOf']
             descendents = set()
+            inlined = list()
             for ref in ref_list:
-                descendents.update(self.concretize_class_ref(ref['$ref']))
-            js_obj['oneOf'] = self._build_ref_list(descendents)
+                if '$ref' not in ref:
+                    inlined.append(ref)
+                else:
+                    descendents.update(self.concretize_class_ref(ref['$ref']))
+            js_obj['oneOf'] = self._build_ref_list(descendents) + inlined
         elif js_obj.get('type', '') == 'array':
             self.concretize_js_object(js_obj['items'])
 
