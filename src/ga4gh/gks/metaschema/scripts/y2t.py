@@ -55,7 +55,7 @@ def resolve_cardinality(class_property_name, class_property_attributes, class_de
     """Resolve class property cardinality from yaml definition"""
     if class_property_name in class_definition.get('required', []):
         min_count = '1'
-    elif class_property_name in class_definition.get('heritable_required', []):
+    elif class_property_name in class_definition.get('heritableRequired', []):
         min_count = '1'
     else:
         min_count = '0'
@@ -81,8 +81,8 @@ for class_name, class_definition in proc_schema.defs.items():
         print(class_definition['description'], file=f)
         if proc_schema.class_is_passthrough(class_name):
             continue
-        if 'heritable_properties' in class_definition:
-            p = 'heritable_properties'
+        if 'heritableProperties' in class_definition:
+            p = 'heritableProperties'
         elif 'properties' in class_definition:
             p = 'properties'
         elif proc_schema.class_is_primitive(class_name):

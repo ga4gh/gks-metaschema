@@ -29,7 +29,7 @@ definitions:
       - $ref: "#/definitions/MolecularVariation"
       - $ref: "#/definitions/SystemicVariation"
       - $ref: "#/definitions/UtilityVariation"
-    heritable_properties:
+    heritableProperties:
       _id:
         $ref: "#/definitions/CURIE"
         description: >-
@@ -38,7 +38,7 @@ definitions:
         type: string
         description: >-
           The Variation class type. MUST match child class type.
-    heritable_required: ["type"]
+    heritableRequired: ["type"]
 
     discriminator:
       propertyName: type
@@ -193,14 +193,14 @@ definitions:
       The copies of :ref:`Location` in a system, expressed as an absolute integer
       quantity (:ref:`AbsoluteCopyNumber`) or a qualitative description of copies 
       relative to a baseline state (:ref:`RelativeCopyNumber`).
-    heritable_properties:
+    heritableProperties:
       subject:
         oneOf:
           - $ref: "#/definitions/Location"
           - $ref: "#/definitions/CURIE"
         description: >-
           A location for which the number of systemic copies is described.
-    heritable_required: [ "subject" ]
+    heritableRequired: [ "subject" ]
 
   AbsoluteCopyNumber:
     inherits: CopyNumber
@@ -291,7 +291,7 @@ definitions:
     oneOf:
       - $ref: "#/definitions/ChromosomeLocation"
       - $ref: "#/definitions/SequenceLocation"
-    heritable_properties:
+    heritableProperties:
       _id:
         $ref: "#/definitions/CURIE"
         description: >-
@@ -300,7 +300,7 @@ definitions:
         type: string
         description: >-
           The Location class type. MUST match child class type.
-    heritable_required: ["type"]
+    heritableRequired: ["type"]
     discriminator:
       propertyName: type
 
@@ -442,12 +442,12 @@ definitions:
       - $ref: "#/definitions/ComposedSequenceExpression"
     discriminator:
       propertyName: type
-    heritable_properties:
+    heritableProperties:
       type:
         type: string
         description: >-
           The SequenceExpression class type. MUST match child class type.
-    heritable_required: ["type"]
+    heritableRequired: ["type"]
 
   LiteralSequenceExpression:
     inherits: SequenceExpression
@@ -593,12 +593,12 @@ definitions:
       - $ref: "#/definitions/Gene"
     discriminator:
       propertyName: type
-    heritable_properties:
+    heritableProperties:
       type:
         type: string
         description: >-
           The Feature class type. MUST match child class type.
-    heritable_required: [ "type" ]
+    heritableRequired: [ "type" ]
 
   Gene:
     inherits: Feature

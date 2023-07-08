@@ -22,7 +22,7 @@ definitions:
     oneOf:
       - $ref: "#/definitions/VariationDescriptor"
       - $ref: "#/definitions/CategoricalVariationDescriptor"
-    heritable_properties:
+    heritableProperties:
       value:
         $ref_curie: gks.core:ValueEntity
       value_id:
@@ -50,7 +50,7 @@ definitions:
           type: string
         description: >-
           List of strings representing alternate labels for the value object.
-    heritable_required: [ "id" ]
+    heritableRequired: [ "id" ]
 
   VariationDescriptor:
     inherits: ValueObjectDescriptor
@@ -249,7 +249,7 @@ definitions:
       This descriptor class is used for describing Categorical Variation value objects.
     oneOf:
       - $ref: "#/definitions/CanonicalVariationDescriptor"
-    heritable_properties:
+    heritableProperties:
       categorical_variation_id:
         extends: value_id
         $ref_curie: gks.core:CURIE
