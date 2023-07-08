@@ -2,6 +2,7 @@
    "$schema": "http://json-schema.org/draft/2020-12/schema",
    "title": "LiteralSequenceExpression",
    "type": "object",
+   "maturity": "Alpha",
    "description": "An explicit expression of a Sequence.",
    "properties": {
       "id": {

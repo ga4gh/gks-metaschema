@@ -2,6 +2,7 @@
    "$schema": "http://json-schema.org/draft/2020-12/schema",
    "title": "SequenceReference",
    "type": "object",
+   "maturity": "Alpha",
    "ga4ghDigest": {
       "prefix": "SQR",
       "keys": [

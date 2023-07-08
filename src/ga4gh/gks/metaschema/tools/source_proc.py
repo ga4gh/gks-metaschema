@@ -172,6 +172,10 @@ class YamlSchemaProcessor:
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
         return 'properties' not in schema_class_def and not self.class_is_primitive(schema_class)
 
+    def class_is_private(self, schema_class):
+        schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
+        return 'privateTo' in schema_class_def
+
     def class_is_digestible(self, schema_class):
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
         return 'ga4ghDigest' in schema_class_def and not self.class_is_abstract(schema_class)
@@ -266,10 +270,16 @@ class YamlSchemaProcessor:
         raw_class_def = self.raw_schema[self.schema_def_keyword][schema_class]
         if schema_class in self.processed_classes:
             return
+        processed_class_def = self.processed_schema[self.schema_def_keyword][schema_class]
+
+        # Check GKS maturity model on all public, concrete classes
+        if not (self.class_is_private(schema_class) or self.class_is_abstract(schema_class)):
+            assert 'maturity' in processed_class_def, schema_class
+            assert processed_class_def['maturity'] in ['Alpha', 'Beta', 'RC', 'Stable'], schema_class
+
         if self.class_is_primitive(schema_class):
             self.processed_classes.add(schema_class)
             return
-        processed_class_def = self.processed_schema[self.schema_def_keyword][schema_class]
         inherited_properties = dict()
         inherited_required = set()
         inherits = processed_class_def.get('inherits', None)

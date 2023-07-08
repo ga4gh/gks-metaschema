@@ -2,6 +2,7 @@
    "$schema": "http://json-schema.org/draft/2020-12/schema",
    "title": "ReferenceLengthExpression",
    "type": "object",
+   "maturity": "Alpha",
    "description": "An expression of a length of a sequence from a repeating reference.",
    "properties": {
       "id": {

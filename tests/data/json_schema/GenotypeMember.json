@@ -2,6 +2,7 @@
    "$schema": "http://json-schema.org/draft/2020-12/schema",
    "title": "GenotypeMember",
    "type": "object",
+   "privateTo": "Genotype",
    "description": "A class for expressing the count of a specific MolecularVariation present _in-trans_ at a genomic locus represented by a Genotype.",
    "properties": {
       "id": {
