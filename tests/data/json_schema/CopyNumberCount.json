@@ -1,16 +1,16 @@
 {
    "$schema": "http://json-schema.org/draft/2020-12/schema",
-   "title": "Allele",
+   "title": "CopyNumberCount",
    "type": "object",
    "ga4ghDigest": {
-      "prefix": "VA",
       "keys": [
-         "location",
-         "state",
+         "copies",
+         "subject",
          "type"
-      ]
+      ],
+      "prefix": "CN"
    },
-   "description": "The state of a molecule at a Location.",
+   "description": "The absolute count of discrete copies of a Location or Gene, within a system (e.g. genome, cell, etc.).",
    "properties": {
       "id": {
          "type": "string",
@@ -28,16 +28,16 @@
       },
       "type": {
          "type": "string",
-         "const": "Allele",
-         "default": "Allele",
-         "description": "MUST be \"Allele\""
+         "const": "CopyNumberCount",
+         "default": "CopyNumberCount",
+         "description": "MUST be \"CopyNumberCount\""
       },
       "digest": {
          "description": "A sha512t24u digest created using the VRS Computed Identifier algorithm.",
          "type": "string",
          "pattern": "[0-9A-Za-z_\\-]{32}"
       },
-      "location": {
+      "subject": {
          "oneOf": [
             {
                "$ref": "#/$defs/SequenceLocation"
@@ -46,23 +46,23 @@
                "$ref": "core.json#/$defs/IRI"
             }
          ],
-         "description": "Where Allele is located"
+         "description": "A location for which the number of systemic copies is described."
       },
-      "state": {
-         "description": "An expression of the sequence state",
+      "copies": {
          "oneOf": [
             {
-               "$ref": "#/$defs/LiteralSequenceExpression"
+               "$ref": "#/$defs/Range"
             },
             {
-               "$ref": "#/$defs/ReferenceLengthExpression"
+               "type": "integer"
             }
-         ]
+         ],
+         "description": "The integral number of copies of the subject in a system"
       }
    },
    "required": [
-      "location",
-      "state",
+      "copies",
+      "subject",
       "type"
    ],
    "additionalProperties": false

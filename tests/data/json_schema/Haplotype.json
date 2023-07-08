@@ -1,19 +1,40 @@
 {
-   "$schema": "http://json-schema.org/draft-07/schema",
+   "$schema": "http://json-schema.org/draft/2020-12/schema",
    "title": "Haplotype",
    "type": "object",
-   "ga4gh_prefix": "HT",
+   "ga4ghDigest": {
+      "prefix": "HT",
+      "keys": [
+         "members",
+         "type"
+      ]
+   },
    "description": "A set of non-overlapping Allele members that co-occur on the same molecule.",
    "properties": {
       "id": {
-         "$ref": "core.json#/$defs/CURIE",
-         "description": "The 'logical' identifier of the entity in the system of record, and MUST be represented as a CURIE. This 'id' is unique within a given system, but may also refer to an 'id' for the shared concept in  another system (represented by namespace, accordingly)."
+         "type": "string",
+         "description": "The 'logical' identifier of the entity in the system of record, e.g. a UUID. This 'id' is  unique within a given system. The identified entity may have a different 'id' in a different  system, or may refer to an 'id' for the shared concept in another system (e.g. a CURIE)."
+      },
+      "label": {
+         "type": "string"
+      },
+      "extensions": {
+         "type": "array",
+         "ordered": true,
+         "items": {
+            "$ref": "core.json#/$defs/Extension"
+         }
       },
       "type": {
          "type": "string",
          "const": "Haplotype",
          "default": "Haplotype",
          "description": "MUST be \"Haplotype\""
+      },
+      "digest": {
+         "description": "A sha512t24u digest created using the VRS Computed Identifier algorithm.",
+         "type": "string",
+         "pattern": "[0-9A-Za-z_\\-]{32}"
       },
       "members": {
          "type": "array",
@@ -23,10 +44,10 @@
          "items": {
             "oneOf": [
                {
-                  "$ref": "#/definitions/Allele"
+                  "$ref": "#/$defs/Allele"
                },
                {
-                  "$ref": "core.json#/$defs/CURIE"
+                  "$ref": "core.json#/$defs/IRI"
                }
             ]
          },

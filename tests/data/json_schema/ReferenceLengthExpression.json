@@ -1,8 +1,8 @@
 {
    "$schema": "http://json-schema.org/draft/2020-12/schema",
-   "title": "GenotypeMember",
+   "title": "ReferenceLengthExpression",
    "type": "object",
-   "description": "A class for expressing the count of a specific MolecularVariation present _in-trans_ at a genomic locus represented by a Genotype.",
+   "description": "An expression of a length of a sequence from a repeating reference.",
    "properties": {
       "id": {
          "type": "string",
@@ -20,11 +20,11 @@
       },
       "type": {
          "type": "string",
-         "const": "GenotypeMember",
-         "default": "GenotypeMember",
-         "description": "MUST be \"GenotypeMember\"."
+         "const": "ReferenceLengthExpression",
+         "default": "ReferenceLengthExpression",
+         "description": "MUST be \"ReferenceLengthExpression\""
       },
-      "count": {
+      "length": {
          "oneOf": [
             {
                "$ref": "#/$defs/Range"
@@ -33,23 +33,20 @@
                "type": "integer"
             }
          ],
-         "description": "The number of copies of the `variation` at a Genotype locus."
+         "description": "The number of residues in the expressed sequence."
       },
-      "variation": {
-         "oneOf": [
-            {
-               "$ref": "#/$defs/Allele"
-            },
-            {
-               "$ref": "#/$defs/Haplotype"
-            }
-         ],
-         "description": "A MolecularVariation at a Genotype locus."
+      "sequence": {
+         "$ref": "#/$defs/SequenceString",
+         "description": "the Sequence encoded by the Reference Length Expression."
+      },
+      "repeatSubunitLength": {
+         "type": "integer",
+         "description": "The number of residues in the repeat subunit."
       }
    },
    "required": [
-      "count",
-      "variation"
+      "length",
+      "type"
    ],
    "additionalProperties": false
 }

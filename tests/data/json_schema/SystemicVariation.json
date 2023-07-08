@@ -1,17 +1,17 @@
 {
-   "$schema": "http://json-schema.org/draft-07/schema",
+   "$schema": "http://json-schema.org/draft/2020-12/schema",
    "title": "SystemicVariation",
    "type": "object",
    "description": "A Variation of multiple molecules in the context of a system, e.g. a genome, sample, or homologous chromosomes.",
    "oneOf": [
       {
-         "$ref": "#/definitions/AbsoluteCopyNumber"
+         "$ref": "#/$defs/CopyNumberChange"
       },
       {
-         "$ref": "#/definitions/Genotype"
+         "$ref": "#/$defs/CopyNumberCount"
       },
       {
-         "$ref": "#/definitions/RelativeCopyNumber"
+         "$ref": "#/$defs/Genotype"
       }
    ],
    "discriminator": {

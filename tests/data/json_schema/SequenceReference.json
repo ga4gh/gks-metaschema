@@ -1,16 +1,15 @@
 {
    "$schema": "http://json-schema.org/draft/2020-12/schema",
-   "title": "Allele",
+   "title": "SequenceReference",
    "type": "object",
    "ga4ghDigest": {
-      "prefix": "VA",
+      "prefix": "SQR",
       "keys": [
-         "location",
-         "state",
+         "refgetAccession",
          "type"
       ]
    },
-   "description": "The state of a molecule at a Location.",
+   "description": "A sequence of nucleic or amino acid character codes.",
    "properties": {
       "id": {
          "type": "string",
@@ -28,41 +27,29 @@
       },
       "type": {
          "type": "string",
-         "const": "Allele",
-         "default": "Allele",
-         "description": "MUST be \"Allele\""
+         "const": "Sequence",
+         "default": "Sequence",
+         "description": "MUST be \"Sequence\""
       },
       "digest": {
          "description": "A sha512t24u digest created using the VRS Computed Identifier algorithm.",
          "type": "string",
          "pattern": "[0-9A-Za-z_\\-]{32}"
       },
-      "location": {
-         "oneOf": [
-            {
-               "$ref": "#/$defs/SequenceLocation"
-            },
-            {
-               "$ref": "core.json#/$defs/IRI"
-            }
-         ],
-         "description": "Where Allele is located"
+      "refgetAccession": {
+         "description": "A `GA4GH RefGet <http://samtools.github.io/hts-specs/refget.html>` identifier for the referenced sequence, using the sha512t24u digest.",
+         "type": "string",
+         "pattern": "SQ.[0-9A-Za-z_\\-]{32}"
       },
-      "state": {
-         "description": "An expression of the sequence state",
-         "oneOf": [
-            {
-               "$ref": "#/$defs/LiteralSequenceExpression"
-            },
-            {
-               "$ref": "#/$defs/ReferenceLengthExpression"
-            }
+      "residueAlphabet": {
+         "type": "string",
+         "enum": [
+            "amino acid",
+            "nucleic acid"
          ]
       }
    },
    "required": [
-      "location",
-      "state",
       "type"
    ],
    "additionalProperties": false

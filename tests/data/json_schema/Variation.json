@@ -1,29 +1,23 @@
 {
-   "$schema": "http://json-schema.org/draft-07/schema",
+   "$schema": "http://json-schema.org/draft/2020-12/schema",
    "title": "Variation",
    "type": "object",
    "description": "A representation of the state of one or more biomolecules.",
    "oneOf": [
       {
-         "$ref": "#/definitions/AbsoluteCopyNumber"
+         "$ref": "#/$defs/Allele"
       },
       {
-         "$ref": "#/definitions/Allele"
+         "$ref": "#/$defs/CopyNumberChange"
       },
       {
-         "$ref": "#/definitions/Genotype"
+         "$ref": "#/$defs/CopyNumberCount"
       },
       {
-         "$ref": "#/definitions/Haplotype"
+         "$ref": "#/$defs/Genotype"
       },
       {
-         "$ref": "#/definitions/RelativeCopyNumber"
-      },
-      {
-         "$ref": "#/definitions/Text"
-      },
-      {
-         "$ref": "#/definitions/VariationSet"
+         "$ref": "#/$defs/Haplotype"
       }
    ],
    "discriminator": {

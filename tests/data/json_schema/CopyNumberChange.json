@@ -1,16 +1,16 @@
 {
    "$schema": "http://json-schema.org/draft/2020-12/schema",
-   "title": "Allele",
+   "title": "CopyNumberChange",
    "type": "object",
    "ga4ghDigest": {
-      "prefix": "VA",
       "keys": [
-         "location",
-         "state",
+         "copy_change",
+         "subject",
          "type"
-      ]
+      ],
+      "prefix": "CX"
    },
-   "description": "The state of a molecule at a Location.",
+   "description": "An assessment of the copy number of a Location or a Gene within a system (e.g. genome, cell, etc.) relative to a baseline ploidy.",
    "properties": {
       "id": {
          "type": "string",
@@ -28,16 +28,16 @@
       },
       "type": {
          "type": "string",
-         "const": "Allele",
-         "default": "Allele",
-         "description": "MUST be \"Allele\""
+         "const": "CopyNumberChange",
+         "default": "CopyNumberChange",
+         "description": "MUST be \"CopyNumberChange\""
       },
       "digest": {
          "description": "A sha512t24u digest created using the VRS Computed Identifier algorithm.",
          "type": "string",
          "pattern": "[0-9A-Za-z_\\-]{32}"
       },
-      "location": {
+      "subject": {
          "oneOf": [
             {
                "$ref": "#/$defs/SequenceLocation"
@@ -46,23 +46,26 @@
                "$ref": "core.json#/$defs/IRI"
             }
          ],
-         "description": "Where Allele is located"
+         "description": "A location for which the number of systemic copies is described."
       },
-      "state": {
-         "description": "An expression of the sequence state",
-         "oneOf": [
-            {
-               "$ref": "#/$defs/LiteralSequenceExpression"
-            },
-            {
-               "$ref": "#/$defs/ReferenceLengthExpression"
-            }
-         ]
+      "copy_change": {
+         "type": "string",
+         "enum": [
+            "efo:0030069",
+            "efo:0020073",
+            "efo:0030068",
+            "efo:0030067",
+            "efo:0030064",
+            "efo:0030070",
+            "efo:0030071",
+            "efo:0030072"
+         ],
+         "description": "MUST be one of \"efo:0030069\" (complete genomic loss), \"efo:0020073\" (high-level loss), \"efo:0030068\" (low-level loss), \"efo:0030067\" (loss), \"efo:0030064\" (regional base ploidy), \"efo:0030070\" (gain), \"efo:0030071\" (low-level gain), \"efo:0030072\" (high-level gain)."
       }
    },
    "required": [
-      "location",
-      "state",
+      "copy_change",
+      "subject",
       "type"
    ],
    "additionalProperties": false

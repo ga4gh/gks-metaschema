@@ -172,13 +172,17 @@ class YamlSchemaProcessor:
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
         return 'properties' not in schema_class_def and not self.class_is_primitive(schema_class)
 
+    def class_is_digestible(self, schema_class):
+        schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
+        return 'ga4ghDigest' in schema_class_def and not self.class_is_abstract(schema_class)
+
     def class_is_passthrough(self, schema_class):
         if not self.class_is_abstract(schema_class):
             return False
-        raw_class_definition = self.get_local_or_inherited_class(schema_class, raw=True)
+        raw_class_definition, _ = self.get_local_or_inherited_class(schema_class, raw=True)
         if 'heritable_properties' not in raw_class_definition \
                 and 'properties' not in raw_class_definition \
-                and raw_class_definition[0].get('inherits'):
+                and raw_class_definition.get('inherits', False):
             return True
         return False
 
@@ -202,11 +206,12 @@ class YamlSchemaProcessor:
             assert isinstance(fp, Path)
         if not fp.exists():
             os.mkdir(fp)
-        for cls in self.for_js['definitions'].keys():
-            class_def = self.for_js['definitions'][cls]
+        kw = self.schema_def_keyword
+        for cls in self.for_js[kw].keys():
+            class_def = self.for_js[kw][cls]
             target_path = fp / f'{cls}.json'
             out_doc = copy.deepcopy(self.for_js)
-            out_doc.pop('definitions', None)
+            out_doc.pop(kw, None)
             out_doc.update(class_def)
             out_doc['title'] = cls
             with open(target_path, 'w') as f:
@@ -275,6 +280,19 @@ class YamlSchemaProcessor:
             inherited_properties |= copy.deepcopy(inherited_class['heritable_properties'])
             inherited_required |= set(inherited_class.get('heritable_required', list()))
 
+            # inherit ga4ghDigest keys
+            if 'ga4ghDigest' in processed_class_def or 'ga4ghDigest' in inherited_class:
+                if 'ga4ghDigest' not in processed_class_def:
+                    assert self.class_is_abstract(schema_class), \
+                        f'{schema_class} is missing a defined prefix.'
+                    processed_class_def['ga4ghDigest'] = copy.deepcopy(inherited_class['ga4ghDigest'])
+                elif 'ga4ghDigest' not in inherited_class:
+                    pass
+                else:
+                    ga4ghDigest_keys = set(inherited_class['ga4ghDigest']['keys'])
+                    ga4ghDigest_keys |= set(processed_class_def['ga4ghDigest'].get('keys', list()))
+                    processed_class_def['ga4ghDigest']['keys'] = sorted(list(ga4ghDigest_keys))
+
         if self.class_is_abstract(schema_class):
             prop_k = 'heritable_properties'
             req_k = 'heritable_required'
@@ -316,11 +334,22 @@ class YamlSchemaProcessor:
                 assert 'ordered' in prop_attribs, f'{schema_class}.{prop} missing ordered attribute.'
                 assert isinstance(prop_attribs['ordered'], bool)
 
+        # Validate class structures for GKS specs
         if self.class_is_abstract(schema_class):
             assert 'type' not in processed_class_def, schema_class
         else:
             assert 'type' in processed_class_def, schema_class
             assert processed_class_def['type'] == 'object', schema_class
+            if self.class_is_digestible(schema_class):
+                assert isinstance(processed_class_def['ga4ghDigest']['prefix'], str), schema_class
+                assert processed_class_def['ga4ghDigest']['prefix'] != '', schema_class
+                l = len(processed_class_def['ga4ghDigest']['keys'])
+                assert l >= 2, \
+                    f'GA4GH digests are expected to be defined by at least 2 properties, {schema_class} has {l}.'
+                assert 'type' in processed_class_def['ga4ghDigest']['keys'], \
+                    f'GA4GH digests are expected to include the class type but not included for {schema_class}.'
+                    # Two properites should be `type` and at least one other field
+
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
         processed_class_def[req_k] = sorted(list(inherited_required | processed_class_required))
         if self.strict and not self.class_is_abstract(schema_class):
@@ -345,6 +374,7 @@ class YamlSchemaProcessor:
             if self.class_is_abstract(schema_class):
                 schema_definition.pop('heritable_properties', None)
                 schema_definition.pop('heritable_required', None)
+                schema_definition.pop('ga4ghDigest', None)
                 schema_definition.pop('header_level', None)
                 self.concretize_js_object(schema_definition)
                 if 'oneOf' not in schema_definition:
@@ -380,7 +410,7 @@ class YamlSchemaProcessor:
                     descendents.update(self.concretize_class_ref(ref['$ref']))
             js_obj['oneOf'] = self._build_ref_list(descendents) + inlined
         elif js_obj.get('type', '') == 'array':
-            self.concretize_js_object(js_obj['items'])
+                self.concretize_js_object(js_obj['items'])
 
     def concretize_class_ref(self, cls_url):
         children = self.has_children.get(cls_url, None)

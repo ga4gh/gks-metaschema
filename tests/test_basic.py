@@ -29,7 +29,7 @@ def test_yaml_create():
 
 
 def test_merged_create():
-    p = YamlSchemaProcessor('data/vod-source.yaml')
+    p = YamlSchemaProcessor('data/vrs-source.yaml')
     p.merge_imported()
     assert True
 
