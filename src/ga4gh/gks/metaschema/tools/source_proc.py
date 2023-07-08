@@ -184,7 +184,7 @@ class YamlSchemaProcessor:
         if not self.class_is_abstract(schema_class):
             return False
         raw_class_definition, _ = self.get_local_or_inherited_class(schema_class, raw=True)
-        if 'heritable_properties' not in raw_class_definition \
+        if 'heritableProperties' not in raw_class_definition \
                 and 'properties' not in raw_class_definition \
                 and raw_class_definition.get('inherits', False):
             return True
@@ -285,10 +285,10 @@ class YamlSchemaProcessor:
         inherits = processed_class_def.get('inherits', None)
         if inherits is not None:
             inherited_class, proc = self.get_local_or_inherited_class(inherits)
-            # extract properties / heritable_properties and required / heritable_required from inherited_class
+            # extract properties / heritableProperties and required / heritableRequired from inherited_class
             # currently assumes inheritance from abstract classes only–will break otherwise
-            inherited_properties |= copy.deepcopy(inherited_class['heritable_properties'])
-            inherited_required |= set(inherited_class.get('heritable_required', list()))
+            inherited_properties |= copy.deepcopy(inherited_class['heritableProperties'])
+            inherited_required |= set(inherited_class.get('heritableRequired', list()))
 
             # inherit ga4ghDigest keys
             if 'ga4ghDigest' in processed_class_def or 'ga4ghDigest' in inherited_class:
@@ -304,8 +304,8 @@ class YamlSchemaProcessor:
                     processed_class_def['ga4ghDigest']['keys'] = sorted(list(ga4ghDigest_keys))
 
         if self.class_is_abstract(schema_class):
-            prop_k = 'heritable_properties'
-            req_k = 'heritable_required'
+            prop_k = 'heritableProperties'
+            req_k = 'heritableRequired'
         else:
             prop_k = 'properties'
             req_k = 'required'
@@ -382,8 +382,8 @@ class YamlSchemaProcessor:
         for schema_class, schema_definition in self.for_js.get(self.schema_def_keyword, dict()).items():
             schema_definition.pop('inherits', None)
             if self.class_is_abstract(schema_class):
-                schema_definition.pop('heritable_properties', None)
-                schema_definition.pop('heritable_required', None)
+                schema_definition.pop('heritableProperties', None)
+                schema_definition.pop('heritableRequired', None)
                 schema_definition.pop('ga4ghDigest', None)
                 schema_definition.pop('header_level', None)
                 self.concretize_js_object(schema_definition)
