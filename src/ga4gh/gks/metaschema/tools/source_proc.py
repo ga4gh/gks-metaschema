@@ -229,8 +229,8 @@ class YamlSchemaProcessor:
     def process_property_tree_refs(self, raw_node, processed_node):
         if isinstance(raw_node, dict):
             for k, v in raw_node.items():
-                if k.endswith('_curie'):
-                    new_k = k[:-6]
+                if k.endswith('Curie'):
+                    new_k = k[:-5]
                     processed_node[new_k] = self.resolve_curie(v)
                     del (processed_node[k])
                 elif k == '$ref' and v.startswith('#/') and self.imported:
