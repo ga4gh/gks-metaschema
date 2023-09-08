@@ -18,6 +18,12 @@ $defs:
           system, or may refer to an 'id' for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
+        description: >-
+          A primary label for the entity.
+      description:
+        type: string
+        description: >-
+          A free-text description of the entity.
       extensions:
         type: array
         ordered: true
@@ -25,6 +31,16 @@ $defs:
           $ref: "#/$defs/Extension"
     discriminator:
       propertyName: type
+
+  MappableEntity:
+    inherits: Entity
+    description: an Entity that is mappable to codings in other terminology systems.
+    heritableProperties:
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: "#/$defs/Mapping"
 
   Mapping:
     type: object
@@ -42,9 +58,9 @@ $defs:
       code:
         $ref: '#/$defs/Code'
         description: Symbol in syntax defined by the terminology system.
-      mapping:
+      relation:
         description: >-
-          A mapping between concepts as defined by the Simple Knowledge Organization System (SKOS).
+          A mapping relation between concepts as defined by the Simple Knowledge Organization System (SKOS).
         type: string
         enum:
           - closeMatch
@@ -53,7 +69,7 @@ $defs:
           - narrowMatch
           - relatedMatch
     required:
-      - mapping
+      - relation
       - code
       - system
 

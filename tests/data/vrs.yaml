@@ -47,25 +47,29 @@ $defs:
           an 'id' for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
+        description: A primary label for the entity.
+      description:
+        type: string
+        description: A free-text description of the entity.
       extensions:
         type: array
         ordered: true
         items:
           $ref: core.json#/$defs/Extension
-      type:
-        type: string
-        const: Allele
-        default: Allele
-        description: MUST be "Allele"
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
         type: string
         pattern: '[0-9A-Za-z_\-]{32}'
+      type:
+        type: string
+        const: Allele
+        default: Allele
+        description: MUST be "Allele"
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: core.json#/$defs/IRI
+        - $refCurie: gks.core:IRI
         description: The location of the Allele
       state:
         description: An expression of the sequence state
@@ -96,21 +100,25 @@ $defs:
           an 'id' for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
+        description: A primary label for the entity.
+      description:
+        type: string
+        description: A free-text description of the entity.
       extensions:
         type: array
         ordered: true
         items:
           $ref: core.json#/$defs/Extension
-      type:
-        type: string
-        const: Haplotype
-        default: Haplotype
-        description: MUST be "Haplotype"
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
         type: string
         pattern: '[0-9A-Za-z_\-]{32}'
+      type:
+        type: string
+        const: Haplotype
+        default: Haplotype
+        description: MUST be "Haplotype"
       members:
         type: array
         ordered: false
@@ -119,9 +127,14 @@ $defs:
         items:
           oneOf:
           - $ref: '#/$defs/Allele'
-          - $ref: core.json#/$defs/IRI
-        description: List of Alleles, or references to Alleles, that comprise this
-          Haplotype.
+          - $ref: '#/$defs/HaplotypeMemberAllele'
+          - $refCurie: gks.core:IRI
+        description: A list of Alleles (or IRI references to `Alleles`) that comprise
+          a Haplotype. Since each `Haplotype` member MUST be an `Allele`, and all
+          members MUST share a common SequenceReference, implementations MAY use a
+          compact representation of Haplotype that omits type and SequenceReference
+          information in individual Haplotype members. Implementations MUST transform
+          compact `Allele` representations into an `Allele` when computing GA4GH identifiers.
     required:
     - members
     - type
@@ -146,25 +159,29 @@ $defs:
           an 'id' for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
+        description: A primary label for the entity.
+      description:
+        type: string
+        description: A free-text description of the entity.
       extensions:
         type: array
         ordered: true
         items:
           $ref: core.json#/$defs/Extension
-      type:
-        type: string
-        const: CopyNumberCount
-        default: CopyNumberCount
-        description: MUST be "CopyNumberCount"
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
         type: string
         pattern: '[0-9A-Za-z_\-]{32}'
+      type:
+        type: string
+        const: CopyNumberCount
+        default: CopyNumberCount
+        description: MUST be "CopyNumberCount"
       subject:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: core.json#/$defs/IRI
+        - $refCurie: gks.core:IRI
         description: A location for which the number of systemic copies is described.
       copies:
         oneOf:
@@ -180,7 +197,7 @@ $defs:
     maturity: Alpha
     ga4ghDigest:
       keys:
-      - copy_change
+      - copyChange
       - subject
       - type
       prefix: CX
@@ -196,27 +213,31 @@ $defs:
           an 'id' for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
+        description: A primary label for the entity.
+      description:
+        type: string
+        description: A free-text description of the entity.
       extensions:
         type: array
         ordered: true
         items:
           $ref: core.json#/$defs/Extension
-      type:
-        type: string
-        const: CopyNumberChange
-        default: CopyNumberChange
-        description: MUST be "CopyNumberChange"
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
         type: string
         pattern: '[0-9A-Za-z_\-]{32}'
+      type:
+        type: string
+        const: CopyNumberChange
+        default: CopyNumberChange
+        description: MUST be "CopyNumberChange"
       subject:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: core.json#/$defs/IRI
+        - $refCurie: gks.core:IRI
         description: A location for which the number of systemic copies is described.
-      copy_change:
+      copyChange:
         type: string
         enum:
         - efo:0030069
@@ -232,7 +253,7 @@ $defs:
           "efo:0030064" (regional base ploidy), "efo:0030070" (gain), "efo:0030071"
           (low-level gain), "efo:0030072" (high-level gain).
     required:
-    - copy_change
+    - copyChange
     - subject
     - type
     additionalProperties: false
@@ -255,21 +276,25 @@ $defs:
           an 'id' for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
+        description: A primary label for the entity.
+      description:
+        type: string
+        description: A free-text description of the entity.
       extensions:
         type: array
         ordered: true
         items:
           $ref: core.json#/$defs/Extension
-      type:
-        type: string
-        const: Genotype
-        default: Genotype
-        description: MUST be "Genotype"
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
         type: string
         pattern: '[0-9A-Za-z_\-]{32}'
+      type:
+        type: string
+        const: Genotype
+        default: Genotype
+        description: MUST be "Genotype"
       members:
         type: array
         ordered: false
@@ -302,8 +327,9 @@ $defs:
     maturity: Alpha
     ga4ghDigest:
       keys:
-      - count
-      - members
+      - end
+      - sequence
+      - start
       - type
       prefix: SL
     description: A Location defined by an interval on a referenced Sequence.
@@ -317,25 +343,29 @@ $defs:
           an 'id' for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
+        description: A primary label for the entity.
+      description:
+        type: string
+        description: A free-text description of the entity.
       extensions:
         type: array
         ordered: true
         items:
           $ref: core.json#/$defs/Extension
-      type:
-        type: string
-        const: SequenceLocation
-        default: SequenceLocation
-        description: MUST be "SequenceLocation"
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
         type: string
         pattern: '[0-9A-Za-z_\-]{32}'
-      sequence:
+      type:
+        type: string
+        const: SequenceLocation
+        default: SequenceLocation
+        description: MUST be "SequenceLocation"
+      sequenceReference:
         oneOf:
         - $ref: '#/$defs/SequenceReference'
-        - $ref: core.json#/$defs/IRI
+        - $refCurie: gks.core:IRI
         description: A SequenceReference.
       start:
         oneOf:
@@ -359,10 +389,8 @@ $defs:
   SequenceReference:
     maturity: Alpha
     ga4ghDigest:
-      prefix: SQR
       keys:
       - refgetAccession
-      - type
     type: object
     description: A sequence of nucleic or amino acid character codes.
     properties:
@@ -374,16 +402,15 @@ $defs:
           an 'id' for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
+        description: A primary label for the entity.
+      description:
+        type: string
+        description: A free-text description of the entity.
       extensions:
         type: array
         ordered: true
         items:
           $ref: core.json#/$defs/Extension
-      type:
-        type: string
-        const: Sequence
-        default: Sequence
-        description: MUST be "Sequence"
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -396,11 +423,14 @@ $defs:
         pattern: SQ.[0-9A-Za-z_\-]{32}
       residueAlphabet:
         type: string
+        description: The interpretation of the character codes referred to by the
+          refget accession, where "aa" specifies an amino acid character set, and
+          "na" specifies a nucleic acid character set.
         enum:
-        - amino acid
-        - nucleic acid
+        - aa
+        - na
     required:
-    - type
+    - refgetAccession
     additionalProperties: false
   SequenceExpression:
     description: An expression describing a Sequence.
@@ -422,11 +452,20 @@ $defs:
           an 'id' for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
+        description: A primary label for the entity.
+      description:
+        type: string
+        description: A free-text description of the entity.
       extensions:
         type: array
         ordered: true
         items:
           $ref: core.json#/$defs/Extension
+      digest:
+        description: A sha512t24u digest created using the VRS Computed Identifier
+          algorithm.
+        type: string
+        pattern: '[0-9A-Za-z_\-]{32}'
       type:
         type: string
         const: ReferenceLengthExpression
@@ -445,6 +484,7 @@ $defs:
         description: The number of residues in the repeat subunit.
     required:
     - length
+    - repeatSubunitLength
     - type
     additionalProperties: false
   LiteralSequenceExpression:
@@ -460,11 +500,20 @@ $defs:
           an 'id' for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
+        description: A primary label for the entity.
+      description:
+        type: string
+        description: A free-text description of the entity.
       extensions:
         type: array
         ordered: true
         items:
           $ref: core.json#/$defs/Extension
+      digest:
+        description: A sha512t24u digest created using the VRS Computed Identifier
+          algorithm.
+        type: string
+        pattern: '[0-9A-Za-z_\-]{32}'
       type:
         type: string
         const: LiteralSequenceExpression
@@ -491,16 +540,20 @@ $defs:
           an 'id' for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
+        description: A primary label for the entity.
+      description:
+        type: string
+        description: A free-text description of the entity.
       extensions:
         type: array
         ordered: true
         items:
           $ref: core.json#/$defs/Extension
-      type:
+      digest:
+        description: A sha512t24u digest created using the VRS Computed Identifier
+          algorithm.
         type: string
-        const: GenotypeMember
-        default: GenotypeMember
-        description: MUST be "GenotypeMember".
+        pattern: '[0-9A-Za-z_\-]{32}'
       count:
         oneOf:
         - $ref: '#/$defs/Range'

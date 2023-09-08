@@ -5,20 +5,10 @@ import os
 import sys
 import pathlib
 from inflector import Inflector
-from ga4gh.gks.metaschema.tools.source_proc import SCHEMA_DEF_KEYWORD_BY_VERSION, \
-    YamlSchemaProcessor
-
-source_file = pathlib.Path(sys.argv[1])
-
-defs_path = pathlib.Path.cwd() / 'defs' / str(source_file.stem)[:-7]
-os.makedirs(defs_path)  # error expected if directory already exists – clear with Make
+from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 
 i = Inflector()
-proc_schema = YamlSchemaProcessor(source_file)
-if proc_schema.defs is None:
-    exit(0)
-schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[proc_schema.raw_schema['$schema']]
 
 
 def resolve_type(class_property_definition):
@@ -33,6 +23,8 @@ def resolve_type(class_property_definition):
             return f':ref:`{identifier}`'
         else:
             return f'`{identifier} <{ref}>`_'
+    elif '$refCurie' in class_property_definition:
+        return class_property_definition['$refCurie']
     elif 'oneOf' in class_property_definition or 'anyOf' in class_property_definition:
         kw = 'oneOf'
         if 'anyOf' in class_property_definition:
@@ -75,42 +67,54 @@ def get_ancestor_with_attributes(class_name, proc):
     return class_name
 
 
-for class_name, class_definition in proc_schema.defs.items():
-    with open(defs_path / (class_name + '.rst'), "w") as f:
-        print("**Computational Definition**\n", file=f)
-        print(class_definition['description'], file=f)
-        if proc_schema.class_is_passthrough(class_name):
-            continue
-        if 'heritableProperties' in class_definition:
-            p = 'heritableProperties'
-        elif 'properties' in class_definition:
-            p = 'properties'
-        elif proc_schema.class_is_primitive(class_name):
-            continue
-        else:
-            raise ValueError(class_name, class_definition)
-        ancestor = proc_schema.raw_defs[class_name].get('inherits')
-        if ancestor:
-            ancestor = get_ancestor_with_attributes(ancestor, proc_schema)
-            inheritance = f"\nSome {class_name} attributes are inherited from :ref:`{ancestor}`.\n"
-        else:
-            inheritance = ""
-        print(f"""
-**Information Model**
-{inheritance}
-.. list-table::
-   :class: clean-wrap
-   :header-rows: 1
-   :align: left
-   :widths: auto
-   
-   *  - Field
-      - Type
-      - Limits
-      - Description""", file=f)
-        for class_property_name, class_property_attributes in class_definition[p].items():
-            print(f"""\
-   *  - {class_property_name}
-      - {resolve_type(class_property_attributes)}
-      - {resolve_cardinality(class_property_name, class_property_attributes, class_definition)}
-      - {class_property_attributes.get('description', '')}""", file=f)
+def main(proc_schema, defs_path):
+    for class_name, class_definition in proc_schema.defs.items():
+        with open(defs_path / (class_name + '.rst'), "w") as f:
+            print("**Computational Definition**\n", file=f)
+            print(class_definition['description'], file=f)
+            if proc_schema.class_is_passthrough(class_name):
+                continue
+            if 'heritableProperties' in class_definition:
+                p = 'heritableProperties'
+            elif 'properties' in class_definition:
+                p = 'properties'
+            elif proc_schema.class_is_primitive(class_name):
+                continue
+            else:
+                raise ValueError(class_name, class_definition)
+            ancestor = proc_schema.raw_defs[class_name].get('inherits')
+            if ancestor:
+                ancestor = get_ancestor_with_attributes(ancestor, proc_schema)
+                inheritance = f"\nSome {class_name} attributes are inherited from :ref:`{ancestor}`.\n"
+            else:
+                inheritance = ""
+            print(f"""
+    **Information Model**
+    {inheritance}
+    .. list-table::
+       :class: clean-wrap
+       :header-rows: 1
+       :align: left
+       :widths: auto
+       
+       *  - Field
+          - Type
+          - Limits
+          - Description""", file=f)
+            for class_property_name, class_property_attributes in class_definition[p].items():
+                print(f"""\
+       *  - {class_property_name}
+          - {resolve_type(class_property_attributes)}
+          - {resolve_cardinality(class_property_name, class_property_attributes, class_definition)}
+          - {class_property_attributes.get('description', '')}""", file=f)
+
+
+if __name__ == "__main__":
+    source_file = pathlib.Path(sys.argv[1])
+
+    defs = pathlib.Path.cwd() / 'defs' / str(source_file.stem)[:-7]
+    os.makedirs(defs)  # error expected if directory already exists – clear with Make
+    p = YamlSchemaProcessor(source_file)
+    if p.defs is None:
+        exit(0)
+    main(p, defs)

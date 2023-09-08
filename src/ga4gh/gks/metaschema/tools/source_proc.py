@@ -57,8 +57,8 @@ class YamlSchemaProcessor:
                     assert len(record) == 1
                     if '$ref' in record:
                         mapped = record['$ref']
-                    elif '$ref_curie' in record:
-                        mapped = self.resolve_curie(record['$ref_curie'])
+                    elif '$refCurie' in record:
+                        mapped = self.resolve_curie(record['$refCurie'])
                     maps_to.add(mapped)
                 class_mapping[cls_url] = maps_to
             if 'inherits' in cls_def:
@@ -176,9 +176,9 @@ class YamlSchemaProcessor:
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
         return 'privateTo' in schema_class_def
 
-    def class_is_digestible(self, schema_class):
+    def class_is_ga4gh_identifiable(self, schema_class):
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
-        return 'ga4ghDigest' in schema_class_def and not self.class_is_abstract(schema_class)
+        return 'ga4ghDigest' in schema_class_def and 'prefix' in schema_class_def['ga4ghDigest']
 
     def class_is_passthrough(self, schema_class):
         if not self.class_is_abstract(schema_class):
@@ -350,14 +350,14 @@ class YamlSchemaProcessor:
         else:
             assert 'type' in processed_class_def, schema_class
             assert processed_class_def['type'] == 'object', schema_class
-            if self.class_is_digestible(schema_class):
+            if self.class_is_ga4gh_identifiable(schema_class):
                 assert isinstance(processed_class_def['ga4ghDigest']['prefix'], str), schema_class
                 assert processed_class_def['ga4ghDigest']['prefix'] != '', schema_class
                 l = len(processed_class_def['ga4ghDigest']['keys'])
                 assert l >= 2, \
-                    f'GA4GH digests are expected to be defined by at least 2 properties, {schema_class} has {l}.'
+                    f'GA4GH identifiable objects are expected to be defined by at least 2 properties, {schema_class} has {l}.'
                 assert 'type' in processed_class_def['ga4ghDigest']['keys'], \
-                    f'GA4GH digests are expected to include the class type but not included for {schema_class}.'
+                    f'GA4GH identifiable objects are expected to include the class type but not included for {schema_class}.'
                     # Two properites should be `type` and at least one other field
 
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
