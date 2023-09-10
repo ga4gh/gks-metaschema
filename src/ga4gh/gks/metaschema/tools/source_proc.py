@@ -197,6 +197,12 @@ class YamlSchemaProcessor:
             return True
         return False
 
+    def class_is_subclass(self, schema_class, parent_class):
+        schema_class_fragment = f'#/{self.schema_def_keyword}/{schema_class}'
+        parent_class_fragment = f'#/{self.schema_def_keyword}/{parent_class}'
+        children = self.concretize_class_ref(parent_class_fragment)
+        return schema_class_fragment in children
+
     def js_json_dump(self, stream):
         json.dump(self.for_js, stream, indent=3, sort_keys=False)
 

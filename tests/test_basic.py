@@ -21,6 +21,11 @@ def test_se_not_passthrough():
     assert not processor.class_is_passthrough('SequenceExpression')
 
 
+def test_class_is_subclass():
+    assert processor.class_is_subclass('Haplotype', 'Variation')
+    assert not processor.class_is_subclass('Haplotype', 'Location')
+
+
 def test_yaml_target_match():
     d2 = processor.for_js
     assert d2 == target
