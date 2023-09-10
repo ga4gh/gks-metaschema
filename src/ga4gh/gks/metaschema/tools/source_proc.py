@@ -349,6 +349,9 @@ class YamlSchemaProcessor:
             if self.enforce_ordered and prop_attribs.get('type', '') == 'array':
                 assert 'ordered' in prop_attribs, f'{schema_class}.{prop} missing ordered attribute.'
                 assert isinstance(prop_attribs['ordered'], bool)
+            if self.strict and prop_attribs.get('type', '') == 'object':
+                assert prop_attribs.get('additionalProperties', '') is False, \
+                    f'"additionalProperties: false" expected in {schema_class}.{prop}'
 
         # Validate class structures for GKS specs
         if self.class_is_abstract(schema_class):
