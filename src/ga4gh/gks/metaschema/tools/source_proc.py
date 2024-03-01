@@ -281,7 +281,7 @@ class YamlSchemaProcessor:
         # Check GKS maturity model on all public, concrete classes
         if not (self.class_is_private(schema_class) or self.class_is_abstract(schema_class)):
             assert 'maturity' in processed_class_def, schema_class
-            assert processed_class_def['maturity'] in ['Alpha', 'Beta', 'RC', 'Stable'], schema_class
+            assert processed_class_def['maturity'] in ['draft', 'trial use', 'normative', 'deprecated'], schema_class
 
         if self.class_is_primitive(schema_class):
             self.processed_classes.add(schema_class)

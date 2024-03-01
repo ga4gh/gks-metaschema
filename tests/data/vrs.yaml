@@ -15,7 +15,7 @@ $defs:
   Expression:
     type: object
     privateTo: Variation
-    maturity: Alpha
+    maturity: draft
     description: Representation of a variation by a specified nomenclature or syntax
       for a Variation object.  Common examples of expressions for the description
       of molecular variation include the HGVS  and ISCN nomenclatures.
@@ -57,7 +57,7 @@ $defs:
     discriminator:
       propertyName: type
   Allele:
-    maturity: Alpha
+    maturity: draft
     ga4ghDigest:
       prefix: VA
       keys:
@@ -115,7 +115,7 @@ $defs:
     - type
     additionalProperties: false
   Haplotype:
-    maturity: Alpha
+    maturity: draft
     ga4ghDigest:
       prefix: HT
       keys:
@@ -177,7 +177,7 @@ $defs:
     - type
     additionalProperties: false
   CopyNumberCount:
-    maturity: Alpha
+    maturity: draft
     ga4ghDigest:
       keys:
       - copies
@@ -236,7 +236,7 @@ $defs:
     - type
     additionalProperties: false
   CopyNumberChange:
-    maturity: Alpha
+    maturity: draft
     ga4ghDigest:
       keys:
       - copyChange
@@ -305,7 +305,7 @@ $defs:
     - type
     additionalProperties: false
   Genotype:
-    maturity: Alpha
+    maturity: draft
     ga4ghDigest:
       keys:
       - count
@@ -370,7 +370,7 @@ $defs:
     - type
     additionalProperties: false
   SequenceLocation:
-    maturity: Alpha
+    maturity: draft
     ga4ghDigest:
       keys:
       - end
@@ -433,7 +433,7 @@ $defs:
     - type
     additionalProperties: false
   SequenceReference:
-    maturity: Alpha
+    maturity: draft
     ga4ghDigest:
       assigned: true
     type: object
@@ -489,7 +489,7 @@ $defs:
     discriminator:
       propertyName: type
   ReferenceLengthExpression:
-    maturity: Alpha
+    maturity: draft
     description: An expression of a length of a sequence from a repeating reference.
     type: object
     properties:
@@ -537,7 +537,7 @@ $defs:
     - type
     additionalProperties: false
   LiteralSequenceExpression:
-    maturity: Alpha
+    maturity: draft
     description: An explicit expression of a Sequence.
     type: object
     properties:
@@ -618,7 +618,7 @@ $defs:
     - variation
     additionalProperties: false
   Range:
-    maturity: Alpha
+    maturity: draft
     description: An inclusive range of values bounded by one or more integers.
     type: array
     ordered: true
@@ -629,14 +629,14 @@ $defs:
     maxItems: 2
     minItems: 2
   Residue:
-    maturity: Alpha
+    maturity: draft
     description: A character representing a specific residue (i.e., molecular species)
       or groupings of these ("ambiguity codes"), using [one-letter IUPAC abbreviations](https://en.wikipedia.org/wiki/International_Union_of_Pure_and_Applied_Chemistry#Amino_acid_and_nucleotide_base_codes)
       for nucleic acids and amino acids.
     type: string
     pattern: '[A-Z*\-]'
   SequenceString:
-    maturity: Alpha
+    maturity: draft
     description: "A character string of Residues that represents a biological sequence\
       \ using the conventional sequence order (5\u2019-to-3\u2019 for nucleic acid\
       \ sequences, and amino-to-carboxyl for amino acid sequences). IUPAC ambiguity\
