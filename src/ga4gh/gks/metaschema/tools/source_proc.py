@@ -6,6 +6,7 @@ import yaml
 import re
 from pathlib import Path
 import os
+from collections import defaultdict
 
 SCHEMA_DEF_KEYWORD_BY_VERSION = {
     "http://json-schema.org/draft-07/schema": "definitions",
@@ -34,7 +35,10 @@ class YamlSchemaProcessor:
         self._init_from_raw()
 
     def _init_from_raw(self):
-        self.has_children = self.build_raw_ref_dict()
+        self.has_children_urls = dict()
+        self.has_children = dict()
+        self.build_inheritance_dicts()
+        self.has_protected_members = defaultdict(set)
         self.processed_schema = copy.deepcopy(self.raw_schema)
         self.defs = self.processed_schema.get(self.schema_def_keyword, None)
         self.processed_classes = set()
@@ -42,15 +46,15 @@ class YamlSchemaProcessor:
         self.for_js = copy.deepcopy(self.processed_schema)
         self.clean_for_js()
 
-    def build_raw_ref_dict(self):
-        class_mapping = dict()
+    def build_inheritance_dicts(self):
         # For all classes:
         #   If an abstract class, register oneOf enumerations
         #   If it inherits from a class, register the inheritance
         for cls, cls_def in self.raw_defs.items():
             cls_url = f'#/{self.schema_def_keyword}/{cls}'
             if self.class_is_abstract(cls) and 'oneOf' in cls_def:
-                maps_to = class_mapping.get(cls_url, set())
+                maps_to_urls = self.has_children_urls.get(cls_url, set())
+                maps_to = self.has_children.get(cls, set())
                 for record in cls_def['oneOf']:
                     if not isinstance(record, dict):
                         continue
@@ -59,17 +63,28 @@ class YamlSchemaProcessor:
                         mapped = record['$ref']
                     elif '$refCurie' in record:
                         mapped = self.resolve_curie(record['$refCurie'])
-                    maps_to.add(mapped)
-                class_mapping[cls_url] = maps_to
+                    maps_to_urls.add(mapped)
+                    maps_to.add(mapped.split('/')[-1])
+                self.has_children_urls[cls_url] = maps_to_urls
+                self.has_children[cls] = maps_to
             if 'inherits' in cls_def:
                 target = cls_def['inherits']
                 if ':' in target:
                     continue  # Ignore mappings from definitions in other sources
                 target_url = f'#/{self.schema_def_keyword}/{target}'
-                maps_to = class_mapping.get(target_url, set())
-                maps_to.add(cls_url)
-                class_mapping[target_url] = maps_to
-        return class_mapping
+                maps_to_urls = self.has_children_urls.get(target_url, set())
+                maps_to = self.has_children.get(target, set())
+                maps_to_urls.add(cls_url)
+                maps_to.add(cls)
+                self.has_children_urls[target_url] = maps_to_urls
+                self.has_children[target] = maps_to
+
+    def get_all_descendants(self, cls):
+        out = set()
+        for descendant in self.has_children.get(cls, []):
+            out.add(descendant)
+            out.update(self.get_all_descendants(descendant))
+        return out
 
     def merge_imported(self):
         # register all import namespaces and create process order
@@ -172,9 +187,9 @@ class YamlSchemaProcessor:
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
         return 'properties' not in schema_class_def and not self.class_is_primitive(schema_class)
 
-    def class_is_private(self, schema_class):
+    def class_is_protected(self, schema_class):
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
-        return 'privateTo' in schema_class_def
+        return 'protectedClassOf' in schema_class_def
 
     def class_is_ga4gh_identifiable(self, schema_class):
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
@@ -210,18 +225,53 @@ class YamlSchemaProcessor:
         yaml.dump(self.for_js, stream, sort_keys=False)
 
     def split_defs_to_js(self, fp=None):
+        def _redirect_refs(obj, dest_path):
+            if isinstance(obj, list):
+                return [_redirect_refs(x, fp) for x in obj]
+            elif isinstance(obj, dict):
+                for k, v in obj.items():
+                    if k == '$ref':
+                        # TODO: Validate that all refs are all relative, JSON fragment URIs
+                        ref_path = Path(v.split('#')[0])
+                        fragment = v.split('#')[1]
+                        if ref_path == Path('.'):
+                            obj[k] = f"{fragment.split('/')[-1]}.json"
+                        else:
+                            target_fp = self.schema_fp.relative_to(ref_path)
+                            pass
+                    else:
+                        obj[k] = _redirect_refs(v, fp)
+                return obj
+            else:
+                return obj
+
         if fp is None:
-            fp = self.schema_fp.parent / 'json_schema'
+            fp = self.schema_fp.parent / 'json'
         else:
             assert isinstance(fp, Path)
         if not fp.exists():
             os.mkdir(fp)
         kw = self.schema_def_keyword
         for cls in self.for_js[kw].keys():
-            class_def = self.for_js[kw][cls]
+            if self.class_is_protected(cls):
+                continue
+            class_def = copy.deepcopy(self.for_js[kw][cls])
             target_path = fp / f'{cls}.json'
             out_doc = copy.deepcopy(self.for_js)
-            out_doc.pop(kw, None)
+            if cls in self.has_protected_members:
+                def_dict = dict()
+                keep = False
+                for protected_cls in self.has_protected_members[cls]:
+                    if self.raw_defs[protected_cls]['protectedClassOf'] == cls:
+                        def_dict[protected_cls] = self.defs[protected_cls]
+                        keep = True
+                if keep:
+                    out_doc[kw] = def_dict
+                else:
+                    out_doc.pop(kw, None)
+            else:
+                out_doc.pop(kw, None)
+            class_def = _redirect_refs(class_def, target_path)
             out_doc.update(class_def)
             out_doc['title'] = cls
             with open(target_path, 'w') as f:
@@ -279,9 +329,16 @@ class YamlSchemaProcessor:
         processed_class_def = self.processed_schema[self.schema_def_keyword][schema_class]
 
         # Check GKS maturity model on all public, concrete classes
-        if not (self.class_is_private(schema_class) or self.class_is_abstract(schema_class)):
+        if not (self.class_is_protected(schema_class) or self.class_is_abstract(schema_class)):
             assert 'maturity' in processed_class_def, schema_class
             assert processed_class_def['maturity'] in ['draft', 'trial use', 'normative', 'deprecated'], schema_class
+
+        if self.class_is_protected(schema_class):
+            containing_class = self.raw_defs[schema_class]['protectedClassOf']
+            self.has_protected_members[containing_class].add(schema_class)
+            if containing_class in self.has_children:
+                for descendant in self.get_all_descendants(containing_class):
+                    self.has_protected_members[descendant].add(schema_class)
 
         if self.class_is_primitive(schema_class):
             self.processed_classes.add(schema_class)
@@ -390,6 +447,7 @@ class YamlSchemaProcessor:
         abstract_class_removals = list()
         for schema_class, schema_definition in self.for_js.get(self.schema_def_keyword, dict()).items():
             schema_definition.pop('inherits', None)
+            schema_definition.pop('protectedClassOf', None)
             if self.class_is_abstract(schema_class):
                 schema_definition.pop('heritableProperties', None)
                 schema_definition.pop('heritableRequired', None)
@@ -432,7 +490,7 @@ class YamlSchemaProcessor:
                 self.concretize_js_object(js_obj['items'])
 
     def concretize_class_ref(self, cls_url):
-        children = self.has_children.get(cls_url, None)
+        children = self.has_children_urls.get(cls_url, None)
         if children is None:
             return {cls_url}
         out = set()

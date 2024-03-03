@@ -1,4 +1,3 @@
-from unittest import TestCase
 import yaml
 import pytest
 import shutil

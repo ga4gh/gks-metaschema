@@ -74,7 +74,7 @@ $defs:
 
   Expression:
     type: object
-    privateTo: Variation
+    protectedClassOf: Variation
     maturity: draft
     description: >-
       Representation of a variation by a specified nomenclature or syntax for a Variation object. 
@@ -667,7 +667,7 @@ $defs:
   # Nested Classes
 
   GenotypeMember:
-    privateTo: Genotype
+    protectedClassOf: Genotype
     inherits: ValueObject
     description: >-
       A class for expressing the count of a specific :ref:`MolecularVariation` present

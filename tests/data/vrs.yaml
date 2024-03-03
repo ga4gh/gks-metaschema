@@ -14,7 +14,6 @@ $defs:
       propertyName: type
   Expression:
     type: object
-    privateTo: Variation
     maturity: draft
     description: Representation of a variation by a specified nomenclature or syntax
       for a Variation object.  Common examples of expressions for the description
@@ -576,7 +575,6 @@ $defs:
     - type
     additionalProperties: false
   GenotypeMember:
-    privateTo: Genotype
     description: A class for expressing the count of a specific MolecularVariation
       present _in-trans_ at a genomic locus represented by a Genotype.
     type: object
