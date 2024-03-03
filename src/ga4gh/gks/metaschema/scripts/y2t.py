@@ -4,11 +4,7 @@
 import os
 import sys
 import pathlib
-from inflector import Inflector
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
-
-
-i = Inflector()
 
 
 def resolve_type(class_property_definition):
@@ -67,9 +63,9 @@ def get_ancestor_with_attributes(class_name, proc):
     return class_name
 
 
-def main(proc_schema, defs_path):
+def main(proc_schema):
     for class_name, class_definition in proc_schema.defs.items():
-        with open(defs_path / (class_name + '.rst'), "w") as f:
+        with open(proc_schema.def_fp / (class_name + '.rst'), "w") as f:
             print("**Computational Definition**\n", file=f)
             print(class_definition['description'], file=f)
             if proc_schema.class_is_passthrough(class_name):
@@ -111,10 +107,8 @@ def main(proc_schema, defs_path):
 
 if __name__ == "__main__":
     source_file = pathlib.Path(sys.argv[1])
-
-    defs = pathlib.Path.cwd() / 'defs' / str(source_file.stem)[:-7]
-    os.makedirs(defs)  # error expected if directory already exists – clear with Make
     p = YamlSchemaProcessor(source_file)
+    os.makedirs(p.def_fp, exist_ok=True)
     if p.defs is None:
         exit(0)
-    main(p, defs)
+    main(p)

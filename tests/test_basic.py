@@ -51,9 +51,9 @@ def test_split_create():
 
 
 def test_docs_create():
-    defs = Path('data/defs')
-    shutil.rmtree(defs, ignore_errors=True)
-    os.mkdir(defs)
     p = YamlSchemaProcessor('data/vrs-source.yaml')
-    y2t(p, defs)
+    defs = p.def_fp
+    shutil.rmtree(defs, ignore_errors=True)
+    os.makedirs(defs)
+    y2t(p)
     assert True
