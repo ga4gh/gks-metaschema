@@ -27,9 +27,10 @@ class YamlSchemaProcessor:
         self.imported = root_fp is not None
         self.root_schema_fp = root_fp
         self.raw_schema = self.load_schema(schema_fp)
-        schema_root_name = str(self.schema_fp.stem)[:-7]  # removes "-source"
+        # schema_root_name = str(self.schema_fp.stem)[:-7]  # removes "-source"
         self.json_fp = self.schema_fp.parent / self.raw_schema.get('json-target', 'json')
-        self.def_fp = self.schema_fp.parent / self.raw_schema.get('def-target', f'def/{schema_root_name}')
+        self.def_fp = self.schema_fp.parent / self.raw_schema.get('def-target', f'def')
+        # self.def_fp = self.schema_fp.parent / self.raw_schema.get('def-target', f'def/{schema_root_name}')
         self.namespaces = self.raw_schema.get('namespaces', list())
         self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[self.raw_schema['$schema']]
         self.raw_defs = self.raw_schema.get(self.schema_def_keyword, None)
@@ -466,8 +467,8 @@ class YamlSchemaProcessor:
 
     @staticmethod
     def _scrub_rst_markup(string):
-        string = ref_re.sub('\g<1>', string)
-        string = link_re.sub('[\g<1>](\g<2>)', string)
+        string = ref_re.sub(r'\g<1>', string)
+        string = link_re.sub(r'[\g<1>](\g<2>)', string)
         string = string.replace('\n', ' ')
         return string
 
