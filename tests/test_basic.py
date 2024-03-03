@@ -1,11 +1,11 @@
 import yaml
 import pytest
 import shutil
-from pathlib import Path
 import os
 
 from src.ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 from src.ga4gh.gks.metaschema.scripts.y2t import main as y2t
+from src.ga4gh.gks.metaschema.scripts.source2splitjs import split_defs_to_js
 
 target = yaml.load(open('data/vrs.yaml'), Loader=yaml.SafeLoader)
 
@@ -46,7 +46,7 @@ def test_merged_create():
 
 def test_split_create():
     p = YamlSchemaProcessor('data/vrs-source.yaml')
-    p.split_defs_to_js()
+    split_defs_to_js(p)
     assert True
 
 
