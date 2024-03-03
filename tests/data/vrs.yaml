@@ -82,7 +82,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: core.json#/$defs/Extension
+          $ref: imports/core.json#/$defs/Extension
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -101,7 +101,7 @@ $defs:
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: core.json#/$defs/IRI
+        - $ref: imports/core.json#/$defs/IRI
         description: The location of the Allele
       state:
         description: An expression of the sequence state
@@ -140,7 +140,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: core.json#/$defs/Extension
+          $ref: imports/core.json#/$defs/Extension
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -164,7 +164,7 @@ $defs:
         items:
           oneOf:
           - $ref: '#/$defs/Allele'
-          - $ref: core.json#/$defs/IRI
+          - $ref: imports/core.json#/$defs/IRI
         description: A list of Alleles (or IRI references to `Alleles`) that comprise
           a Haplotype. Since each `Haplotype` member MUST be an `Allele`, and all
           members MUST share a common SequenceReference, implementations MAY use a
@@ -203,7 +203,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: core.json#/$defs/Extension
+          $ref: imports/core.json#/$defs/Extension
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -222,7 +222,7 @@ $defs:
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: core.json#/$defs/IRI
+        - $ref: imports/core.json#/$defs/IRI
         description: A location for which the number of systemic copies is described.
       copies:
         oneOf:
@@ -262,7 +262,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: core.json#/$defs/Extension
+          $ref: imports/core.json#/$defs/Extension
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -281,7 +281,7 @@ $defs:
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: core.json#/$defs/IRI
+        - $ref: imports/core.json#/$defs/IRI
         description: A location for which the number of systemic copies is described.
       copyChange:
         type: string
@@ -330,7 +330,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: core.json#/$defs/Extension
+          $ref: imports/core.json#/$defs/Extension
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -396,7 +396,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: core.json#/$defs/Extension
+          $ref: imports/core.json#/$defs/Extension
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -410,7 +410,7 @@ $defs:
       sequenceReference:
         oneOf:
         - $ref: '#/$defs/SequenceReference'
-        - $ref: core.json#/$defs/IRI
+        - $ref: imports/core.json#/$defs/IRI
         description: A SequenceReference.
       start:
         oneOf:
@@ -454,7 +454,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: core.json#/$defs/Extension
+          $ref: imports/core.json#/$defs/Extension
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -508,7 +508,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: core.json#/$defs/Extension
+          $ref: imports/core.json#/$defs/Extension
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -556,7 +556,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: core.json#/$defs/Extension
+          $ref: imports/core.json#/$defs/Extension
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -595,7 +595,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: core.json#/$defs/Extension
+          $ref: imports/core.json#/$defs/Extension
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.

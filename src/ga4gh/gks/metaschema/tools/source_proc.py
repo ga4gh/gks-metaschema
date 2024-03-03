@@ -22,10 +22,12 @@ defs_re = re.compile(r'#/(\$defs|definitions)/.*')
 
 class YamlSchemaProcessor:
 
-    def __init__(self, schema_fp, imported=False):
+    def __init__(self, schema_fp, root_fp=None):
         self.schema_fp = Path(schema_fp)
-        self.imported = imported
+        self.imported = root_fp is not None
+        self.root_schema_fp = root_fp
         self.raw_schema = self.load_schema(schema_fp)
+        self.namespaces = self.raw_schema.get('namespaces', list())
         self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[self.raw_schema['$schema']]
         self.raw_defs = self.raw_schema.get(self.schema_def_keyword, None)
         self.imports = dict()
@@ -102,14 +104,14 @@ class YamlSchemaProcessor:
             defined_classes.update(other.processed_classes)
 
         for key in self.import_process_order:
-            self.raw_schema['namespaces'][key] = f'#/{self.schema_def_keyword}/'
+            self.namespaces[key] = f'#/{self.schema_def_keyword}/'
             other = self.import_processors[key]
             other_ns = other.raw_schema.get('namespaces', list())
             if other_ns:
                 for ns in other_ns:
                     if ns not in self.import_process_order:
                         # Handle external refs that do not match imports
-                        self.raw_schema['namespaces'][key] = other.raw_schema['namespaces'][key]
+                        self.namespaces[key] = other.namespaces[key]
             self.raw_defs.update(other.raw_defs)
 
         # revise all class.inherits attributes from CURIE to local defs
@@ -174,7 +176,11 @@ class YamlSchemaProcessor:
             if not fp.is_absolute():
                 base_path = self.schema_fp.parent
                 fp = base_path.joinpath(fp)
-            self.imports[dependency] = YamlSchemaProcessor(fp, imported=True)
+            if self.imported:
+                root_fp = self.root_schema_fp
+            else:
+                root_fp = self.schema_fp
+            self.imports[dependency] = YamlSchemaProcessor(fp, root_fp=root_fp)
 
     def process_schema(self):
         if self.defs is None:
@@ -303,7 +309,7 @@ class YamlSchemaProcessor:
 
     def resolve_curie(self, curie):
         namespace, identifier = curie.split(':')
-        base_url = self.processed_schema['namespaces'][namespace]
+        base_url = self.namespaces[namespace]
         return base_url + identifier
 
     def process_property_tree_refs(self, raw_node, processed_node):
@@ -315,7 +321,9 @@ class YamlSchemaProcessor:
                     del (processed_node[k])
                 elif k == '$ref' and v.startswith('#/') and self.imported:
                     # TODO: fix below hard-coded name convention, yuck.
-                    processed_node[k] = str(self.schema_fp.stem.split('-')[0]) + '.json' + v
+                    rel_root = self.schema_fp.parent.relative_to(self.root_schema_fp.parent, walk_up=True)
+                    schema_stem = self.schema_fp.stem.split('-')[0]
+                    processed_node[k] = str(rel_root / f'{schema_stem}.json{v}')
                 else:
                     self.process_property_tree_refs(raw_node[k], processed_node[k])
         elif isinstance(raw_node, list):
