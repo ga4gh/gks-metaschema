@@ -237,8 +237,10 @@ class YamlSchemaProcessor:
                         if ref_path == Path('.'):
                             obj[k] = f"{fragment.split('/')[-1]}.json"
                         else:
-                            target_fp = self.schema_fp.relative_to(ref_path)
-                            pass
+                            # Only works in Python >= 3.12
+                            schema_root = self.schema_fp.parent
+                            relative_fp = schema_root.relative_to(dest_path, walk_up=True)
+                            obj[k] = str(relative_fp / ref_path)
                     else:
                         obj[k] = _redirect_refs(v, fp)
                 return obj
