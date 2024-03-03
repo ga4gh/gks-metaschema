@@ -232,10 +232,14 @@ class YamlSchemaProcessor:
             elif isinstance(obj, dict):
                 for k, v in obj.items():
                     if k == '$ref':
-                        try:
-                            ref, fragment = v.split('#')
-                        except ValueError:
-                            raise NotImplementedError
+                        parts = v.split('#')
+                        if len(parts) == 2:
+                            ref, fragment = parts
+                        elif len(parts) == 1:
+                            ref = parts[0]
+                            fragment = ''
+                        else:
+                            raise ValueError(f'Expected only one fragment operator.')
                         if ref == '':
                             if fragment:
                                 m = frag_re.match(fragment)
@@ -253,7 +257,7 @@ class YamlSchemaProcessor:
                                 else:
                                     obj[k] = f'{fragment_class}.json'
                             else:
-                                raise NotImplementedError("No handler for non-fragment references")
+                                raise NotImplementedError("No handler for non-fragment self-references")
                         else:
                             # Only works in Python >= 3.12
                             schema_root = self.schema_fp.parent
