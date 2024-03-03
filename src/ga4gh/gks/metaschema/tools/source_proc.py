@@ -225,24 +225,42 @@ class YamlSchemaProcessor:
         yaml.dump(self.for_js, stream, sort_keys=False)
 
     def split_defs_to_js(self, fp=None):
+        frag_re = re.compile(r'(/\$defs|definitions)/(\w+)')
         def _redirect_refs(obj, dest_path):
             if isinstance(obj, list):
-                return [_redirect_refs(x, fp) for x in obj]
+                return [_redirect_refs(x, dest_path) for x in obj]
             elif isinstance(obj, dict):
                 for k, v in obj.items():
                     if k == '$ref':
-                        # TODO: Validate that all refs are all relative, JSON fragment URIs
-                        ref_path = Path(v.split('#')[0])
-                        fragment = v.split('#')[1]
-                        if ref_path == Path('.'):
-                            obj[k] = f"{fragment.split('/')[-1]}.json"
+                        try:
+                            ref, fragment = v.split('#')
+                        except ValueError:
+                            raise NotImplementedError
+                        if ref == '':
+                            if fragment:
+                                m = frag_re.match(fragment)
+                                assert m is not None
+                                fragment_class = m.group(2)
+                                if self.class_is_protected(fragment_class):
+                                    dest_class = dest_path.stem
+                                    frag_containing_class = self.raw_defs[fragment_class]['protectedClassOf']
+                                    # containing class matches dest
+                                    if frag_containing_class == dest_class:
+                                        pass
+                                    # containing class does not match dest
+                                    else:
+                                        obj[k] = f'{frag_containing_class}.json#/{self.schema_def_keyword}/{fragment_class}'
+                                else:
+                                    obj[k] = f'{fragment_class}.json'
+                            else:
+                                raise NotImplementedError("No handler for non-fragment references")
                         else:
                             # Only works in Python >= 3.12
                             schema_root = self.schema_fp.parent
-                            relative_fp = schema_root.relative_to(dest_path, walk_up=True)
-                            obj[k] = str(relative_fp / ref_path)
+                            relative_fp = schema_root.relative_to(dest_path.parent, walk_up=True)
+                            obj[k] = str(relative_fp / Path(ref)) + fragment
                     else:
-                        obj[k] = _redirect_refs(v, fp)
+                        obj[k] = _redirect_refs(v, dest_path)
                 return obj
             else:
                 return obj
@@ -265,10 +283,10 @@ class YamlSchemaProcessor:
                 keep = False
                 for protected_cls in self.has_protected_members[cls]:
                     if self.raw_defs[protected_cls]['protectedClassOf'] == cls:
-                        def_dict[protected_cls] = self.defs[protected_cls]
+                        def_dict[protected_cls] = copy.deepcopy(self.defs[protected_cls])
                         keep = True
                 if keep:
-                    out_doc[kw] = def_dict
+                    out_doc[kw] = _redirect_refs(def_dict, target_path)
                 else:
                     out_doc.pop(kw, None)
             else:
