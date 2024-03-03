@@ -268,7 +268,7 @@ class YamlSchemaProcessor:
                             # Only works in Python >= 3.12
                             schema_root = self.schema_fp.parent
                             relative_fp = schema_root.relative_to(dest_path.parent, walk_up=True)
-                            obj[k] = str(relative_fp / Path(ref)) + fragment
+                            obj[k] = str(relative_fp / Path(ref)) + f'#{fragment}'
                     else:
                         obj[k] = _redirect_refs(v, dest_path)
                 return obj
