@@ -1,7 +1,27 @@
-$schema: http://json-schema.org/draft/2020-12/schema
-title: GA4GH-GKS-Core-Definitions
-type: object
+$schema: https://json-schema.org/draft/2020-12/schema
+title: GKS Common Library Core Definitions
 $defs:
+  Coding:
+    type: object
+    maturity: draft
+    description: a concept codified by a terminology system.
+    properties:
+      label:
+        type: string
+        description: A primary label for the coding.
+      system:
+        type: string
+        description: Identity of the terminology system.
+      version:
+        type: string
+        description: Version of the terminology system.
+      code:
+        $ref: '#/$defs/Code'
+        description: Symbol in syntax defined by the terminology system.
+    required:
+    - code
+    - system
+    additionalProperties: false
   Mapping:
     type: object
     maturity: draft
@@ -24,15 +44,8 @@ $defs:
         ordered: true
         items:
           $ref: '#/$defs/Extension'
-      system:
-        type: string
-        description: Identity of the terminology system.
-      version:
-        type: string
-        description: Version of the terminology system.
-      code:
-        $ref: '#/$defs/Code'
-        description: Symbol in syntax defined by the terminology system.
+      coding:
+        $ref: '#/$defs/Coding'
       relation:
         description: A mapping relation between concepts as defined by the Simple
           Knowledge Organization System (SKOS).
@@ -44,9 +57,8 @@ $defs:
         - narrowMatch
         - relatedMatch
     required:
-    - code
+    - coding
     - relation
-    - system
     additionalProperties: false
   Extension:
     type: object

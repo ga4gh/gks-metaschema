@@ -45,6 +45,8 @@ def _redirect_refs(obj, dest_path, root_proc):
                     for _, other in root_proc.imports.items():
                         if ref_class in other.defs:
                             proc = other
+                    if proc is None:
+                        raise ValueError(f'Could not find {ref_class} in processors')
 
                 # Determine if protected or public reference
                 # If protected, reference class accordingly
@@ -55,7 +57,7 @@ def _redirect_refs(obj, dest_path, root_proc):
                         frag_containing_class = proc.raw_defs[ref_class]['protectedClassOf']
                         # containing class matches dest
                         if frag_containing_class == dest_class:
-                            ref_class_pointer = v
+                            ref_class_pointer = f'{ref_class}.json'
                         # containing class does not match dest
                         else:
                             ref_class_pointer = f'{frag_containing_class}.json#/{proc.schema_def_keyword}/{ref_class}'
@@ -64,12 +66,13 @@ def _redirect_refs(obj, dest_path, root_proc):
                 else:
                     ref_class_pointer = f'{ref_class}.json'
 
-                # Determine the expected json export path from schema_proc
-                # Calculate the relative path structure
-                relative_fp = proc.json_fp.relative_to(dest_path.parent, walk_up=True)
+                if ref:
+                    revised_path = str(Path(ref).with_name(ref_class_pointer))
+                else:
+                    revised_path = ref_class_pointer
 
                 # Point to JSON export
-                obj[k] = str(relative_fp / ref_class_pointer)
+                obj[k] = str(revised_path)
             else:
                 obj[k] = _redirect_refs(v, dest_path, root_proc)
         return obj

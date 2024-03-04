@@ -5,12 +5,11 @@ import json
 import yaml
 import re
 from pathlib import Path
-import os
 from collections import defaultdict
 
 SCHEMA_DEF_KEYWORD_BY_VERSION = {
-    "http://json-schema.org/draft-07/schema": "definitions",
-    "http://json-schema.org/draft/2020-12/schema": "$defs"
+    "https://json-schema.org/draft-07/schema": "definitions",
+    "https://json-schema.org/draft/2020-12/schema": "$defs"
 }
 
 

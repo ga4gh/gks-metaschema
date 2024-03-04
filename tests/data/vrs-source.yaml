@@ -8,16 +8,16 @@
 #   make watch &
 
 # https://json-schema.org/understanding-json-schema/reference/schema.html
-$schema: "http://json-schema.org/draft/2020-12/schema"
+$schema: "https://json-schema.org/draft/2020-12/schema"
 title: "GA4GH-VRS-Definitions"
 type: object
 strict: true
 
 imports:
-  gks.core: imports/core-source.yaml
+  gks.core: import/gks-common/core-source.yaml
 
 namespaces:
-  gks.core: imports/core.json#/$defs/
+  gks.common: import/gks-common/
 
 $defs:
   # VRS definitions are presented top-down.  Everything rolls up to
@@ -31,14 +31,8 @@ $defs:
   ValueObject:
     inherits: gks.core:Entity
     description: >-
-      A contextual value whose equality is based on value, not identity. All VRS Value Objects
-      may have computed digests from the VRS Computed Identifier algorithm.
+      A contextual value whose equality is based on value, not identity.
       See https://en.wikipedia.org/wiki/Value_object for more on Value Objects.
-    heritableProperties:
-      digest:
-        description: A sha512t24u digest created using the VRS Computed Identifier algorithm.
-        type: string
-        pattern: '[0-9A-Za-z_\-]{32}'
 
   Ga4ghIdentifiableObject:
     inherits: ValueObject
@@ -50,11 +44,10 @@ $defs:
     heritableProperties:
       type:
         type: string
-    heritableRequired:
-      - type
-
-  # TODO: Draft recomposition of Allele as "AlleleMember" plus seq requirement
-  # TODO: Explore "typed entity"
+      digest:
+        description: A sha512t24u digest created using the VRS Computed Identifier algorithm.
+        type: string
+        pattern: '^[0-9A-Za-z_\-]{32}$'
 
   Variation:
     inherits: Ga4ghIdentifiableObject
@@ -74,7 +67,7 @@ $defs:
 
   Expression:
     type: object
-    protectedClassOf: Variation
+    privateTo: Variation
     maturity: draft
     description: >-
       Representation of a variation by a specified nomenclature or syntax for a Variation object. 
@@ -108,7 +101,6 @@ $defs:
       A Variation of multiple molecules in the context of a system, e.g.
       a genome, sample, or homologous chromosomes.
     oneOf:
-      - $ref: "#/$defs/Genotype"
       - $ref: "#/$defs/CopyNumberCount"
       - $ref: "#/$defs/CopyNumberChange"
     discriminator:
@@ -142,7 +134,7 @@ $defs:
           MUST be "Allele"
       location:
         oneOf:
-          - $refCurie: gks.core:IRI
+          - $refCurie: gks.common:IRI.json
           - $ref: "#/$defs/Location"
         description: >-
           The location of the Allele
@@ -160,7 +152,7 @@ $defs:
         - members
     inherits: MolecularVariation
     description: >-
-      A set of non-overlapping :ref:`Allele` members that co-occur on the same molecule.
+      An ordered set of co-occurring :ref:`variants <Variation>` on the same molecule.
     type: "object"
     properties:
       type:
@@ -171,68 +163,23 @@ $defs:
           MUST be "Haplotype"
       members:
         type: array
-        ordered: false
+        ordered: true
         minItems: 2
-        uniqueItems: true
+        uniqueItems: false
         items:
           oneOf:
-          - $ref: "#/$defs/Allele"
-          - $refCurie: gks.core:IRI
+            - $ref: "#/$defs/Adjacency"
+            - $ref: "#/$defs/Allele"
+            - $refCurie: gks.common:IRI.json
         description: >-
-          A list of :ref:`Alleles <Allele>` (or IRI references to `Alleles`) that comprise a Haplotype. Since each
-          `Haplotype` member MUST be an `Allele`, and all members MUST share a common :ref:`SequenceReference`,
-          implementations MAY use a compact representation of Haplotype that omits type and :ref:`SequenceReference`
-          information in individual Haplotype members. Implementations MUST transform compact `Allele` representations
-          into an `Allele` when computing GA4GH identifiers.
+          A list of :ref:`Alleles <Allele>` and :ref:`Adjacencies <Adjacency>` that comprise a Haplotype. 
+          Members must share the same reference sequence as adjacent members. Alleles should not have
+          overlapping or adjacent coordinates with neighboring Alleles. Neighboring alleles should be ordered 
+          by ascending coordinates, unless represented on a DNA inversion (following an Adjacency with 
+          end-defined adjoinedSequences), in which case they should be ordered in descending coordinates. 
+          Sequence references MUST be consistent for all members between and including the end of one 
+          Adjacency and the beginning of another.
     required: [ "members" ]
-
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # UtilityVariation
-
-#  Text:
-#    ga4ghPrefix: VT
-#    inherits: UtilityVariation
-#    description: >-
-#      A free-text definition of variation.
-#    type: object
-#    properties:
-#      type:
-#        type: string
-#        const: "Text"
-#        default: "Text"
-#        description: MUST be "Text"
-#      definition:
-#        type: string
-#        description: >-
-#          A textual representation of variation not representable by
-#          other subclasses of Variation.
-#    required: [ "definition" ]
-#
-#  VariationSet:
-#    ga4ghPrefix: VS
-#    inherits: UtilityVariation
-#    description: >-
-#      An unconstrained set of Variation members.
-#    type: object
-#    properties:
-#      type:
-#        type: string
-#        const: "VariationSet"
-#        default: "VariationSet"
-#        description: MUST be "VariationSet"
-#      members:
-#        type: array
-#        ordered: false
-#        uniqueItems: true
-#        items:
-#          oneOf:
-#            - $refCurie: gks.core:IRI
-#            - $ref: "#/$defs/Variation"
-#        description: >-
-#          List of Variation objects or identifiers. Attribute is
-#          required, but MAY be empty.
-#    required: [ "members" ]
-
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # SystemicVariation
@@ -240,14 +187,14 @@ $defs:
   CopyNumber:
     ga4ghDigest:
       keys:
-        - subject
+        - location
     inherits: SystemicVariation
     description: >-
       A measure of the copies of a :ref:`Location` within a system (e.g. genome, cell, etc.)
     heritableProperties:
       location:
         oneOf:
-          - $refCurie: gks.core:IRI
+          - $refCurie: gks.common:IRI.json
           - $ref: "#/$defs/Location"
         description: >-
           A location for which the number of systemic copies is described.
@@ -299,52 +246,53 @@ $defs:
           MUST be "CopyNumberChange"
       copyChange:
         type: string
-        enum: [ "efo:0030069", "efo:0020073", "efo:0030068", "efo:0030067", "efo:0030064", "efo:0030070", "efo:0030071", "efo:0030072" ]
+        enum: [ "efo:0030069", "efo:0020073", "efo:0030068", "efo:0030067", "efo:0030064", "efo:0030070",
+                "efo:0030071", "efo:0030072" ]
         description: >-
           MUST be one of "efo:0030069" (complete genomic loss), "efo:0020073" (high-level loss),
           "efo:0030068" (low-level loss), "efo:0030067" (loss), "efo:0030064" (regional base ploidy),
           "efo:0030070" (gain), "efo:0030071" (low-level gain), "efo:0030072" (high-level gain).
     required: [ "copyChange" ]
 
-  Genotype:
-    maturity: draft
-    ga4ghDigest:
-      keys:
-        - members
-        - count
-      prefix: GT
-    inherits: SystemicVariation
-    description: >-
-      A quantified set of _in-trans_ :ref:`MolecularVariation` at a genomic locus.
-    type: object
-    properties:
-      type:
-        type: string
-        const: "Genotype"
-        default: "Genotype"
-        description: >-
-          MUST be "Genotype"
-      members:
-        type: array
-        ordered: false
-        uniqueItems: true
-        minItems: 1
-        items:
-          $ref: "#/$defs/GenotypeMember"
-        description: >-
-          Each GenotypeMember in `members` describes a :ref:`MolecularVariation`
-          and the count of that variation at the locus.
-      count:
-        oneOf:
-          - type: integer
-          - $ref: "#/$defs/Range"
-        description: >-
-          The total number of copies of all :ref:`MolecularVariation` at this locus,
-          MUST be greater than or equal to the sum of :ref:`GenotypeMember` copy counts.
-          If greater than the total counts, this implies additional
-          :ref:`MolecularVariation` that are expected to exist but are not explicitly
-          indicated.
-    required: [ "members", "count" ]
+#  Genotype:
+#    maturity: draft
+#    ga4ghDigest:
+#      keys:
+#        - members
+#        - count
+#      prefix: GT
+#    inherits: SystemicVariation
+#    description: >-
+#      A quantified set of _in-trans_ :ref:`MolecularVariation` at a genomic locus.
+#    type: object
+#    properties:
+#      type:
+#        type: string
+#        const: "Genotype"
+#        default: "Genotype"
+#        description: >-
+#          MUST be "Genotype"
+#      members:
+#        type: array
+#        ordered: false
+#        uniqueItems: true
+#        minItems: 1
+#        items:
+#          $ref: "#/$defs/GenotypeMember"
+#        description: >-
+#          Each GenotypeMember in `members` describes a :ref:`MolecularVariation`
+#          and the count of that variation at the locus.
+#      count:
+#        oneOf:
+#          - type: integer
+#          - $ref: "#/$defs/Range"
+#        description: >-
+#          The total number of copies of all :ref:`MolecularVariation` at this locus,
+#          MUST be greater than or equal to the sum of :ref:`GenotypeMember` copy counts.
+#          If greater than the total counts, this implies additional
+#          :ref:`MolecularVariation` that are expected to exist but are not explicitly
+#          indicated.
+#    required: [ "members", "count" ]
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Locations
@@ -354,47 +302,8 @@ $defs:
     description: >-
       A contiguous segment of a biological sequence.
     $ref: "#/$defs/SequenceLocation"
-#    oneOf:
-#      - $ref: "#/$defs/ChromosomeLocation"
-#      - $ref: "#/$defs/SequenceLocation"
     discriminator:
       propertyName: type
-
-#  ChromosomeLocation:
-#    ga4ghPrefix: CL
-#    inherits: Location
-#    description: >-
-#      A Location on a chromosome defined by a species and chromosome name.
-#    type: object
-#    properties:
-#      type:
-#        type: string
-#        const: "ChromosomeLocation"
-#        default: "ChromosomeLocation"
-#        description: MUST be "ChromosomeLocation"
-#      species_id:
-#        $refCurie: gks.core:IRI
-#        default: "taxonomy:9606"
-#        description: >-
-#          :ref:`CURIE` representing a species from the
-#          `NCBI species taxonomy <https://registry.identifiers.org/registry/taxonomy>`_.
-#          Default: "taxonomy:9606" (human)
-#      chr:
-#        type: string
-#        description: >-
-#          The symbolic chromosome name. For humans, For humans,
-#          chromosome names MUST be one of 1..22, X, Y (case-sensitive)
-#      start:
-#        $ref: "#/$defs/HumanCytoband"
-#        description: >-
-#          The start cytoband region. MUST specify a region nearer the
-#          terminal end (telomere) of the chromosome p-arm than `end`.
-#      end:
-#        $ref: "#/$defs/HumanCytoband"
-#        description: >-
-#          The start cytoband region. MUST specify a region nearer the
-#          terminal end (telomere) of the chromosome q-arm than `start`.
-#    required: [ "species_id", "chr", "start", "end" ]
 
   SequenceLocation:
     maturity: draft
@@ -402,7 +311,7 @@ $defs:
       keys:
         - start
         - end
-        - sequence
+        - sequenceReference
       prefix: SL
     inherits: Location
     description: >-
@@ -416,10 +325,9 @@ $defs:
         description: MUST be "SequenceLocation"
       sequenceReference:
         oneOf:
-          - $refCurie: gks.core:IRI
+          - $refCurie: gks.common:IRI.json
           - $ref: "#/$defs/SequenceReference"
-        description: >-
-          A :ref:`SequenceReference`.
+        description: A :ref:`SequenceReference`.
       start:
         oneOf:
           - type: integer
@@ -427,7 +335,7 @@ $defs:
         description: >-
           The start coordinate or range of the SequenceLocation.
           The minimum value of this coordinate or range is 0.
-          MUST represent a coordinate or range less than the value of `end`.
+          MUST represent a coordinate or range less than or equal to the value of `end`.
       end:
         oneOf:
           - type: integer
@@ -435,17 +343,15 @@ $defs:
         description: >-
           The end coordinate or range of the SequenceLocation.
           The minimum value of this coordinate or range is 0.
-          MUST represent a coordinate or range greater than the value of `start`.
-    required:
-      - start
-      - end
+          MUST represent a coordinate or range greater than or equal to the value of `start`.
 
   SequenceReference:
     maturity: draft
     inherits: ValueObject
     ga4ghDigest:
       assigned: true # This special property indicates that the `digest` field follows an alternate convention
-                     # and is expected to have the value assigned following that convention.
+                     # and is expected to have the value assigned following that convention. For SequenceReference,
+                     # it is expected the digest will be the refget accession value without the `SQ.` prefix.
     type: object
     description: A sequence of nucleic or amino acid character codes.
     properties:
@@ -453,9 +359,11 @@ $defs:
         type: string
         const: SequenceReference
       refgetAccession:
-        description: A `GA4GH RefGet <http://samtools.github.io/hts-specs/refget.html>` identifier for the referenced sequence, using the sha512t24u digest.
+        description: >-
+          A `GA4GH RefGet <http://samtools.github.io/hts-specs/refget.html>` identifier for the referenced sequence, 
+          using the sha512t24u digest.
         type: string
-        pattern: 'SQ.[0-9A-Za-z_\-]{32}'
+        pattern: '^SQ.[0-9A-Za-z_\-]{32}$'
       residueAlphabet:
         type: string
         description: >-
@@ -466,9 +374,7 @@ $defs:
           - na
     required:
       - refgetAccession
-      - type
 
-      #TODO: add VRSATILE
       #TODO: implementation guidance: digest property is RefGet TRUNC512
 
   # =============================================================================
@@ -481,6 +387,9 @@ $defs:
 
   SequenceExpression:
     inherits: ValueObject
+    ga4ghDigest:
+      keys:
+        - type
     description: >-
       An expression describing a :ref:`Sequence`.
     oneOf:
@@ -502,6 +411,10 @@ $defs:
   ReferenceLengthExpression:
     maturity: draft
     inherits: SequenceExpression
+    ga4ghDigest:
+      keys:
+        - length
+        - repeatSubunitLength
     description: >-
       An expression of a length of a sequence from a repeating reference.
     type: object
@@ -515,24 +428,43 @@ $defs:
         oneOf:
           - type: integer
           - $ref: "#/$defs/Range"
-        description: >-
-          The number of residues in the expressed sequence.
+        description: The number of residues in the expressed sequence.
       sequence:
         $ref: "#/$defs/SequenceString"
         description: the :ref:`Sequence` encoded by the Reference Length Expression.
       repeatSubunitLength:
         type: integer
-        description: >-
-          The number of residues in the repeat subunit.
+        description: The number of residues in the repeat subunit.
     required:
       - length
       - repeatSubunitLength
 
+  LengthExpression:
+    maturity: draft
+    inherits: SequenceExpression
+    ga4ghDigest:
+      keys:
+        - length
+    type: object
+    description: A sequence expressed only by its length.
+    properties:
+      type:
+        type: string
+        const: "LengthExpression"
+        default: "LengthExpression"
+        description: MUST be "LengthExpression"
+      length:
+        oneOf:
+          - $ref: "#/$defs/Range"
+          - type: integer
+
   LiteralSequenceExpression:
     maturity: draft
     inherits: SequenceExpression
-    description: >-
-      An explicit expression of a Sequence.
+    ga4ghDigest:
+      keys:
+        - sequence
+    description: An explicit expression of a Sequence.
     type: object
     properties:
       type:
@@ -546,147 +478,34 @@ $defs:
     required:
       - sequence
 
-#  DerivedSequenceExpression:
-#    inherits: SequenceExpression
-#    description: >-
-#      An approximate expression of a sequence that is derived from
-#      a referenced sequence location. Use of this class
-#      indicates that the derived sequence is *approximately equivalent*
-#      to the reference indicated, and is typically used for describing
-#      large regions in contexts where the use of an approximate sequence
-#      is inconsequential.
-#    type: object
-#    properties:
-#      type:
-#        type: string
-#        const: "DerivedSequenceExpression"
-#        default: "DerivedSequenceExpression"
-#        description: MUST be "DerivedSequenceExpression"
-#      location:
-#        $ref: "#/$defs/SequenceLocation"
-#        description: >-
-#          The location from which the approximate sequence is derived
-#      reverse_complement:
-#        type: boolean
-#        description: >-
-#          A flag indicating if the expressed sequence is the reverse
-#          complement of the sequence referred to by `location`
-#    required: [ "location", "reverse_complement" ]
-#
-#  RepeatedSequenceExpression:
-#    inherits: SequenceExpression
-#    description: >-
-#      An expression of a sequence comprised of a tandem repeating subsequence.
-#    type: object
-#    properties:
-#      type:
-#        type: string
-#        const: "RepeatedSequenceExpression"
-#        default: "RepeatedSequenceExpression"
-#        description: MUST be "RepeatedSequenceExpression"
-#      seq_expr:
-#        oneOf:
-#          - $ref: "#/$defs/LiteralSequenceExpression"
-#          - $ref: "#/$defs/DerivedSequenceExpression"
-#        description: >-
-#          An expression of the repeating subsequence
-#      count:
-#        oneOf:
-#          - $ref: "#/$defs/Number"
-#          - $ref: "#/$defs/IndefiniteRange"
-#          - $ref: "#/$defs/DefiniteRange"
-#        description: >-
-#          The count of repeated units, as an integer or inclusive range
-#    allOf:
-#      - if:
-#          properties:
-#            count:
-#              $ref: "#/$defs/Number"
-#        then:
-#          properties:
-#            count:
-#              properties:
-#                value:
-#                  minimum: 0
-#      - if:
-#          properties:
-#            count:
-#              $ref: "#/$defs/IndefiniteRange"
-#        then:
-#          properties:
-#            count:
-#              properties:
-#                value:
-#                  minimum: 0
-#      - if:
-#          properties:
-#            count:
-#              $ref: "#/$defs/DefiniteRange"
-#        then:
-#          properties:
-#            count:
-#              properties:
-#                min:
-#                  minimum: 0
-#                max:
-#                  minimum: 0
-#    required: [ "seq_expr", "count" ]
-#
-#  ComposedSequenceExpression:
-#    description: >-
-#      An expression of a sequence composed from multiple other
-#      :ref:`Sequence Expressions<SequenceExpression>`
-#      objects. MUST have at least one component that is not a
-#      ref:`LiteralSequenceExpression`. CANNOT be composed from
-#      nested composed sequence expressions.
-#    additionalProperties: false
-#    type: object
-#    properties:
-#      type:
-#        type: string
-#        const: "ComposedSequenceExpression"
-#        default: "ComposedSequenceExpression"
-#        description: MUST be "ComposedSequenceExpression"
-#      components:
-#        type: array
-#        ordered: true
-#        uniqueItems: true
-#        minItems: 2
-#        items:
-#          anyOf:
-#            - $ref: "#/$defs/LiteralSequenceExpression"
-#            - $ref: "#/$defs/RepeatedSequenceExpression"
-#            - $ref: "#/$defs/DerivedSequenceExpression"
-#        description: >-
-#          An ordered list of :ref:`SequenceExpression` components
-#          comprising the expression. MUST NOT have two adjacent
-#          :ref:`LiteralSequenceExpression` objects.
-#    required: [ "components" ]
-
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Nested Classes
 
-  GenotypeMember:
-    protectedClassOf: Genotype
-    inherits: ValueObject
-    description: >-
-      A class for expressing the count of a specific :ref:`MolecularVariation` present
-      _in-trans_ at a genomic locus represented by a :ref:`Genotype`.
-    type: object
-    properties:
-      count:
-        oneOf:
-          - $ref: '#/$defs/Range'
-          - type: integer
-        description: >-
-          The number of copies of the `variation` at a :ref:`Genotype` locus.
-      variation:
-        oneOf:
-          - $ref: "#/$defs/Allele"
-          - $ref: "#/$defs/Haplotype"
-        description: >-
-          A :ref:`MolecularVariation` at a :ref:`Genotype` locus.
-    required: [ "count", "variation" ]
+#  GenotypeMember:
+#    privateTo: Genotype
+#    inherits: ValueObject
+#    ga4ghDigest:
+#      keys:
+#        - count
+#        - variation
+#    description: >-
+#      A class for expressing the count of a specific :ref:`MolecularVariation` present
+#      _in-trans_ at a genomic locus represented by a :ref:`Genotype`.
+#    type: object
+#    properties:
+#      count:
+#        oneOf:
+#          - $ref: '#/$defs/Range'
+#          - type: integer
+#        description: >-
+#          The number of copies of the `variation` at a :ref:`Genotype` locus.
+#      variation:
+#        oneOf:
+#          - $ref: "#/$defs/Allele"
+#          - $ref: "#/$defs/Haplotype"
+#        description: >-
+#          A :ref:`MolecularVariation` at a :ref:`Genotype` locus.
+#    required: [ "count", "variation" ]
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Numerics, Comparators, and Ranges
@@ -702,78 +521,6 @@ $defs:
         - type: 'null'
     maxItems: 2
     minItems: 2
-
-#  Number:
-#    description: >-
-#      A simple integer value as a VRS class.
-#    type: object
-#    properties:
-#      type:
-#        type: string
-#        const: "Number"
-#        default: "Number"
-#        description: MUST be "Number"
-#      value:
-#        type: integer
-#        description: The value represented by Number
-#    required: [ "type", "value" ]
-#
-#  DefiniteRange:
-#    description: >-
-#      A bounded, inclusive range of numbers.
-#    type: object
-#    properties:
-#      type:
-#        type: string
-#        const: "DefiniteRange"
-#        default: "DefiniteRange"
-#        description: MUST be "DefiniteRange"
-#      min:
-#        type: number
-#        description: The minimum value; inclusive
-#      max:
-#        type: number
-#        description: The maximum value; inclusive
-#    required: ["type", "min", "max"]
-#
-#  IndefiniteRange:
-#    description: >-
-#      A half-bounded range of numbers represented as a number bound and
-#      associated comparator. The bound operator is interpreted as follows:
-#      '>=' are all numbers greater than and including `value`, '<=' are all
-#      numbers less than and including `value`.
-#    type: object
-#    properties:
-#      type:
-#        type: string
-#        const: "IndefiniteRange"
-#        default: "IndefiniteRange"
-#        description: MUST be "IndefiniteRange"
-#      value:
-#        type: number
-#        description: The bounded value; inclusive
-#      comparator:
-#        type: string
-#        enum: [ "<=", ">=" ]
-#        description: >-
-#          MUST be one of "<=" or ">=", indicating which direction the range
-#          is indefinite
-#    required: [ "type", "value", "comparator" ]
-
-  # =============================================================================
-  # BASIC TYPES (STRUCTURES)
-  # These types do NOT have a VRS `type` attribute
-  # These types are used solely within other definitions.
-  # =============================================================================
-
-#  HumanCytoband:
-#    description: >-
-#      A character string representing cytobands derived from the
-#      *International System for Human Cytogenomic Nomenclature* (ISCN)
-#      `guidelines <http://doi.org/10.1159/isbn.978-3-318-06861-0>`_.
-#    type: string
-#    pattern: '^cen|[pq](ter|([1-9][0-9]*(\.[1-9][0-9]*)?))$'
-#    example: "q22.3"
 
   Residue:
     maturity: draft
@@ -794,3 +541,86 @@ $defs:
       sequences). IUPAC ambiguity codes are permitted in Sequence Strings.
     type: string
     pattern: '^[A-Z*\-]*$'
+
+
+  # =============================================================================
+  # NEW PROPOSED SV Classes
+  # These classes are not yet organized within the vrs-source.yaml document
+  # These classes are under active discussion.
+  # =============================================================================
+
+  Adjacency:
+    maturity: draft
+    ga4ghDigest:
+      prefix: AJ
+      keys:
+        - type
+        - adjoinedSequences
+        - linker
+    inherits: MolecularVariation
+    description:
+      The `Adjacency` class can represent either the termination of a sequence 
+      or the adjoining of the end of a sequence with the beginning of an
+      adjacent sequence, potentially with an intervening linker sequence.
+    type: object
+    properties:
+      type:
+        type: string
+        const: Adjacency
+        default: Adjacency
+        description: MUST be "Adjacency".
+      adjoinedSequences:
+        type: array
+        uniqueItems: false
+        ordered: true
+        items:
+          oneOf:
+          - $refCurie: gks.common:IRI.json
+          - $ref: '#/$defs/Location'
+        description: The terminal sequence or pair of adjoined sequences that defines in the adjacency.
+        minItems: 1
+        maxItems: 2
+      linker:
+        $ref: '#/$defs/SequenceExpression'
+        description: The sequence found between adjoined sequences.
+#      homology:
+#        # Only valid for breakends=2
+#        type: boolean
+#        default: false
+#        description:
+#          A flag indicating whether the location interval of the breakend
+#          is due to the sequences at the breakends being homologous or
+#          whether the interval is due to uncertainty regarding the actual
+#          locations of the breakends.
+#      terminal:
+#        # TODO: can the schema encode a constraint that a terminal breakend cannot
+#        # be part of a breakpoint?
+#        type: boolean
+#        default: false
+#        description:
+#          # Only valid for breakends=1
+#          Indicates the end of the molecule
+    required:
+      - adjoinedSequences
+
+#  Event:
+#    description:
+#      An event that results in a set of variants.
+#    type: object
+#    properties:
+#      type:
+#        type: string
+#        const: Event
+#        default: Event
+#        description: MUST be "Event"
+#      variants:
+#        $ref: '#/definitions/VariationSet'
+#      classification:
+#        # TODO: what event ontology should we use?
+#        type: string
+#        description: Category of event
+#    required:
+#      - type
+#      - variants
+#      - classification
+#    additionalProperties: true
