@@ -9,15 +9,16 @@
 
 # https://json-schema.org/understanding-json-schema/reference/schema.html
 $schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/vrs/vrs-source.yaml"
 title: "GA4GH-VRS-Definitions"
 type: object
 strict: true
 
 imports:
-  gks.core: import/gks-common/core-source.yaml
+  gks.core: ../gks-common/core-source.yaml
 
 namespaces:
-  gks.common: import/gks-common/
+  gks.common: ../gks-common/
 
 $defs:
   # VRS definitions are presented top-down.  Everything rolls up to

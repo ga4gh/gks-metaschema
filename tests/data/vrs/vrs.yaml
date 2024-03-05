@@ -1,4 +1,5 @@
 $schema: https://json-schema.org/draft/2020-12/schema
+$id: https://w3id.org/ga4gh/schema/vrs/vrs-source.yaml
 title: GA4GH-VRS-Definitions
 type: object
 $defs:
@@ -82,7 +83,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: import/gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/core.json#/$defs/Extension
       type:
         type: string
         const: Allele
@@ -101,7 +102,7 @@ $defs:
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: import/gks-common/IRI.json
+        - $ref: ../gks-common/IRI.json
         description: The location of the Allele
       state:
         description: An expression of the sequence state
@@ -139,7 +140,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: import/gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/core.json#/$defs/Extension
       type:
         type: string
         const: Haplotype
@@ -164,7 +165,7 @@ $defs:
           oneOf:
           - $ref: '#/$defs/Adjacency'
           - $ref: '#/$defs/Allele'
-          - $ref: import/gks-common/IRI.json
+          - $ref: ../gks-common/IRI.json
         description: A list of Alleles that comprise a Haplotype.  Members must share
           the same reference sequence as adjacent members. Alleles should not have
           overlapping or adjacent coordinates with neighboring Alleles. Neighboring
@@ -204,7 +205,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: import/gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/core.json#/$defs/Extension
       type:
         type: string
         const: CopyNumberCount
@@ -223,7 +224,7 @@ $defs:
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: import/gks-common/IRI.json
+        - $ref: ../gks-common/IRI.json
         description: A location for which the number of systemic copies is described.
       copies:
         oneOf:
@@ -262,7 +263,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: import/gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/core.json#/$defs/Extension
       type:
         type: string
         const: CopyNumberChange
@@ -281,7 +282,7 @@ $defs:
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: import/gks-common/IRI.json
+        - $ref: ../gks-common/IRI.json
         description: A location for which the number of systemic copies is described.
       copyChange:
         type: string
@@ -330,7 +331,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: import/gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/core.json#/$defs/Extension
       type:
         type: string
         const: SequenceLocation
@@ -344,7 +345,7 @@ $defs:
       sequenceReference:
         oneOf:
         - $ref: '#/$defs/SequenceReference'
-        - $ref: import/gks-common/IRI.json
+        - $ref: ../gks-common/IRI.json
         description: A SequenceReference.
       start:
         oneOf:
@@ -385,7 +386,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: import/gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/core.json#/$defs/Extension
       type:
         type: string
         const: SequenceReference
@@ -438,7 +439,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: import/gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/core.json#/$defs/Extension
       type:
         type: string
         const: ReferenceLengthExpression
@@ -485,7 +486,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: import/gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/core.json#/$defs/Extension
       type:
         type: string
         const: LengthExpression
@@ -523,7 +524,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: import/gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/core.json#/$defs/Extension
       type:
         type: string
         const: LiteralSequenceExpression
@@ -591,7 +592,7 @@ $defs:
         type: array
         ordered: true
         items:
-          $ref: import/gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/core.json#/$defs/Extension
       type:
         type: string
         const: Adjacency
@@ -614,7 +615,7 @@ $defs:
         items:
           oneOf:
           - $ref: '#/$defs/SequenceLocation'
-          - $ref: import/gks-common/IRI.json
+          - $ref: ../gks-common/IRI.json
         description: The terminal sequence or pair of adjoined sequences that defines
           in the adjacency.
         minItems: 1

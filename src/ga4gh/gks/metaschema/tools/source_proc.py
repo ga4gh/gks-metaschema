@@ -26,9 +26,13 @@ class YamlSchemaProcessor:
         self.imported = root_fp is not None
         self.root_schema_fp = root_fp
         self.raw_schema = self.load_schema(schema_fp)
+        self.yaml_key = self.raw_schema.get('yaml-target', 'yaml')
+        self.json_key = self.raw_schema.get('json-target', 'json')
+        self.defs_key = self.raw_schema.get('def-target', f'def')
         # schema_root_name = str(self.schema_fp.stem)[:-7]  # removes "-source"
-        self.json_fp = self.schema_fp.parent / self.raw_schema.get('json-target', 'json')
-        self.def_fp = self.schema_fp.parent / self.raw_schema.get('def-target', f'def')
+        self.yaml_fp = self.schema_fp.parent / self.yaml_key
+        self.json_fp = self.schema_fp.parent / self.json_key
+        self.def_fp = self.schema_fp.parent / self.defs_key
         # self.def_fp = self.schema_fp.parent / self.raw_schema.get('def-target', f'def/{schema_root_name}')
         self.namespaces = self.raw_schema.get('namespaces', list())
         self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[self.raw_schema['$schema']]

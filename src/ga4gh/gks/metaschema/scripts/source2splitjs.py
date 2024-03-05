@@ -3,6 +3,7 @@
 from pathlib import Path
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 import argparse
+from urllib.parse import urlparse
 import re
 import os
 import copy
@@ -32,7 +33,7 @@ def _redirect_refs(obj, dest_path, root_proc):
                     assert m is not None
                     ref_class = m.group(2)
                     ref_class_from_frag = True
-                elif ref.endswith('.json'):
+                else:
                     ref_class = ref.split('/')[-1].split('.')[0]
                     ref_class_from_frag = False
 
@@ -57,14 +58,14 @@ def _redirect_refs(obj, dest_path, root_proc):
                         frag_containing_class = proc.raw_defs[ref_class]['protectedClassOf']
                         # containing class matches dest
                         if frag_containing_class == dest_class:
-                            ref_class_pointer = f'{ref_class}.json'
+                            ref_class_pointer = f'{ref_class}'
                         # containing class does not match dest
                         else:
-                            ref_class_pointer = f'{frag_containing_class}.json#/{proc.schema_def_keyword}/{ref_class}'
+                            ref_class_pointer = f'{frag_containing_class}#/{proc.schema_def_keyword}/{ref_class}'
                     else:
-                        ref_class_pointer = f'{ref_class}.json'
+                        ref_class_pointer = f'{ref_class}'
                 else:
-                    ref_class_pointer = f'{ref_class}.json'
+                    ref_class_pointer = f'{ref_class}'
 
                 if ref:
                     revised_path = str(Path(ref).with_name(ref_class_pointer))
@@ -80,15 +81,20 @@ def _redirect_refs(obj, dest_path, root_proc):
         return obj
 
 
-def split_defs_to_js(root_proc):
-    fp = root_proc.json_fp
+def split_defs_to_js(root_proc, mode='json'):
+    if mode == 'json':
+        fp = root_proc.json_fp
+    elif mode == 'yaml':
+        fp = root_proc.yaml_fp
+    else:
+        raise ValueError('mode must be json or yaml')
     os.makedirs(fp, exist_ok=True)
     kw = root_proc.schema_def_keyword
     for cls in root_proc.for_js[kw].keys():
         if root_proc.class_is_protected(cls):
             continue
         class_def = copy.deepcopy(root_proc.for_js[kw][cls])
-        target_path = fp / f'{cls}.json'
+        target_path = fp / f'{cls}'
         out_doc = copy.deepcopy(root_proc.for_js)
         if cls in root_proc.has_protected_members:
             def_dict = dict()
@@ -106,6 +112,8 @@ def split_defs_to_js(root_proc):
         class_def = _redirect_refs(class_def, target_path, root_proc)
         out_doc.update(class_def)
         out_doc['title'] = cls
+        parsed_id_path = urlparse(out_doc['$id']).path
+        out_doc['$id'] = str(Path(parsed_id_path).parent.joinpath(root_proc.json_key, cls))
         with open(target_path, 'w') as f:
             json.dump(out_doc, f, indent=3, sort_keys=False)
 

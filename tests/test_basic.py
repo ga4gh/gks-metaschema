@@ -8,9 +8,9 @@ from src.ga4gh.gks.metaschema.scripts.y2t import main as y2t
 from src.ga4gh.gks.metaschema.scripts.source2splitjs import split_defs_to_js
 from src.ga4gh.gks.metaschema.scripts.source2classes import main as s2c
 
-processor = YamlSchemaProcessor('data/vrs-source.yaml')
-processor.js_yaml_dump(open('data/vrs.yaml', 'w'))
-target = yaml.load(open('data/vrs.yaml'), Loader=yaml.SafeLoader)
+processor = YamlSchemaProcessor('data/vrs/vrs-source.yaml')
+processor.js_yaml_dump(open('data/vrs/vrs.yaml', 'w'))
+target = yaml.load(open('data/vrs/vrs.yaml'), Loader=yaml.SafeLoader)
 
 def test_mv_is_passthrough():
     assert processor.class_is_passthrough('MolecularVariation')
@@ -26,8 +26,8 @@ def test_class_is_subclass():
 
 
 def test_yaml_create():
-    p = YamlSchemaProcessor('data/import/gks-common/core-source.yaml')
-    p.js_yaml_dump(open('data/import/gks-common/core.yaml', 'w'))
+    p = YamlSchemaProcessor('data/gks-common/core-source.yaml')
+    p.js_yaml_dump(open('data/gks-common/core.yaml', 'w'))
     assert True
 
 
@@ -37,7 +37,7 @@ def test_yaml_target_match():
 
 
 def test_merged_create():
-    p = YamlSchemaProcessor('data/vrs-source.yaml')
+    p = YamlSchemaProcessor('data/vrs/vrs-source.yaml')
     p.merge_imported()
     assert True
 
