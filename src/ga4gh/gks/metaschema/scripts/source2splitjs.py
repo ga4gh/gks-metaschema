@@ -3,7 +3,6 @@
 from pathlib import Path
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 import argparse
-from urllib.parse import urlparse
 import re
 import os
 import copy
@@ -32,10 +31,8 @@ def _redirect_refs(obj, dest_path, root_proc, mode):
                     m = frag_re.match(fragment)
                     assert m is not None
                     ref_class = m.group(2)
-                    ref_class_from_frag = True
                 else:
                     ref_class = ref.split('/')[-1].split('.')[0]
-                    ref_class_from_frag = False
 
                 # Test if reference is for internal or external object
                 # and retrieve appropriate processor for export path
@@ -48,33 +45,7 @@ def _redirect_refs(obj, dest_path, root_proc, mode):
                             proc = other
                     if proc is None:
                         raise ValueError(f'Could not find {ref_class} in processors')
-
-                # Determine if protected or public reference
-                # If protected, reference class accordingly
-                # If public, reference exported JSON relative to destination
-                if ref_class_from_frag:
-                    if proc.class_is_protected(ref_class):
-                        dest_class = dest_path.stem
-                        frag_containing_class = proc.raw_defs[ref_class]['protectedClassOf']
-                        # containing class matches dest
-                        if frag_containing_class == dest_class:
-                            ref_class_pointer = f'{ref_class}'
-                        # containing class does not match dest
-                        else:
-                            ref_class_pointer = f'{frag_containing_class}#/{proc.schema_def_keyword}/{ref_class}'
-                    else:
-                        ref_class_pointer = f'{ref_class}'
-                else:
-                    ref_class_pointer = f'{ref_class}'
-
-                if ref:
-                    p = Path(ref).with_name(ref_class_pointer)
-                    revised_path = str(p)
-                else:
-                    revised_path = ref_class_pointer
-
-                # Point to JSON export
-                obj[k] = str(revised_path)
+                obj[k] = proc.get_class_abs_path(ref_class, mode)
             else:
                 obj[k] = _redirect_refs(v, dest_path, root_proc, mode)
         return obj
@@ -113,10 +84,7 @@ def split_defs_to_js(root_proc, mode='json'):
         class_def = _redirect_refs(class_def, target_path, root_proc, mode)
         out_doc.update(class_def)
         out_doc['title'] = cls
-        parsed_url = urlparse(out_doc['$id'])
-        parsed_id_path = parsed_url.path
-        revised_path = Path(parsed_id_path).parent.joinpath(root_proc.json_key, cls)
-        out_doc['$id'] = f'{parsed_url.scheme}://{parsed_url.netloc}{revised_path}'
+        out_doc['$id'] = root_proc.get_class_uri(cls, mode)
         with open(target_path, 'w') as f:
             json.dump(out_doc, f, indent=3, sort_keys=False)
 

@@ -6,6 +6,7 @@ import yaml
 import re
 from pathlib import Path
 from collections import defaultdict
+from urllib.parse import urlparse
 
 SCHEMA_DEF_KEYWORD_BY_VERSION = {
     "https://json-schema.org/draft-07/schema": "definitions",
@@ -26,6 +27,7 @@ class YamlSchemaProcessor:
         self.imported = root_fp is not None
         self.root_schema_fp = root_fp
         self.raw_schema = self.load_schema(schema_fp)
+        self.id = self.raw_schema['$id']
         self.yaml_key = self.raw_schema.get('yaml-target', 'yaml')
         self.json_key = self.raw_schema.get('json-target', 'json')
         self.defs_key = self.raw_schema.get('def-target', f'def')
@@ -283,6 +285,29 @@ class YamlSchemaProcessor:
         else:
             raise ValueError
         return inherited_class, proc
+
+    def get_class_uri(self, schema_class, mode):
+        abs_path = self.get_class_abs_path(schema_class, mode)
+        parsed_url = urlparse(self.id)
+        return f'{parsed_url.scheme}://{parsed_url.netloc}{abs_path}'
+
+    def get_class_abs_path(self, schema_class, mode):
+        if mode == 'json':
+            export_key = self.json_key
+        elif mode == 'yaml':
+            export_key = self.yaml_key
+        else:
+            raise ValueError('mode must be json or yaml')
+        if self.class_is_protected(schema_class):
+            frag_containing_class = self.raw_defs[schema_class]['protectedClassOf']
+            class_ref = f'{frag_containing_class}#/{self.schema_def_keyword}/{schema_class}'
+        else:
+            class_ref = schema_class
+        parsed_url = urlparse(self.id)
+        parsed_id_path = parsed_url.path
+        revised_path = Path(parsed_id_path).parent.joinpath(export_key, class_ref)
+        return str(revised_path)
+
 
     def process_schema_class(self, schema_class):
         raw_class_def = self.raw_schema[self.schema_def_keyword][schema_class]
