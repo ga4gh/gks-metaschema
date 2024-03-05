@@ -1,5 +1,5 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: https://w3id.org/ga4gh/schema/vrs/vrs-source.yaml
+$id: https://w3id.org/ga4gh/schema/v.id/vrs/vrs-source.yaml
 title: GA4GH-VRS-Definitions
 type: object
 $defs:
@@ -102,7 +102,7 @@ $defs:
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: ../gks-common/IRI.json
+        - $ref: /ga4gh/schema/gks-common/1.x/IRI.json
         description: The location of the Allele
       state:
         description: An expression of the sequence state
@@ -165,7 +165,7 @@ $defs:
           oneOf:
           - $ref: '#/$defs/Adjacency'
           - $ref: '#/$defs/Allele'
-          - $ref: ../gks-common/IRI.json
+          - $ref: /ga4gh/schema/gks-common/1.x/IRI.json
         description: A list of Alleles that comprise a Haplotype.  Members must share
           the same reference sequence as adjacent members. Alleles should not have
           overlapping or adjacent coordinates with neighboring Alleles. Neighboring
@@ -224,7 +224,7 @@ $defs:
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: ../gks-common/IRI.json
+        - $ref: /ga4gh/schema/gks-common/1.x/IRI.json
         description: A location for which the number of systemic copies is described.
       copies:
         oneOf:
@@ -282,7 +282,7 @@ $defs:
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: ../gks-common/IRI.json
+        - $ref: /ga4gh/schema/gks-common/1.x/IRI.json
         description: A location for which the number of systemic copies is described.
       copyChange:
         type: string
@@ -345,7 +345,7 @@ $defs:
       sequenceReference:
         oneOf:
         - $ref: '#/$defs/SequenceReference'
-        - $ref: ../gks-common/IRI.json
+        - $ref: /ga4gh/schema/gks-common/1.x/IRI.json
         description: A SequenceReference.
       start:
         oneOf:
@@ -615,7 +615,7 @@ $defs:
         items:
           oneOf:
           - $ref: '#/$defs/SequenceLocation'
-          - $ref: ../gks-common/IRI.json
+          - $ref: /ga4gh/schema/gks-common/1.x/IRI.json
         description: The terminal sequence or pair of adjoined sequences that defines
           in the adjacency.
         minItems: 1

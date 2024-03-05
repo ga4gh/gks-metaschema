@@ -13,10 +13,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument("infile")
 
 
-def _redirect_refs(obj, dest_path, root_proc):
+def _redirect_refs(obj, dest_path, root_proc, mode):
     frag_re = re.compile(r'(/\$defs|definitions)/(\w+)')
     if isinstance(obj, list):
-        return [_redirect_refs(x, dest_path, root_proc) for x in obj]
+        return [_redirect_refs(x, dest_path, root_proc, mode) for x in obj]
     elif isinstance(obj, dict):
         for k, v in obj.items():
             if k == '$ref':
@@ -68,14 +68,15 @@ def _redirect_refs(obj, dest_path, root_proc):
                     ref_class_pointer = f'{ref_class}'
 
                 if ref:
-                    revised_path = str(Path(ref).with_name(ref_class_pointer))
+                    p = Path(ref).with_name(ref_class_pointer)
+                    revised_path = str(p)
                 else:
                     revised_path = ref_class_pointer
 
                 # Point to JSON export
                 obj[k] = str(revised_path)
             else:
-                obj[k] = _redirect_refs(v, dest_path, root_proc)
+                obj[k] = _redirect_refs(v, dest_path, root_proc, mode)
         return obj
     else:
         return obj
@@ -104,16 +105,18 @@ def split_defs_to_js(root_proc, mode='json'):
                     def_dict[protected_cls] = copy.deepcopy(root_proc.defs[protected_cls])
                     keep = True
             if keep:
-                out_doc[kw] = _redirect_refs(def_dict, target_path, root_proc)
+                out_doc[kw] = _redirect_refs(def_dict, target_path, root_proc, mode)
             else:
                 out_doc.pop(kw, None)
         else:
             out_doc.pop(kw, None)
-        class_def = _redirect_refs(class_def, target_path, root_proc)
+        class_def = _redirect_refs(class_def, target_path, root_proc, mode)
         out_doc.update(class_def)
         out_doc['title'] = cls
-        parsed_id_path = urlparse(out_doc['$id']).path
-        out_doc['$id'] = str(Path(parsed_id_path).parent.joinpath(root_proc.json_key, cls))
+        parsed_url = urlparse(out_doc['$id'])
+        parsed_id_path = parsed_url.path
+        revised_path = Path(parsed_id_path).parent.joinpath(root_proc.json_key, cls)
+        out_doc['$id'] = f'{parsed_url.scheme}://{parsed_url.netloc}{revised_path}'
         with open(target_path, 'w') as f:
             json.dump(out_doc, f, indent=3, sort_keys=False)
 
