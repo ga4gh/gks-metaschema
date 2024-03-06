@@ -1,0 +1,237 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/va-spec/1.x/core-im/core-im-source.yaml"
+title: Variant Annotation Specification Core Information Model
+type: object
+strict: true
+
+imports:
+  gks.core: ../../gks-common/core-source.yaml
+  catvrs: ../../catvrs/catvrs-source.yaml
+  vrs: ../../vrs/vrs-source.yaml
+
+namespaces:
+  gks.core: ../../gks-common/core.json#/$defs/
+  catvrs: ../../catvrs/catvrs.json#/$defs/
+  vrs: ../../vrs/vrs.json#/$defs/
+
+$defs:
+  InformationEntity:
+    inherits: gks.core:Entity
+    description: >-
+      InformationEntities are abstract (non-physical) entities that are about something (i.e. they carry 
+      information about things in the real world).
+    heritableProperties:
+      type:
+        type: string
+      specifiedBy:
+        oneOf:
+        - $ref: "#/$defs/Method"
+        - $refCurie: gks.core:IRI
+        description: >-
+          A :ref:`Method` that describes all or part of the process through which the information was
+          generated.
+      contributions:
+        type: array
+        ordered: true
+        items:
+          $ref: "#/$defs/Contribution"
+      isReportedIn:
+        type: array
+        ordered: false
+        items:
+          oneOf:
+          - $ref: "#/$defs/Document"
+          - $refCurie: gks.core:IRI
+        description: A document in which the information content is expressed.
+      recordMetadata:
+        $comment: this should be "gks.core:RecordMetadata", but that data class is not in the common core, so using null as placeholder
+        type: null
+    heritableRequired:
+      - id
+      - type
+  Contribution:
+    type: object
+    inherits: gks.core:Entity
+    maturity: draft
+    description: >-
+      The sum of all actions taken by a single agent in contributing to the creation, modification, 
+      assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine, DataItem, 
+      Publication, etc.)
+    properties:
+      type:
+        type: string
+        const: Contribution
+      contributor:
+        $ref: "#/$defs/Agent"
+      date:
+        type: string
+        format: date
+      activity:
+        $refCurie: gks.core:Coding
+        description: >-
+         SHOULD describe a concept descending from the Contributor Role Ontology.
+
+  Agent:
+    type: object
+    maturity: draft
+    inherits: gks.core:Entity
+    description: >-
+      An autonomous actor (person, organization, or computational agent) that bears some form
+      of responsibility for an activity taking place, for the existence of an entity, or for 
+      another agent’s activity.
+    properties:
+      type:
+        type: string
+        const: Agent
+        default: Agent
+        description: MUST be "Agent".
+      name:
+        type: string
+      subtype:
+        type: string
+        enum:
+          - person
+          - organization
+          - computer
+  Method:
+    type: object
+    maturity: draft
+    inherits: gks.core:Entity
+    description: >-
+      A set of instructions that specify how to achieve some objective (e.g. experimental protocols, 
+      curation guidelines, rule sets, etc.)
+    properties:
+      type:
+        type: string
+        const: Method
+        default: Method
+        description: MUST be "Method".
+      isReportedIn:
+        oneOf:
+        - $refCurie: gks.core:IRI
+        - $ref: "#/$defs/Document"
+      subtype:
+        $refCurie: gks.core:Coding
+        description: >-
+          A more specific type of entity the method represents (e.g. Variant Interpretation Guideline, 
+          Experimental Protocol)
+
+  Document:
+    type: object
+    maturity: draft
+    inherits: gks.core:MappableEntity
+    description: a representation of a physical or digital document
+    properties:
+      type:
+        type: string
+        const: Document
+        default: Document
+        description: Must be "Document"
+      title:
+        type: string
+        description: The title of the Document
+      url:
+        type: string
+        description: A URL at which the document may be retrieved.
+        format: uri
+        pattern: "^(https?|s?ftp)://"
+      doi:
+        type: string
+        pattern: "^10.(\\d+)(\\.\\d+)*/[\\w\\-\\.]+"
+        description: >-
+          A `Digital Object Identifier <https://www.doi.org/the-identifier/what-is-a-doi/>_` 
+          for the document.
+      pmid:
+        type: integer
+        description: A `PubMed unique identifier <https://en.wikipedia.org/wiki/PubMed#PubMed_identifier>`_.
+  DataItem:
+    inherits: InformationEntity
+    maturity: draft
+    type: object
+    description: >-
+      An InformationEntity representing an individual piece of data, generated/acquired through methods 
+      which reliably produce truthful information about something.
+    properties:
+      type:
+        type: string
+        const: DataItem
+        default: DataItem
+        description: Must be "DataItem"
+      subtype:
+        $refCurie: gks.core:Coding
+        description: >- 
+          A specific type of data the DataItem object represents (e.g. a specimen count, a 
+          patient weight, an allele frequency, a p-value, a confidence score)
+      value:
+         type: string
+      unit:
+        type:
+          $refCurie: gks.core:Coding
+    required: [ "value" ]
+  Statement:
+    inherits: InformationEntity
+    description: >-
+      A Statement (aka ‘Assertion’) represents a claim of purported truth as made by a particular agent, 
+      on a particular occasion.
+    heritableProperties:
+      subject:
+        description: The subject of the Statement.
+      predicate:
+        description: The predicate of the Statement.
+        type: string
+      object:
+        description: The object of the Statement.
+      qualifiers:
+        description: Additional, optional properties that may qualify the Statement.
+        type: object
+        additionalProperties: false
+      direction:
+        type: string
+        enum: [ "supports", "none", "refutes" ]
+        description: >-
+          The direction of this Statement with respect to the predicate.
+      strength:
+        oneOf:
+          - $refCurie: gks.core:Coding
+          - $refCurie: gks.core:IRI
+        description: >-
+          The overall strength of support for the Statement based on all evidence assessed.
+    heritableRequired:
+      - subject
+      - direction
+  VariantStatement:
+    inherits: Statement
+    description: >-
+      A :ref:`Statement` describing the impact of a variant.
+    heritableProperties:
+      variant:
+        extends: subject
+        oneOf:
+          - $refCurie: vrs:Variation
+          - $refCurie: catvrs:CategoricalVariation
+          - $refCurie: gks.core:IRI
+        description: A variant that is the subject of the Statement.
+  VariantClassification:
+    inherits: VariantStatement
+    description: >-
+      A :ref:`VariantStatement` classifying the impact of a variant.
+    heritableProperties:
+      classification:
+        oneOf:
+          - $refCurie: gks.core:Coding
+          - $refCurie: gks.core:IRI
+        description: >-
+          A methodological, summary classification about the impact of a variant.
+    heritableRequired:
+      - classification
+  VariantStudySummary:
+    inherits: VariantStatement
+    description: >-
+      A :ref:`Statement` summarizing evidence about the impact of a variant from
+      one or more studies.
+    heritableProperties:
+      isReportedIn:
+        extends: isReportedIn
+        minItems: 1
+    heritableRequired:
+      - isReportedIn

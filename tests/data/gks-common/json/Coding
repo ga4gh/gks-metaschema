@@ -1,0 +1,31 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/gks-common/1.x/json/Coding",
+   "title": "Coding",
+   "type": "object",
+   "maturity": "draft",
+   "description": "a concept codified by a terminology system.",
+   "properties": {
+      "label": {
+         "type": "string",
+         "description": "A primary label for the coding."
+      },
+      "system": {
+         "type": "string",
+         "description": "Identity of the terminology system."
+      },
+      "version": {
+         "type": "string",
+         "description": "Version of the terminology system."
+      },
+      "code": {
+         "$ref": "/ga4gh/schema/gks-common/1.x/json/Code",
+         "description": "Symbol in syntax defined by the terminology system."
+      }
+   },
+   "required": [
+      "code",
+      "system"
+   ],
+   "additionalProperties": false
+}
