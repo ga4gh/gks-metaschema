@@ -45,6 +45,12 @@ def _redirect_refs(obj, dest_path, root_proc, mode):
                             proc = other
                     if proc is None:
                         raise ValueError(f'Could not find {ref_class} in processors')
+                # if reference is protected for the class being processed, return only fragment
+                if ref == '' and proc.class_is_protected(ref_class):
+                    containing_class = proc.raw_defs[ref_class]['protectedClassOf']
+                    if containing_class == dest_path.name:
+                        obj[k] = f'#{fragment}'
+                        return obj
                 obj[k] = proc.get_class_abs_path(ref_class, mode)
             else:
                 obj[k] = _redirect_refs(v, dest_path, root_proc, mode)

@@ -130,3 +130,6 @@ dmypy.json
 
 # Pipfiles
 Pipfile*
+
+# IDEs
+.vscode
