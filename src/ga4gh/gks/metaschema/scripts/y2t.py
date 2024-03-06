@@ -36,7 +36,7 @@ def resolve_type(class_property_definition):
                 resolved_active.append(resolved_type)
         return ' | '.join(resolved_active + resolved_deprecated)
     else:
-        raise ValueError(class_property_definition)
+        return "_Not Specified_"
 
 
 def resolve_cardinality(class_property_name, class_property_attributes, class_definition):
