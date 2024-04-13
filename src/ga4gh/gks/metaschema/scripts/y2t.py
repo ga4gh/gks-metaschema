@@ -85,18 +85,18 @@ def main(proc_schema):
             else:
                 inheritance = ""
             print(f"""
-    **Information Model**
-    {inheritance}
-    .. list-table::
-       :class: clean-wrap
-       :header-rows: 1
-       :align: left
-       :widths: auto
-       
-       *  - Field
-          - Type
-          - Limits
-          - Description""", file=f)
+**Information Model**
+{inheritance}
+.. list-table::
+    :class: clean-wrap
+    :header-rows: 1
+    :align: left
+    :widths: auto
+    
+    *  - Field
+        - Type
+        - Limits
+        - Description""", file=f)
             for class_property_name, class_property_attributes in class_definition[p].items():
                 print(f"""\
        *  - {class_property_name}
