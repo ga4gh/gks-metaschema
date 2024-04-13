@@ -9,6 +9,8 @@ parser.add_argument("infile")
 
 def main(proc):
     for cls in proc.processed_classes:
+        if proc.class_is_protected(cls):
+            continue
         print(cls)
 
 

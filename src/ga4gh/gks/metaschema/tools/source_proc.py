@@ -308,7 +308,6 @@ class YamlSchemaProcessor:
         revised_path = Path(parsed_id_path).parent.joinpath(export_key, class_ref)
         return str(revised_path)
 
-
     def process_schema_class(self, schema_class):
         raw_class_def = self.raw_schema[self.schema_def_keyword][schema_class]
         if schema_class in self.processed_classes:
