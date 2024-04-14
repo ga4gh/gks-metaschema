@@ -88,21 +88,21 @@ def main(proc_schema):
 **Information Model**
 {inheritance}
 .. list-table::
-    :class: clean-wrap
-    :header-rows: 1
-    :align: left
-    :widths: auto
-    
-    *  - Field
-        - Type
-        - Limits
-        - Description""", file=f)
+   :class: clean-wrap
+   :header-rows: 1
+   :align: left
+   :widths: auto
+
+   *  - Field
+      - Type
+      - Limits
+      - Description""", file=f)
             for class_property_name, class_property_attributes in class_definition[p].items():
                 print(f"""\
-       *  - {class_property_name}
-          - {resolve_type(class_property_attributes)}
-          - {resolve_cardinality(class_property_name, class_property_attributes, class_definition)}
-          - {class_property_attributes.get('description', '')}""", file=f)
+   *  - {class_property_name}
+      - {resolve_type(class_property_attributes)}
+      - {resolve_cardinality(class_property_name, class_property_attributes, class_definition)}
+      - {class_property_attributes.get('description', '')}""", file=f)
 
 
 if __name__ == "__main__":
