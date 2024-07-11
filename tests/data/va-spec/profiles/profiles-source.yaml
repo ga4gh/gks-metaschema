@@ -1,0 +1,470 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/va-spec/1.x/profiles/profiles-source.yaml"
+title: VA Spec Standard Profiles
+strict: true
+
+imports:
+  va.core: ../core-im/core-im-source.yaml
+  catvrs: ../../catvrs/catvrs-source.yaml
+  gks.common: ../../gks-common/common-source.yaml
+  gks.domain-entities: ../../gks-domain-entities/domain-entities-source.yaml
+  vrs: ../../vrs/vrs-source.yaml
+
+namespaces:
+  va.core: ../core-im/core-im.json#/$defs/
+  va.core.slots: ../core-im/core-im.json#/$slotdefs/
+  gks.common: ../../gks-common/common.json#/$defs/
+  gks.domain-entities: ../../gks-domain-entities/domain-entities.json#/$defs/
+  catvrs: ../../catvrs/catvrs.json#/$defs/
+  vrs: ../../vrs/vrs.json#/$defs/
+
+$defs:
+  CohortAlleleFrequencyStudyResult:
+    inherits: va.core:StudyResult
+    maturity: draft
+    type: object
+    description: >-
+      A StudyResult that reports measures related to the frequency of an Allele in a cohort
+    properties:
+      type:
+        extends: type
+        const: "CohortAlleleFrequencyStudyResult"
+        default: "CohortAlleleFrequencyStudyResult"
+        description: MUST be "CohortAlleleFrequencyStudyResult".
+      sourceDataSet:
+        extends: sourceDataSet
+        description: The dataset from which the CohortAlleleFrequencyStudyResult was reported.
+        additionalProperties: false
+      focusAllele:
+        extends: focus
+        oneOf:
+        - $refCurie: vrs:Allele
+        - type: string
+          format: uri-reference
+          description: The Allele for which the frequency is being reported.
+      focusAlleleCount:
+#       multiplies: dataItem    (placeholder for flag I would like to add to indicate that 1:m property specialization is happening here - see issue #134)
+        # $refCurie: va.core:DataItem
+        # description: The number of occurrences of the focusAllele in the cohort.
+        # properties:
+        #   value:
+        #     extends: value
+        #     type: integer
+        #     description: The number of occurrences of the focusAllele in the cohort.
+        type: integer
+        description: The number of occurrences of the focusAllele in the cohort.        
+      locusAlleleCount:  
+#       multiplies: dataItem    (placeholder for flag I would like to add to indicate that 1:m property specialization is happening here - see issue #134)      
+        # $refCurie: va.core:DataItem
+        # description: >-
+        #   The number of occurrences of alleles at the locus in the cohort
+        #   (count of all alleles at this locus, sometimes referred to as "allele number")    
+        # properties:
+        #   value:
+        #     extends: value
+        #     type: integer
+        #     description: >-
+        #       The number of occurrences of alleles at the locus in the cohort
+        #       (count of all alleles at this locus, sometimes referred to as "allele number")
+        type: integer
+        description: >-
+          The number of occurrences of alleles at the locus in the cohort
+          (count of all alleles at this locus, sometimes referred to as "allele number")
+      alleleFrequency: 
+#       multiplies: dataItem    (placeholder for flag I would like to add to indicate that 1:m property specialization is happening here - see issue #134)      
+        # $refCurie: va.core:DataItem
+        # description: The frequency of the focusAllele in the cohort.
+        # properties:
+        #   value:
+        #     extends: value
+        #     type: number
+        #     description: The frequency of the focusAllele in the cohort.
+        type: number
+        description: The frequency of the focusAllele in the cohort.        
+      cohortStudyGroup:    
+        extends: studyGroup   
+        description: The cohort from which the frequency was derived.
+      ancillaryResults:           
+        description: >-
+          Ancillary results that may be associated with the CohortAlleleFrequency,
+          providing additional context or information.               
+        maturity: draft
+        $comment: This field is different from most GKS objects by allowing any content to be added, and so is independently versioned.
+        type: object
+        additionalProperties: false
+        properties:
+          grpMaxFAF95:
+            description: >-
+              The maximum allele frequency in the cohort group for a within a 95% confidence interval.
+            type: object
+            properties:
+              frequency:
+                type: number
+                description: The maximum allele frequency in the cohort group.
+              confidenceInterval:
+                type: number
+                description: The confidence interval for the maximum allele frequency.
+              groupId:
+                type: string
+                description: The group ID for which the maximum allele frequency is reported.
+          jointGrpMaxFAF95: 
+            description: >-
+              The maximum allele frequency in the joint cohort group within a 95% confidence interval.
+            type: number
+            description: The maximum allele frequency in the cohort group.            
+          homozygotes: 
+            type: integer
+          hemizygotes: 
+            type: integer
+      # qualityMeasures:    
+      #   description: >-
+      #     Quality measures associated with the CohortAlleleFrequency and how it was
+      #     derived, which may impact interpretation.                             
+      #   maturity: draft
+      #   $comment: This field is different from most GKS objects by allowing any content to be added, and so is independently versioned.
+      #   type: object
+      #   additionalProperties: true
+      subCohortFrequency:    
+        description: >-
+          A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described.
+          This creates a recursive relationship and subcohorts can be further subdivided into more subcohorts.
+          This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.                    
+        extends: componentResult  
+        items:
+          $ref: "#/$defs/CohortAlleleFrequencyStudyResult"
+    required: 
+    - focusAllele
+    - focusAlleleCount
+    - locusAlleleCount
+    - alleleFrequency
+    - cohortStudyGroup
+
+# Variant Diagnostic Study Statement
+  VariantDiagnosticStudyStatement:
+    inherits: va.core:Statement
+    type: object
+    maturity: draft
+    description: >-
+      A study summarization describing whether a variant is associated with a disease
+      (positive) or lack of a disease (negative).
+    properties:
+      type:
+        extends: type
+        const: "VariantDiagnosticStudyStatement"
+        default: "VariantDiagnosticStudyStatement"
+        description: MUST be "VariantDiagnosticStudyStatement".
+      subjectVariant:
+        # extends: subject
+        oneOf:
+        - $refCurie: vrs:Variation
+        - $refCurie: catvrs:CategoricalVariation
+        - $refCurie: gks.common:IRI
+        description: A variant that is the subject of the Statement.
+      predicate:
+        # extends: predicate
+        enum:
+        - positive
+        - negative
+      objectDisease:
+        # extends: object
+        oneOf:
+        - $refCurie: gks.domain-entities:Condition
+        - $refCurie: gks.common:IRI
+        description: The disease that is evaluated for diagnosis.
+      isReportedIn:
+        extends: isReportedIn
+        minItems: 1
+      alleleOriginQualifier:
+#       multiplies: qualifier    (placeholder for flag I would like to add to indicate that 1:m property specialization is happening here - see issue #134)
+        description: >-
+          Whether the statement should be interpreted in the context of an inherited
+          (germline) variant, an acquired (somatic) mutation, or both (combined).
+        type: string
+        enum:
+        - germline
+        - somatic
+        - combined
+      allelePrevalenceQualifier:
+#       multiplies: qualifier    (placeholder for flag I would like to add to indicate that 1:m property specialization is happening here - see issue #134)
+        description: >-
+          Whether the statement should be interpreted in the context of the variant
+          being rare or common.
+        type: string
+        enum:
+        - rare
+        - common
+      geneContextQualifier:
+#       multiplies: qualifier    (placeholder for flag I would like to add to indicate that 1:m property specialization is happening here - see issue #134)
+        description: A gene context that qualifies the Statement.
+        $refCurie: gks.domain-entities:Gene
+    required:
+    - subjectVariant
+    - predicate
+    - objectDisease
+    - isReportedIn
+
+# Variant Oncogenicity Study Statement
+  VariantOncogenicityStudyStatement:
+    inherits: va.core:Statement
+    maturity: draft
+    type: object
+    description: >-
+      A study summarization supporting or refuting the effect of variant on oncogenesis of a tumor type.
+    properties:
+      type:
+        extends: type
+        const: "VariantOncogenicityStatement"
+        default: "VariantOncogenicityStatement"
+        description: MUST be "VariantOncogenicityStatement".
+      subjectVariant:
+        # extends: subject
+        oneOf:
+        - $refCurie: vrs:Variation
+        - $refCurie: catvrs:CategoricalVariation
+        - $refCurie: gks.common:IRI
+        description: A variant that is the subject of the Statement.
+      predicate:
+        # extends: predicate
+        enum:
+        - isOncogenicFor
+        - isProtectiveFor
+        - isPredisposingFor
+      objectTumorType:
+        # extends: object
+        oneOf:
+        - $refCurie: gks.domain-entities:Condition
+        - $refCurie: gks.common:IRI
+        description: >-
+          The tumor type for which the variant impact is evaluated.
+      isReportedIn:
+        extends: isReportedIn
+        minItems: 1
+      alleleOriginQualifier:
+        type: string
+        description: >-
+          Whether the statement should be interpreted in the context of an inherited 
+          (germline) variant, an acquired (somatic) mutation, or both (combined).
+        enum:
+        - germline
+        - somatic
+        - combined
+      allelePrevalenceQualifier:
+        type: string
+        description: >-
+          Whether the statement should be interpreted in the context of the variant
+          being rare or common.
+        enum:
+        - rare
+        - common
+      geneContextQualifier:
+        description: >-
+          A gene context that qualifies the Statement.
+        $refCurie: gks.domain-entities:Gene
+    required:
+      - subjectVariant
+      - predicate
+      - objectTumorType
+      - isReportedIn
+
+# Variant Pathogenicity Statement
+  VariantPathogenicityStatement:
+    type: object
+    maturity: draft
+    inherits: va.core:Statement
+    description: >-
+      A :ref:`VariantClassification` describing the role of a variant in causing an 
+      inherited disorder.
+    properties:
+      type:
+        extends: type
+        const: "VariantPathogenicityStatement"
+        default: "VariantPathogenicityStatement"
+        description: MUST be "VariantPathogenicityStatement".
+      variant:
+        is_a:
+          $refCurie: va.core.slots:subject
+        oneOf:
+        - $refCurie: vrs:Variation
+        - $refCurie: catvrs:CategoricalVariation
+        - $refCurie: gks.common:IRI
+        description: A variant that is the subject of the Statement.
+      causality:
+        is_a:
+          $refCurie: va.core.slots:predicate
+        const: isCausalFor
+      condition:
+        is_a:
+          $refCurie: va.core.slots:object
+        oneOf:
+        - $refCurie: gks.domain-entities:Condition
+        - $refCurie: gks.common:IRI
+        description: The :ref:`Condition` for which the variant impact is stated.    
+      penetrance:
+        is_a:
+          $refCurie: va.core.slots:qualifier
+        type: string
+        enum:
+        - high
+        - low
+        - risk allele
+        description: >-
+          Extends the statement to report the penetrance of the pathogenic effect - i.e. the extent 
+          to which the variant impact is expressed by individuals carrying it as a measure of the 
+          proportion of carriers exhibiting the condition.
+      modeOfInheritance:
+        is_a:
+          $refCurie: va.core.slots:qualifier
+        type: string
+        enum:
+        - autosomal dominant
+        - autosomal recessive
+        - X-linked dominant
+        - X-linked recessive
+        - mitochondrial
+        description: >-
+          Reports a pattern of inheritance expected for the pathogenic effect of the variant. 
+      geneContext:
+        is_a:
+          $refCurie: va.core.slots:qualifier
+        description: >-
+          Reports the gene through which the pathogenic effect asserted for the variant is mediated 
+          (i.e. it is the variant's impact on this gene that is responsible for causing the condition).
+        $refCurie: gks.domain-entities:Gene
+    required:
+    - variant
+    - causality
+    - condition
+
+# Variant Prognostic Study Statement
+  VariantPrognosticStudyStatement:
+    inherits: va.core:Statement
+    type: object
+    maturity: draft
+    description: >-
+      A study summarization describing whether a variant is associated with improved or
+      worse outcome for a disease.
+    properties:
+      type:
+        extends: type
+        const: "VariantPrognosticStudyStatement"
+        default: "VariantPrognosticStudyStatement"
+        description: MUST be "VariantPrognosticStudyStatement".
+      subjectVariant:
+        # extends: subject
+        oneOf:
+        - $refCurie: vrs:Variation
+        - $refCurie: catvrs:CategoricalVariation
+        - $refCurie: gks.common:IRI
+        description: A variant that is the subject of the Statement.
+      predicate:
+        # extends: predicate
+        enum:
+        - Better Outcome
+        - Worse Outcome
+      objectDisease:
+        # extends: object
+        oneOf:
+        - $refCurie: gks.domain-entities:Condition
+        - $refCurie: gks.common:IRI
+        description: The disease that is evaluated for outcome.
+      isReportedIn:
+        extends: isReportedIn
+        minItems: 1
+      alleleOriginQualifier:
+        type: string
+        description: >-
+          Reports whether the statement should be interpreted in the context of an inherited
+          (germline) variant, an acquired (somatic) mutation, or both (combined).
+        enum:
+        - germline
+        - somatic
+        - combined
+      allelePrevalenceQualifier:
+        type: string
+        description: >-
+          Reports whether the statement should be interpreted in the context of the variant
+          being rare or common.
+        enum:
+        - rare
+        - common
+      geneContextQualifier:
+        description: A gene context that qualifies the Statement.
+        $refCurie: gks.domain-entities:Gene
+    required:
+      - subjectVariant
+      - predicate
+      - objectDisease
+      - isReportedIn
+
+# Variant Therapeutic Response Study Statement
+  VariantTherapeuticResponseStudyStatement:
+    inherits: va.core:Statement
+    maturity: draft
+    type: object
+    description: >-
+      A study summarization describing the role of a variant in modulating the response of a
+      neoplasm to drug administration or other therapeutic procedure.
+    properties:
+      type:
+        extends: type
+        const: "VariantTherapeuticResponseStudyStatement"
+        default: "VariantTherapeuticResponseStudyStatement"
+        description: MUST be "VariantTherapeuticResponseStudyStatement".
+      subjectVariant:
+        # extends: subject
+        oneOf:
+        - $refCurie: vrs:Variation
+        - $refCurie: catvrs:CategoricalVariation
+        - $refCurie: gks.common:IRI
+        description: A variant that is the subject of the Statement.
+      predicate:
+        # extends: predicate
+        enum:
+        - predictsSensitivityTo
+        - predictsResistanceTo
+      objectTherapeutic:
+        description: A drug administration or other therapeutic procedure that the neoplasm
+          is intended to respond to.
+        # extends: object
+        oneOf:
+        - $refCurie: gks.domain-entities:TherapeuticProcedure
+        - $refCurie: gks.common:IRI
+      diseaseQualifier:
+        oneOf:
+        - $refCurie: gks.domain-entities:Condition
+        - $refCurie: gks.common:IRI
+        description: >-
+          Reports the disease context in which the variant's association with therapeutic 
+          sensitivity or resistance is evaluated. Note that this is a required qualifier in 
+          therapeutic response statements.
+      alleleOriginQualifier:
+        type: string
+        description: >-
+          Reports whether the statement should be interpreted in the context of an inherited
+          (germline) variant, an acquired (somatic) mutation, or both (combined).
+        enum:
+          - germline
+          - somatic
+          - combined
+      allelePrevalenceQualifier:
+        type: string
+        description: >-
+         Reports wWhether the statement should be interpreted in the context of the variant
+          being rare or common.
+        enum:
+          - rare
+          - common
+      geneContextQualifier:
+        description: >
+          Reports a gene impacted by the variant, which contributes to the therapeutic 
+          sensitivity or resistance reported in the Statement. 
+        $refCurie: gks.domain-entities:Gene
+      isReportedIn:
+        extends: isReportedIn
+        minItems: 1
+    required:
+    - subjectVariant
+    - predicate
+    - objectTherapeutic
+    - diseaseQualifier
+    - isReportedIn

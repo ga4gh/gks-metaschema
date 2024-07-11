@@ -1,32 +1,39 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 $id: "https://w3id.org/ga4gh/schema/va-spec/1.x/core-im/core-im-source.yaml"
 title: Variant Annotation Specification Core Information Model
-type: object
 strict: true
 
 imports:
-  gks.core: ../../gks-common/core-source.yaml
+  gks.common: ../../gks-common/common-source.yaml
   catvrs: ../../catvrs/catvrs-source.yaml
   vrs: ../../vrs/vrs-source.yaml
 
 namespaces:
-  gks.core: ../../gks-common/core.json#/$defs/
+  gks.common: ../../gks-common/common-source.json#/$defs/
   catvrs: ../../catvrs/catvrs.json#/$defs/
   vrs: ../../vrs/vrs.json#/$defs/
 
+$slotdefs:
+  subject:
+    description: The subject slot of a class using the SPOQ terms.
+  predicate:
+    description: The predicate slot of a class using the SPOQ terms.
+  object:
+    description: The object slot of a class using the SPOQ terms.
+  qualifier:
+    description: A qualifier slot of a class using the SPOQ terms.
+    
 $defs:
   InformationEntity:
-    inherits: gks.core:Entity
+    inherits: gks.common:Entity
     description: >-
-      InformationEntities are abstract (non-physical) entities that are about something (i.e. they carry 
+      Information Entities are abstract (non-physical) entities that are about something (i.e. they carry
       information about things in the real world).
     heritableProperties:
-      type:
-        type: string
       specifiedBy:
         oneOf:
         - $ref: "#/$defs/Method"
-        - $refCurie: gks.core:IRI
+        - $refCurie: gks.common:IRI
         description: >-
           A :ref:`Method` that describes all or part of the process through which the information was
           generated.
@@ -35,98 +42,156 @@ $defs:
         ordered: true
         items:
           $ref: "#/$defs/Contribution"
+        description: >-
+          A list of :ref:`Contribution` objects that describe the activities performed by agents upon this entity.
       isReportedIn:
         type: array
         ordered: false
         items:
           oneOf:
           - $ref: "#/$defs/Document"
-          - $refCurie: gks.core:IRI
+          - $refCurie: gks.common:IRI
         description: A document in which the information content is expressed.
+      dateAuthored:
+        type: string
+        format: datetime
+        description: Indicates when the information content expressed in the Information Entity was generated.
+      derivedFrom:
+        type: array
+        ordered: false
+        items:
+          $ref: "#/$defs/InformationEntity"
+        description: Another Information Entity from which this Information Entity is derived, in whole or in part.
       recordMetadata:
-        $comment: this should be "gks.core:RecordMetadata", but that data class is not in the common core, so using null as placeholder
-        type: null
+        $ref: "#/$defs/RecordMetadata"
+        description: Metadata that applies to a specific concrete record of information as encoded in a particular system.
     heritableRequired:
       - id
-      - type
-  Contribution:
-    type: object
-    inherits: gks.core:Entity
+
+  Activity:
+    inherits: gks.common:Entity
     maturity: draft
     description: >-
-      The sum of all actions taken by a single agent in contributing to the creation, modification, 
-      assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine, DataItem, 
-      Publication, etc.)
-    properties:
-      type:
-        type: string
-        const: Contribution
-      contributor:
-        $ref: "#/$defs/Agent"
+      An action or set of actions performed by an agent, that occurs over a period of time. Activities may use,
+      generate, modify, move, or destroy one or more entities.
+    heritableProperties:
+      subtype:
+        type:
+          $refCurie: gks.common:Coding
+        description: A more specific type of activity that an Activity object may represent.
       date:
         type: string
         format: date
-      activity:
-        $refCurie: gks.core:Coding
         description: >-
-         SHOULD describe a concept descending from the Contributor Role Ontology.
+          The date that the Activity was completed. The date SHOULD be formatted as a date string
+          in ISO format "YYYY-MM-DD".
+      performedBy:
+        type: array
+        ordered: false
+        items:
+          $ref: "#/$defs/Agent"
+        description: >-
+          An Agent who contributed to executing the Activity.
+      specifiedBy:
+        type: array
+        ordered: false
+        items:
+          $ref: "#/$defs/Method"
+        description: >-
+          A method that was followed in performing an Activity, that describes how it was executed.
+
+  Contribution:
+    type: object
+    inherits: Activity
+    maturity: draft
+    description: >-
+      An action taken by an agent in contributing to the creation, modification, assessment, or
+      deprecation of a particular entity (e.g. a Statement, EvidenceLine, DataItem, Publication, etc.)
+    properties:
+      type:
+        extends: type
+        const: Contribution
+        default: Contribution
+        description: MUST be "Contribution".
+      contributor:
+        extends: performedBy
+        minItems: 1
+        maxItems: 1
+        description: >-
+          The agent that made the contribution.
+      activityType:
+        $refCurie: gks.common:Coding
+        description: >-
+          SHOULD describe a concept descending from the Contributor Role Ontology.
 
   Agent:
     type: object
+    inherits: gks.common:Entity
     maturity: draft
-    inherits: gks.core:Entity
     description: >-
       An autonomous actor (person, organization, or computational agent) that bears some form
-      of responsibility for an activity taking place, for the existence of an entity, or for 
-      another agent’s activity.
+      of responsibility for an activity taking place, for the existence of an entity, or for
+      another agent's activity.
     properties:
       type:
-        type: string
+        extends: type
         const: Agent
         default: Agent
         description: MUST be "Agent".
       name:
         type: string
+        description: The descriptive name of the agent.
       subtype:
         type: string
+        description: A more specific type of agent the agent represents.
         enum:
           - person
           - organization
-          - computer
+          - software
+
   Method:
     type: object
+    inherits: InformationEntity
     maturity: draft
-    inherits: gks.core:Entity
     description: >-
-      A set of instructions that specify how to achieve some objective (e.g. experimental protocols, 
+      A set of instructions that specify how to achieve some objective (e.g. experimental protocols,
       curation guidelines, rule sets, etc.)
     properties:
       type:
-        type: string
+        extends: type
         const: Method
         default: Method
         description: MUST be "Method".
       isReportedIn:
         oneOf:
-        - $refCurie: gks.core:IRI
+        - $refCurie: gks.common:IRI
         - $ref: "#/$defs/Document"
       subtype:
-        $refCurie: gks.core:Coding
+        $refCurie: gks.common:Coding
         description: >-
-          A more specific type of entity the method represents (e.g. Variant Interpretation Guideline, 
+          A more specific type of entity the method represents (e.g. Variant Interpretation Guideline,
           Experimental Protocol)
+      license:
+        type: string
+        description: >-
+          A particular license that dictates legal permissions for how a published method (e.g. an
+          experimental protocol, workflow specification, curation guideline) can be used.          
 
   Document:
     type: object
+    inherits: InformationEntity
     maturity: draft
-    inherits: gks.core:MappableEntity
     description: a representation of a physical or digital document
     properties:
       type:
-        type: string
+        extends: type
         const: Document
         default: Document
         description: Must be "Document"
+      subtype:
+        $refCurie: gks.common:Coding
+        description: >-
+          A more specific type for the document (e.g. a publication, patent, pathology report)
       title:
         type: string
         description: The title of the Document
@@ -139,99 +204,387 @@ $defs:
         type: string
         pattern: "^10.(\\d+)(\\.\\d+)*/[\\w\\-\\.]+"
         description: >-
-          A `Digital Object Identifier <https://www.doi.org/the-identifier/what-is-a-doi/>_` 
+          A `Digital Object Identifier <https://www.doi.org/the-identifier/what-is-a-doi/>_`
           for the document.
       pmid:
         type: integer
         description: A `PubMed unique identifier <https://en.wikipedia.org/wiki/PubMed#PubMed_identifier>`_.
+
+  RecordMetadata:
+    type: object
+    maturity: draft
+    description: >-
+      A reusable structure that encapsulates provenance metadata about a serialized data record or
+      object in a particular dataset (as opposed to provenance about the real world entity this
+      record or object represents).
+    comment: >-
+      Record-level metadata applies to a specific concrete encoding/serialization of information 
+      (e.g as a record in a specific data/knowlegebase, or an online digital resource). 
+      A RecordMetadata object can capture when, how, and by whom a specific record serialization was
+      generated or modified; what upstream resources it was derived or retrieved from; and record-level 
+      administrative information such as versioning and lifecycle status. RecordMetadata objects should 
+      not be used to describe provenance of the abstract information content or knowledge captured in a 
+      data record or object - other properties in the model are defined to support this use case. 
+    properties:
+      recordIdentifier:
+        type: string
+        description: >-
+          The identifier of the data record or object described in this RecordMetadata object.
+      recordVersion:
+        type: string
+        description: The version number of the record-level artifact the object describes.
+      derivedFrom:
+        type: string
+        description: >-
+          Another data record from which the record described here was derived, through a data 
+          ingest and/or transformation process. Value should be a string representing the identifier
+          of the source record.
+      dateRecordCreated:
+        type: string
+        format: datetime
+        description: The date the record was initially created.
+      contributions:
+        type: array
+        ordered: false
+        items:
+          $ref: '#/$defs/Contribution'
+        description: >-
+          Describes specific contributions made by an human or software agent to the creation,
+          modification, or administrative management of a data record or object.
+
   DataItem:
     inherits: InformationEntity
     maturity: draft
     type: object
     description: >-
-      An InformationEntity representing an individual piece of data, generated/acquired through methods 
+      An InformationEntity representing an individual piece of data, generated/acquired through methods
       which reliably produce truthful information about something.
     properties:
       type:
-        type: string
+        extends: type
         const: DataItem
         default: DataItem
         description: Must be "DataItem"
       subtype:
-        $refCurie: gks.core:Coding
-        description: >- 
-          A specific type of data the DataItem object represents (e.g. a specimen count, a 
+        $refCurie: gks.common:Coding
+        description: >-
+          A specific type of data the DataItem object represents (e.g. a specimen count, a
           patient weight, an allele frequency, a p-value, a confidence score)
       value:
          type: string
       unit:
-        type:
-          $refCurie: gks.core:Coding
-    required: [ "value" ]
+        $refCurie: gks.common:Coding
+    required:
+      - value
+
+  DataSet:
+    inherits: InformationEntity
+    maturity: draft
+    type: object
+    description: >-
+      A collection of related data items or records that are organized together in a common format
+      or structure, to enable their computational manipulation as a unit.
+    properties:
+      type:
+        extends: type
+        const: DataSet
+        default: DataSet
+        description: MUST be "DataSet".
+      subtype:
+        $refCurie: gks.common:Coding
+        description: >-
+          A specific type of data set the DataSet object represents (e.g. a clinical data set,
+          a sequencing data set, a gene expression data set, a genome annotation data set)
+      releaseDate:
+        type: string
+        format: datetime
+        description: Indicates when a version of a Data Set was formally released.
+      version:
+        type: string
+        description: The version of the Data Set, as assigned by its creator.
+      license:
+        type: string
+        description: >-
+          A license that dictates legal permissions for how the Data Set can be used -
+          referenced by a URL where possible.
+
   Statement:
     inherits: InformationEntity
     description: >-
-      A Statement (aka ‘Assertion’) represents a claim of purported truth as made by a particular agent, 
-      on a particular occasion.
+      A Statement (aka "Assertion") represents a claim of purported truth as made by a particular agent,
+      on a particular occasion. In addition to the properties shared by all Statements, statements MUST
+      also have properties inheriting from Subject<ref> and Predicate<ref>, MAY also have a property inheriting
+      from Object<ref> and MAY also have one or more properties inheriting from Qualifier<ref>.
     heritableProperties:
-      subject:
-        description: The subject of the Statement.
-      predicate:
-        description: The predicate of the Statement.
-        type: string
-      object:
-        description: The object of the Statement.
-      qualifiers:
-        description: Additional, optional properties that may qualify the Statement.
-        type: object
-        additionalProperties: false
       direction:
         type: string
-        enum: [ "supports", "none", "refutes" ]
+        enum:
+          - supports
+          - none
+          - refutes
         description: >-
           The direction of this Statement with respect to the predicate.
       strength:
         oneOf:
-          - $refCurie: gks.core:Coding
-          - $refCurie: gks.core:IRI
+          - $refCurie: gks.common:Coding
+          - $refCurie: gks.common:IRI
         description: >-
           The overall strength of support for the Statement based on all evidence assessed.
+      statementText:
+        type: string
+        description: >-
+          A natural-language expression of what a structured Statement object asserts to be true.
+          e.g. for a Variant Pathogenicity statement, "BRCA2 c.8023A>G is pathogenic for Breast
+          Cancer", or "there is moderate evidence supporting the pathogenicity of BRCA2 c.8023A>G
+          for Breast Cancer".
+      proposition:
+        $ref: "#/$defs/Proposition"
+        description:  >-
+          A possible fact that the Statement assesses or puts forth as true. This attribute provides
+          the option of encapsulating the structured semantics of the possible fact asserted or
+          evaluated by a Statement in a separate 'Proposition' object - instead of using the subject,
+          predicate, object, qualifier properties directly in the Statement object.
+      subjectClassification:
+        oneOf:
+          - $refCurie: gks.common:Coding
+          - $refCurie: gks.common:IRI
+        description: >-
+          A single term or phrase summarizing the outcome of direction and strength
+          assessments of a Statement's proposition, in terms of a classification of the
+          Statement's subject. Permissible values for this attribute are typically
+          selected to be succinct and familiar in the target community of practice. e.g.
+          'likely pathogenic' in the domain of variant pathogenicity classification'.
+      hasEvidenceOfType:
+        type: array
+        ordered: false
+        items:
+          $refCurie: gks.common:Coding
+        description: >-
+          A term describing a type of evidence used to assess the validity of Statement's proposition
+          (e.g. 'sequence similarity evidence', 'in vitro assay evidence').
+      hasEvidenceLines:
+        type: array
+        ordered: false
+        items:
+          $ref: "#/$defs/EvidenceLine"
+        description: >-
+          A discrete, independent argument relevant to the validity of the Proposition assessed or
+          put forth in the Statement. This argument is based on the interpretation of one or more
+          pieces of information as evidence.
+      hasEvidence:
+        type: array
+        ordered: false
+        items:
+          $ref: "#/$defs/InformationEntity"
+        description: >-
+          A piece of information that represents or contributes to an argument for or against the
+          validity of the Proposition put forth in a Statement. This is a shortcut relation that links
+          a Statement directly to a piece of evidence supporting it, bypassing the Evidence Line class
+          when used data creators do not utilize an Evidence Line object.
     heritableRequired:
       - subject
       - direction
-  VariantStatement:
-    inherits: Statement
+
+  StudyResult:
+    inherits: InformationEntity
+    maturity: draft
     description: >-
-      A :ref:`Statement` describing the impact of a variant.
+      A collection of data items from a single study that are about a particular subject or experimental
+      unit in the study, along with optional provenance information describing how these data items were
+      generated. StudyResult objects provide a flexible and useful way to summarize a subset of data items
+      from a larger study that are cited as evidence in curation workflows that generate higher order
+      knowledge about a particular variant or other entity.
     heritableProperties:
-      variant:
-        extends: subject
-        oneOf:
-          - $refCurie: vrs:Variation
-          - $refCurie: catvrs:CategoricalVariation
-          - $refCurie: gks.core:IRI
-        description: A variant that is the subject of the Statement.
-  VariantClassification:
-    inherits: VariantStatement
-    description: >-
-      A :ref:`VariantStatement` classifying the impact of a variant.
-    heritableProperties:
-      classification:
-        oneOf:
-          - $refCurie: gks.core:Coding
-          - $refCurie: gks.core:IRI
+      focus:
+        $refCurie: gks.common:DomainEntity
         description: >-
-          A methodological, summary classification about the impact of a variant.
-    heritableRequired:
-      - classification
-  VariantStudySummary:
-    inherits: VariantStatement
+          The specific subject or experimental unit in a Study that data in the StudyResult object is about.
+          e.g. a particular variant in a population allele frequency dataset like ExAC or gnomAD.
+      dataItem:
+        type: object
+        additionalProperties: false
+        description: >-
+          An item of data that is included in the StudyResult because it pertains to the 'focus' of the result.
+          This data can directly describe this 'focus' (e.g. the population frequency of an allele focus), or 
+          represent metadata about how data about the 'focus' were generated (e.g the sequencing method used to 
+          determine this allele frequency).
+        comment: >-
+          Note that in profiles of the StudyResult class, 'dataItem' is typically specialized into one or more 
+          datatype-specific properties that are defined to capture a specifc kind of data. e.g. 'focusAlleleCount'
+          and 'focusAlleleFrequency' in a CohortAlleleFrequencyStudyResult profile.
+      sourceDataSet:
+        extends: derivedFrom
+        items:
+          $ref: "#/$defs/DataSet"
+        maximum: 1
+        description: >-
+          A larger Data Set from which the content of the Result was derived.
+      componentResult:
+        type: array
+        ordered: false
+        items:
+          $ref: "#/$defs/StudyResult"
+        description: >-
+          A Study Result comprised of data items about the same focus as its parent Result, but based on a
+          analysis of a different subset of the data pertaining to that focus (e.g. data from analysis of a
+          subset of the full Study Group).
+      studyGroup:
+        $ref: "#/$defs/StudyGroup"
+        description: >-
+          A structured description of specific population of subjects interrogated in the Research Study to
+          produce the subset of data captured in the StudyResult.
+
+  EvidenceLine:
+    inherits: InformationEntity
+    maturity: draft
+    type: object
     description: >-
-      A :ref:`Statement` summarizing evidence about the impact of a variant from
-      one or more studies.
-    heritableProperties:
-      isReportedIn:
-        extends: isReportedIn
-        minItems: 1
+      A discrete, independent argument relevant to the validity of the Proposition assessed or put forth as
+      true in a Statement. This argument is based on an interpretation of one or more pieces of information
+      as evidence (i.e. Evidence Items).
+    properties:
+      type:
+        extends: type
+        const: EvidenceLine
+        default: EvidenceLine
+        description: Must be "EvidenceLine"
+      targetProposition:
+        $ref: "#/$defs/Proposition"
+        description: >-
+          The possible fact against which evidence items contained in an Evidence Line were collectively evaluated,
+          in determining the overall strength and direction of support they provide. e.g. in an ACMG Guideline-based
+          assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against
+          a target proposition that a variant is pathogenic for a specific disease.
+      evidenceItems:
+        type: array
+        ordered: false
+        items:
+          $ref: "#/$defs/InformationEntity"
+        description: >-
+          An individual piece of information that was evaluated as evidence in building the argument represented
+          by an Evidence Line.
+      directionOfEvidenceProvided:
+        type: string
+        enum: [ "supports", "neutral", "disputes" ]
+        description: >-
+          The direction of support that the Evidence Line is determined to provide toward its target Proposition
+          (can be supporting, disputing, or neutral)
+      strengthOfEvidenceProvided:
+        oneOf:
+          - $refCurie: gks.common:Coding
+          - $refCurie: gks.common:IRI
+        description: >-
+          The strength of support that an Evidence Line is determined to provide for or against its target
+          Proposition. Strength is evaluated in the direction indicated by the directionOfEvidenceProvided value.
+  
+  Proposition:
+    inherits: gks.common:Entity
+    maturity: draft
+    type: object
+    description: >-
+      The abstract entity representing a possible fact that may be put forth as true, or subjected to
+      an evidence-based assessment, by a Statement. As abstract entities, their identity and existence
+      are independent of space and time, and whether they are ever asserted to be true by some agent.
+      Propositions may be used in two contexts; (1) by Statements that assert them to be true or false,
+      or describe the overall level of confidence/evidence for or against them; (2) by Evidence Lines that
+      report the direction and strength of an evidence-based argument for the Proposition.
+    properties:
+      type:
+        extends: type
+        const: Proposition
+        default: Proposition
+        description: Must be "Proposition"
+      statementText:
+        type: string
+        description: >-
+         A natural-language expression of the Proposition's meaning. e.g. "BRCA2 c.8023A>G is pathogenic for
+         Breast Cancer".
+      subject:
+        type:
+          $refCurie: gks.common:Entity
+        description: The Entity or concept about which the Proposition is made.
+      predicate:
+        type:
+          $refCurie: gks.common:Coding
+        description: The relationship asserted to hold between the subject and the object of the Proposition.
+      object:
+        type:
+          $refCurie: gks.common:Entity
+        description: An Entity that is related to the subject of a Proposition via its predicate.
+      qualifier:
+        oneOf:
+          - $refCurie: gks.common:Entity
+          - $refCurie: gks.common:Coding
+          - $refCurie: gks.common:IRI
+        description: >-
+          An entity or concept applied to extend or refine the meaning of a Proposition's core subject-predicate-object
+          'triple' - by providing additional detail, or constraining the claim to apply in a particular context.
+      negated:
+        type: boolean
+        description: >-
+          A boolean flag set to 'true' to represent a negation of the proposition expressed by the subject, predicate,
+          object, and qualifiers (e.g. that "Variant X is NOT pathogenic for Disease Y")/
     heritableRequired:
-      - isReportedIn
+      - subject
+      - predicate
+      - object
+
+  StudyGroup:
+    inherits: gks.common:Entity
+    maturity: draft
+    type: object
+    description: >-
+      A collection of individuals or specimens from the same taxonomic class, selected for analysis in a scientific
+      study based on their exhibiting one or more common characteristics  (e.g. species, ethnicity, race, country of
+      origin, clinical history, age, gender, geographic location, income, etc.) May be referred to as a 'cohort' or
+      'population' in specific research settings.
+    properties:
+      type:
+        extends: type
+        const: StudyGroup
+        default: StudyGroup
+        description: Must be "StudyGroup"
+      memberCount:
+        type: integer
+        description: the total number of individual members in the study group
+      isSubsetOf:
+        type: array
+        items:
+          $ref: "#/$defs/StudyGroup"
+        ordered: false
+        description: A larger study group of which this study group represents a subset.
+      characteristics:
+        type: array
+        items:
+          $ref: "#/$defs/Characteristic"
+        ordered: false
+        description: >-
+          A feature or characteristic shared by all members of the study group, and representing a criteria for
+          membership in the group.
+
+  Characteristic:
+    type: object
+    maturity: draft
+    description: >-
+      An object holding a name-value pair used to describe any characteristic of an individual member of a
+      Study Group (e.g. name = sex, value = female)
+    properties:
+      name:
+        type: string
+        description: >-
+          The type of the feature/trait described by the characteristic
+          (e.g. 'ethnicity', 'sex', 'age', 'disease status').
+      value:
+        type: string
+        description: >-
+          The specific value(s) that the indicated feature/trait holds in all population members
+          (e.g. 'east asian', 'female', 'adolescent', 'cancer').
+      exclude:
+        type: boolean
+        description: >-
+          A boolean attribute set to TRUE if the characteristic must be absent to qualify as a member of a
+          study group or population.
+    required:
+      - name
+      - value
+

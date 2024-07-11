@@ -39,6 +39,7 @@ class YamlSchemaProcessor:
         self.namespaces = self.raw_schema.get('namespaces', list())
         self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[self.raw_schema['$schema']]
         self.raw_defs = self.raw_schema.get(self.schema_def_keyword, None)
+        self.slot_defs = self.raw_schema.get('$slotdefs', dict())
         self.imports = dict()
         self.import_dependencies()
         self.strict = self.raw_schema.get('strict', False)
@@ -291,16 +292,20 @@ class YamlSchemaProcessor:
         parsed_url = urlparse(self.id)
         return f'{parsed_url.scheme}://{parsed_url.netloc}{abs_path}'
 
-    def get_class_abs_path(self, schema_class, mode):
+    def get_class_abs_path(self, schema_class, mode, is_slot=False):
         if mode == 'json':
             export_key = self.json_key
         elif mode == 'yaml':
             export_key = self.yaml_key
         else:
             raise ValueError('mode must be json or yaml')
-        if self.class_is_protected(schema_class):
+        if not is_slot and self.class_is_protected(schema_class):
             frag_containing_class = self.raw_defs[schema_class]['protectedClassOf']
-            class_ref = f'{frag_containing_class}#/{self.schema_def_keyword}/{schema_class}'
+            if is_slot:
+                kw = '$slotdefs'
+            else:
+                kw = {self.schema_def_keyword}
+            class_ref = f'{frag_containing_class}#/{kw}/{schema_class}'
         else:
             class_ref = schema_class
         parsed_url = urlparse(self.id)

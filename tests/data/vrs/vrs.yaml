@@ -8,44 +8,21 @@ $defs:
     oneOf:
     - $ref: '#/$defs/Adjacency'
     - $ref: '#/$defs/Allele'
+    - $ref: '#/$defs/CisPhasedBlock'
     - $ref: '#/$defs/CopyNumberChange'
     - $ref: '#/$defs/CopyNumberCount'
-    - $ref: '#/$defs/Haplotype'
+    - $ref: '#/$defs/DerivativeSequence'
+    - $ref: '#/$defs/SequenceTerminus'
     discriminator:
       propertyName: type
-  Expression:
-    type: object
-    privateTo: Variation
-    maturity: draft
-    description: Representation of a variation by a specified nomenclature or syntax
-      for a Variation object.  Common examples of expressions for the description
-      of molecular variation include the HGVS  and ISCN nomenclatures.
-    properties:
-      syntax:
-        type: string
-        enum:
-        - hgvs.c
-        - hgvs.p
-        - hgvs.g
-        - hgvs.m
-        - hgvs.n
-        - hgvs.r
-        - iscn
-        - gnomad
-        - spdi
-      value:
-        type: string
-      syntax_version:
-        type: string
-    required:
-    - syntax
-    - value
-    additionalProperties: false
   MolecularVariation:
     description: A variation on a contiguous molecule.
     oneOf:
+    - $ref: '#/$defs/Adjacency'
     - $ref: '#/$defs/Allele'
-    - $ref: '#/$defs/Haplotype'
+    - $ref: '#/$defs/CisPhasedBlock'
+    - $ref: '#/$defs/DerivativeSequence'
+    - $ref: '#/$defs/SequenceTerminus'
     discriminator:
       propertyName: type
   SystemicVariation:
@@ -70,25 +47,36 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
-        description: A primary label for the entity.
+        description: A primary name for the entity.
       description:
         type: string
         description: A free-text description of the entity.
+      alternativeLabels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: Alternative name(s) for the Entity.
       extensions:
         type: array
         ordered: true
         items:
-          $ref: ../gks-common/core.json#/$defs/Extension
-      type:
-        type: string
-        const: Allele
-        default: Allele
-        description: MUST be "Allele"
+          $ref: ../gks-common/common.json#/$defs/Extension
+        description: A list of extensions to the entity. Extensions are not expected
+          to be natively understood, but may be used for pre-negotiated exchange of
+          message attributes between systems.
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/ConceptMapping
+        description: A list of mappings to concepts in terminologies or code systems.
+          Each mapping should include a coding and a relation.
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -98,11 +86,16 @@ $defs:
         type: array
         ordered: false
         items:
-          $ref: '#/$defs/Expression'
+          $ref: ../gks-common/common.json#/$defs/Expression
+      type:
+        type: string
+        const: Allele
+        default: Allele
+        description: MUST be "Allele"
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: ../gks-common/$defs/IRI
+        - $ref: ../gks-common/common.json#/$defs/IRI
         description: The location of the Allele
       state:
         description: An expression of the sequence state
@@ -113,11 +106,12 @@ $defs:
     required:
     - location
     - state
+    - type
     additionalProperties: false
-  Haplotype:
+  CisPhasedBlock:
     maturity: draft
     ga4ghDigest:
-      prefix: HT
+      prefix: CPB
       keys:
       - members
       - type
@@ -127,25 +121,36 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
-        description: A primary label for the entity.
+        description: A primary name for the entity.
       description:
         type: string
         description: A free-text description of the entity.
+      alternativeLabels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: Alternative name(s) for the Entity.
       extensions:
         type: array
         ordered: true
         items:
-          $ref: ../gks-common/core.json#/$defs/Extension
-      type:
-        type: string
-        const: Haplotype
-        default: Haplotype
-        description: MUST be "Haplotype"
+          $ref: ../gks-common/common.json#/$defs/Extension
+        description: A list of extensions to the entity. Extensions are not expected
+          to be natively understood, but may be used for pre-negotiated exchange of
+          message attributes between systems.
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/ConceptMapping
+        description: A list of mappings to concepts in terminologies or code systems.
+          Each mapping should include a coding and a relation.
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -155,27 +160,30 @@ $defs:
         type: array
         ordered: false
         items:
-          $ref: '#/$defs/Expression'
+          $ref: ../gks-common/common.json#/$defs/Expression
+      type:
+        type: string
+        const: CisPhasedBlock
+        default: CisPhasedBlock
+        description: MUST be "CisPhasedBlock"
       members:
         type: array
-        ordered: true
+        ordered: false
         minItems: 2
         uniqueItems: false
         items:
           oneOf:
-          - $ref: '#/$defs/Adjacency'
           - $ref: '#/$defs/Allele'
-          - $ref: ../gks-common/$defs/IRI
-        description: A list of Alleles that comprise a Haplotype.  Members must share
-          the same reference sequence as adjacent members. Alleles should not have
-          overlapping or adjacent coordinates with neighboring Alleles. Neighboring
-          alleles should be ordered  by ascending coordinates, unless represented
-          on a DNA inversion (following an Adjacency with  end-defined adjoinedSequences),
-          in which case they should be ordered in descending coordinates.  Sequence
-          references MUST be consistent for all members between and including the
-          end of one  Adjacency and the beginning of another.
+          - $ref: ../gks-common/common.json#/$defs/IRI
+        description: A list of Alleles that are found in-cis on a shared molecule.
+      sequenceReference:
+        $ref: '#/$defs/SequenceReference'
+        description: An optional Sequence Reference on which all of the in-cis Alleles
+          are found. When defined, this may be used to implicitly define the `sequenceReference`
+          attribute for each of the CisPhasedBlock member Alleles.
     required:
     - members
+    - type
     additionalProperties: false
   CopyNumberCount:
     maturity: draft
@@ -192,25 +200,36 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
-        description: A primary label for the entity.
+        description: A primary name for the entity.
       description:
         type: string
         description: A free-text description of the entity.
+      alternativeLabels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: Alternative name(s) for the Entity.
       extensions:
         type: array
         ordered: true
         items:
-          $ref: ../gks-common/core.json#/$defs/Extension
-      type:
-        type: string
-        const: CopyNumberCount
-        default: CopyNumberCount
-        description: MUST be "CopyNumberCount"
+          $ref: ../gks-common/common.json#/$defs/Extension
+        description: A list of extensions to the entity. Extensions are not expected
+          to be natively understood, but may be used for pre-negotiated exchange of
+          message attributes between systems.
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/ConceptMapping
+        description: A list of mappings to concepts in terminologies or code systems.
+          Each mapping should include a coding and a relation.
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -220,12 +239,17 @@ $defs:
         type: array
         ordered: false
         items:
-          $ref: '#/$defs/Expression'
+          $ref: ../gks-common/common.json#/$defs/Expression
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: ../gks-common/$defs/IRI
+        - $ref: ../gks-common/common.json#/$defs/IRI
         description: A location for which the number of systemic copies is described.
+      type:
+        type: string
+        const: CopyNumberCount
+        default: CopyNumberCount
+        description: MUST be "CopyNumberCount"
       copies:
         oneOf:
         - $ref: '#/$defs/Range'
@@ -234,6 +258,7 @@ $defs:
     required:
     - copies
     - location
+    - type
     additionalProperties: false
   CopyNumberChange:
     maturity: draft
@@ -250,25 +275,36 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
-        description: A primary label for the entity.
+        description: A primary name for the entity.
       description:
         type: string
         description: A free-text description of the entity.
+      alternativeLabels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: Alternative name(s) for the Entity.
       extensions:
         type: array
         ordered: true
         items:
-          $ref: ../gks-common/core.json#/$defs/Extension
-      type:
-        type: string
-        const: CopyNumberChange
-        default: CopyNumberChange
-        description: MUST be "CopyNumberChange"
+          $ref: ../gks-common/common.json#/$defs/Extension
+        description: A list of extensions to the entity. Extensions are not expected
+          to be natively understood, but may be used for pre-negotiated exchange of
+          message attributes between systems.
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/ConceptMapping
+        description: A list of mappings to concepts in terminologies or code systems.
+          Each mapping should include a coding and a relation.
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -278,12 +314,17 @@ $defs:
         type: array
         ordered: false
         items:
-          $ref: '#/$defs/Expression'
+          $ref: ../gks-common/common.json#/$defs/Expression
       location:
         oneOf:
         - $ref: '#/$defs/SequenceLocation'
-        - $ref: ../gks-common/$defs/IRI
+        - $ref: ../gks-common/common.json#/$defs/IRI
         description: A location for which the number of systemic copies is described.
+      type:
+        type: string
+        const: CopyNumberChange
+        default: CopyNumberChange
+        description: MUST be "CopyNumberChange"
       copyChange:
         type: string
         enum:
@@ -302,6 +343,7 @@ $defs:
     required:
     - copyChange
     - location
+    - type
     additionalProperties: false
   SequenceLocation:
     maturity: draft
@@ -318,35 +360,51 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
-        description: A primary label for the entity.
+        description: A primary name for the entity.
       description:
         type: string
         description: A free-text description of the entity.
+      alternativeLabels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: Alternative name(s) for the Entity.
       extensions:
         type: array
         ordered: true
         items:
-          $ref: ../gks-common/core.json#/$defs/Extension
-      type:
-        type: string
-        const: SequenceLocation
-        default: SequenceLocation
-        description: MUST be "SequenceLocation"
+          $ref: ../gks-common/common.json#/$defs/Extension
+        description: A list of extensions to the entity. Extensions are not expected
+          to be natively understood, but may be used for pre-negotiated exchange of
+          message attributes between systems.
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/ConceptMapping
+        description: A list of mappings to concepts in terminologies or code systems.
+          Each mapping should include a coding and a relation.
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
         type: string
         pattern: ^[0-9A-Za-z_\-]{32}$
+      type:
+        type: string
+        const: SequenceLocation
+        default: SequenceLocation
+        description: MUST be "SequenceLocation"
       sequenceReference:
         oneOf:
         - $ref: '#/$defs/SequenceReference'
-        - $ref: ../gks-common/$defs/IRI
-        description: A SequenceReference.
+        - $ref: ../gks-common/common.json#/$defs/IRI
+        description: A reference to a Sequence on which the location is defined.
       start:
         oneOf:
         - $ref: '#/$defs/Range'
@@ -361,38 +419,63 @@ $defs:
         description: The end coordinate or range of the SequenceLocation. The minimum
           value of this coordinate or range is 0. MUST represent a coordinate or range
           greater than or equal to the value of `start`.
-    required: []
+      sequence:
+        description: The literal sequence encoded by the `sequenceReference` at these
+          coordinates.
+        $ref: '#/$defs/SequenceString'
+    required:
+    - type
     additionalProperties: false
   SequenceReference:
     maturity: draft
     ga4ghDigest:
-      assigned: true
+      keys:
+      - refgetAccession
+      - type
     type: object
     description: A sequence of nucleic or amino acid character codes.
     properties:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
-        description: A primary label for the entity.
+        description: A primary name for the entity.
       description:
         type: string
         description: A free-text description of the entity.
+      alternativeLabels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: Alternative name(s) for the Entity.
       extensions:
         type: array
         ordered: true
         items:
-          $ref: ../gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/common.json#/$defs/Extension
+        description: A list of extensions to the entity. Extensions are not expected
+          to be natively understood, but may be used for pre-negotiated exchange of
+          message attributes between systems.
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/ConceptMapping
+        description: A list of mappings to concepts in terminologies or code systems.
+          Each mapping should include a coding and a relation.
       type:
         type: string
         const: SequenceReference
+        default: SequenceReference
+        description: MUST be "SequenceReference"
       refgetAccession:
         description: A `GA4GH RefGet <http://samtools.github.io/hts-specs/refget.html>`
-          identifier for the referenced sequence,  using the sha512t24u digest.
+          identifier for the referenced sequence, using the sha512t24u digest.
         type: string
         pattern: ^SQ.[0-9A-Za-z_\-]{32}$
       residueAlphabet:
@@ -403,12 +486,18 @@ $defs:
         enum:
         - aa
         - na
+      circular:
+        type: boolean
+        description: A boolean indicating whether the molecule represented by the
+          sequence is circular (true) or linear (false).
     required:
     - refgetAccession
+    - type
     additionalProperties: false
   SequenceExpression:
     description: An expression describing a Sequence.
     oneOf:
+    - $ref: '#/$defs/LengthExpression'
     - $ref: '#/$defs/LiteralSequenceExpression'
     - $ref: '#/$defs/ReferenceLengthExpression'
     discriminator:
@@ -426,25 +515,41 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
-        description: A primary label for the entity.
+        description: A primary name for the entity.
       description:
         type: string
         description: A free-text description of the entity.
+      alternativeLabels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: Alternative name(s) for the Entity.
       extensions:
         type: array
         ordered: true
         items:
-          $ref: ../gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/common.json#/$defs/Extension
+        description: A list of extensions to the entity. Extensions are not expected
+          to be natively understood, but may be used for pre-negotiated exchange of
+          message attributes between systems.
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/ConceptMapping
+        description: A list of mappings to concepts in terminologies or code systems.
+          Each mapping should include a coding and a relation.
       type:
         type: string
+        description: MUST be "ReferenceLengthExpression"
         const: ReferenceLengthExpression
         default: ReferenceLengthExpression
-        description: MUST be "ReferenceLengthExpression"
       length:
         oneOf:
         - $ref: '#/$defs/Range'
@@ -473,25 +578,41 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
-        description: A primary label for the entity.
+        description: A primary name for the entity.
       description:
         type: string
         description: A free-text description of the entity.
+      alternativeLabels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: Alternative name(s) for the Entity.
       extensions:
         type: array
         ordered: true
         items:
-          $ref: ../gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/common.json#/$defs/Extension
+        description: A list of extensions to the entity. Extensions are not expected
+          to be natively understood, but may be used for pre-negotiated exchange of
+          message attributes between systems.
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/ConceptMapping
+        description: A list of mappings to concepts in terminologies or code systems.
+          Each mapping should include a coding and a relation.
       type:
         type: string
+        description: MUST be "LengthExpression"
         const: LengthExpression
         default: LengthExpression
-        description: MUST be "LengthExpression"
       length:
         oneOf:
         - $ref: '#/$defs/Range'
@@ -511,25 +632,41 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
-        description: A primary label for the entity.
+        description: A primary name for the entity.
       description:
         type: string
         description: A free-text description of the entity.
+      alternativeLabels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: Alternative name(s) for the Entity.
       extensions:
         type: array
         ordered: true
         items:
-          $ref: ../gks-common/core.json#/$defs/Extension
+          $ref: ../gks-common/common.json#/$defs/Extension
+        description: A list of extensions to the entity. Extensions are not expected
+          to be natively understood, but may be used for pre-negotiated exchange of
+          message attributes between systems.
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/ConceptMapping
+        description: A list of mappings to concepts in terminologies or code systems.
+          Each mapping should include a coding and a relation.
       type:
         type: string
+        description: MUST be "LiteralSequenceExpression"
         const: LiteralSequenceExpression
         default: LiteralSequenceExpression
-        description: MUST be "LiteralSequenceExpression"
       sequence:
         $ref: '#/$defs/SequenceString'
         description: the literal sequence
@@ -579,25 +716,36 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
-        description: A primary label for the entity.
+        description: A primary name for the entity.
       description:
         type: string
         description: A free-text description of the entity.
+      alternativeLabels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: Alternative name(s) for the Entity.
       extensions:
         type: array
         ordered: true
         items:
-          $ref: ../gks-common/core.json#/$defs/Extension
-      type:
-        type: string
-        const: Adjacency
-        default: Adjacency
-        description: MUST be "Adjacency".
+          $ref: ../gks-common/common.json#/$defs/Extension
+        description: A list of extensions to the entity. Extensions are not expected
+          to be natively understood, but may be used for pre-negotiated exchange of
+          message attributes between systems.
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/ConceptMapping
+        description: A list of mappings to concepts in terminologies or code systems.
+          Each mapping should include a coding and a relation.
       digest:
         description: A sha512t24u digest created using the VRS Computed Identifier
           algorithm.
@@ -607,7 +755,12 @@ $defs:
         type: array
         ordered: false
         items:
-          $ref: '#/$defs/Expression'
+          $ref: ../gks-common/common.json#/$defs/Expression
+      type:
+        type: string
+        const: Adjacency
+        default: Adjacency
+        description: MUST be "Adjacency".
       adjoinedSequences:
         type: array
         uniqueItems: false
@@ -615,10 +768,10 @@ $defs:
         items:
           oneOf:
           - $ref: '#/$defs/SequenceLocation'
-          - $ref: ../gks-common/$defs/IRI
+          - $ref: ../gks-common/common.json#/$defs/IRI
         description: The terminal sequence or pair of adjoined sequences that defines
           in the adjacency.
-        minItems: 1
+        minItems: 2
         maxItems: 2
       linker:
         description: The sequence found between adjoined sequences.
@@ -626,6 +779,158 @@ $defs:
         - $ref: '#/$defs/LengthExpression'
         - $ref: '#/$defs/LiteralSequenceExpression'
         - $ref: '#/$defs/ReferenceLengthExpression'
+      homology:
+        type: boolean
+        maturity: draft
+        $comment: This flag is under active discussion; see github.com/ga4gh/vrs/discussions/489
+        description: A flag indicating if coordinate ambiguity in the adjoined sequences
+          is from sequence homology (true) or other uncertainty (false).
     required:
     - adjoinedSequences
+    - type
+    additionalProperties: false
+  SequenceTerminus:
+    maturity: draft
+    ga4ghDigest:
+      prefix: SQX
+      keys:
+      - location
+      - type
+    description: The `SequenceTerminus` data class provides a structure for describing
+      the end (terminus) of a sequence. Structurally similar to Adjacency but the
+      linker sequence is not allowed and it removes the unnecessary array structure.
+    type: object
+    properties:
+      id:
+        type: string
+        description: The 'logical' identifier of the entity in the system of record,
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
+      label:
+        type: string
+        description: A primary name for the entity.
+      description:
+        type: string
+        description: A free-text description of the entity.
+      alternativeLabels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: Alternative name(s) for the Entity.
+      extensions:
+        type: array
+        ordered: true
+        items:
+          $ref: ../gks-common/common.json#/$defs/Extension
+        description: A list of extensions to the entity. Extensions are not expected
+          to be natively understood, but may be used for pre-negotiated exchange of
+          message attributes between systems.
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/ConceptMapping
+        description: A list of mappings to concepts in terminologies or code systems.
+          Each mapping should include a coding and a relation.
+      digest:
+        description: A sha512t24u digest created using the VRS Computed Identifier
+          algorithm.
+        type: string
+        pattern: ^[0-9A-Za-z_\-]{32}$
+      expressions:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/Expression
+      type:
+        type: string
+        const: SequenceTerminus
+        default: SequenceTerminus
+        description: MUST be "SequenceTerminus".
+      location:
+        oneOf:
+        - $ref: '#/$defs/SequenceLocation'
+        - $ref: ../gks-common/common.json#/$defs/IRI
+        description: The location of the terminus.
+    required:
+    - location
+    - type
+    additionalProperties: false
+  DerivativeSequence:
+    maturity: draft
+    ga4ghDigest:
+      prefix: DSQ
+      keys:
+      - components
+      - type
+    description: The "Derivative Sequence" data class is a structure for describing
+      a derivate sequence composed from multiple sequence adjacencies.
+    type: object
+    properties:
+      id:
+        type: string
+        description: The 'logical' identifier of the entity in the system of record,
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
+      label:
+        type: string
+        description: A primary name for the entity.
+      description:
+        type: string
+        description: A free-text description of the entity.
+      alternativeLabels:
+        type: array
+        ordered: false
+        items:
+          type: string
+        description: Alternative name(s) for the Entity.
+      extensions:
+        type: array
+        ordered: true
+        items:
+          $ref: ../gks-common/common.json#/$defs/Extension
+        description: A list of extensions to the entity. Extensions are not expected
+          to be natively understood, but may be used for pre-negotiated exchange of
+          message attributes between systems.
+      mappings:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/ConceptMapping
+        description: A list of mappings to concepts in terminologies or code systems.
+          Each mapping should include a coding and a relation.
+      digest:
+        description: A sha512t24u digest created using the VRS Computed Identifier
+          algorithm.
+        type: string
+        pattern: ^[0-9A-Za-z_\-]{32}$
+      expressions:
+        type: array
+        ordered: false
+        items:
+          $ref: ../gks-common/common.json#/$defs/Expression
+      type:
+        type: string
+        const: DerivativeSequence
+        default: DerivativeSequence
+        description: MUST be "DerivativeSequence".
+      components:
+        type: array
+        uniqueItems: false
+        ordered: true
+        items:
+          oneOf:
+          - $ref: '#/$defs/Adjacency'
+          - $ref: '#/$defs/Allele'
+          - $ref: '#/$defs/CisPhasedBlock'
+          - $ref: '#/$defs/SequenceTerminus'
+          - $ref: ../gks-common/common.json#/$defs/IRI
+        description: The sequence components that make up the derivative sequence.
+        minItems: 2
+    required:
+    - components
+    - type
     additionalProperties: false

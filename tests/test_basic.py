@@ -46,8 +46,7 @@ def test_merged_create():
 
 
 def test_split_create():
-    split_defs_to_js(processor)
-    p = YamlSchemaProcessor(root /'data/gnomAD/gnomad-caf-source.yaml')
+    p = YamlSchemaProcessor(root /'data/va-spec/profiles/profiles-source.yaml')
     split_defs_to_js(p)
     assert True
 

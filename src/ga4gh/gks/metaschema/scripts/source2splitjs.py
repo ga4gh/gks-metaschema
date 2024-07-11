@@ -13,11 +13,12 @@ parser.add_argument("infile")
 
 
 def _redirect_refs(obj, dest_path, root_proc, mode):
-    frag_re = re.compile(r'(/\$defs|definitions)/(\w+)')
+    frag_re = re.compile(r'(/\$(slot)?defs|definitions)/(\w+)')
     if isinstance(obj, list):
         return [_redirect_refs(x, dest_path, root_proc, mode) for x in obj]
     elif isinstance(obj, dict):
         for k, v in obj.items():
+            is_slot = False
             if k == '$ref':
                 parts = v.split('#')
                 if len(parts) == 2:
@@ -29,8 +30,11 @@ def _redirect_refs(obj, dest_path, root_proc, mode):
                     raise ValueError(f'Expected only one fragment operator.')
                 if fragment:
                     m = frag_re.match(fragment)
-                    assert m is not None
-                    ref_class = m.group(2)
+                    assert m is not None, fragment
+                    ref_class = m.group(3)
+                    is_slot = bool(m.group(2))
+                    if is_slot:
+                        return obj
                 else:
                     ref_class = ref.split('/')[-1].split('.')[0]
 
@@ -41,17 +45,26 @@ def _redirect_refs(obj, dest_path, root_proc, mode):
                 else:
                     proc = None
                     for _, other in root_proc.imports.items():
-                        if ref_class in other.defs:
+                        if is_slot:
+                            def_set = other.slot_defs
+                        else:
+                            def_set = other.defs
+                        if ref_class in def_set:
                             proc = other
+                            break
                     if proc is None:
                         raise ValueError(f'Could not find {ref_class} in processors')
+                # if reference is a slot, return slot path
+                if is_slot:
+                    pass # TODO: Implement this
                 # if reference is protected for the class being processed, return only fragment
-                if ref == '' and proc.class_is_protected(ref_class):
+                elif ref == '' and proc.class_is_protected(ref_class):
                     containing_class = proc.raw_defs[ref_class]['protectedClassOf']
                     if containing_class == dest_path.name:
                         obj[k] = f'#{fragment}'
                         return obj
-                obj[k] = proc.get_class_abs_path(ref_class, mode)
+                else:
+                    obj[k] = proc.get_class_abs_path(ref_class, mode)
             else:
                 obj[k] = _redirect_refs(v, dest_path, root_proc, mode)
         return obj

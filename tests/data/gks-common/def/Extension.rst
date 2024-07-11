@@ -1,6 +1,6 @@
 **Computational Definition**
 
-The Extension class provides VODs with a means to extend descriptions with other attributes unique to a content provider. These extensions are not expected to be natively understood under VRSATILE, but may be used for pre-negotiated exchange of message attributes when needed.
+The Extension class provides entities with a means to include additional attributes that are outside of the specified standard but needed by a given content provider or system implementer. These extensions are not expected to be natively understood, but may be used for pre-negotiated exchange of message attributes between systems.
 
     **Information Model**
     
@@ -14,15 +14,15 @@ The Extension class provides VODs with a means to extend descriptions with other
           - Type
           - Limits
           - Description
-       *  - type
-          - string
-          - 0..1
-          - MUST be "Extension".
        *  - name
           - string
           - 1..1
-          - A name for the Extension
+          - A name for the Extension. Should be indicative of its meaning and/or the type of information it value represents.
        *  - value
           - ['number', 'string', 'boolean', 'object', 'array', 'null']
+          - 1..1
+          - The value of the Extension - can be any primitive or structured object
+       *  - description
+          - string
           - 0..1
-          - Any primitive or structured object
+          - A description of the meaning or utility of the Extension, to explain the type of information it is meant to hold.
