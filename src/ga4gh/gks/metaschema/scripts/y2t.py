@@ -81,11 +81,11 @@ def main(proc_schema):
             ancestor = proc_schema.raw_defs[class_name].get('inherits')
             if ancestor:
                 ancestor = get_ancestor_with_attributes(ancestor, proc_schema)
-                inheritance = f"\nSome {class_name} attributes are inherited from :ref:`{ancestor}`.\n"
+                inheritance = f"Some {class_name} attributes are inherited from :ref:`{ancestor}`.\n"
             else:
                 inheritance = ""
+            print("\n**Information Model**", file=f)
             print(f"""
-**Information Model**
 {inheritance}
 .. list-table::
    :class: clean-wrap
