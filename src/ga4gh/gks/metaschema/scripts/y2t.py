@@ -104,11 +104,13 @@ def main(proc_schema):
       - {resolve_cardinality(class_property_name, class_property_attributes, class_definition)}
       - {class_property_attributes.get('description', '')}""", file=f)
 
-
-if __name__ == "__main__":
+def cli():
     source_file = pathlib.Path(sys.argv[1])
     p = YamlSchemaProcessor(source_file)
     os.makedirs(p.def_fp, exist_ok=True)
     if p.defs is None:
         exit(0)
     main(p)
+
+if __name__ == "__main__":
+    cli()

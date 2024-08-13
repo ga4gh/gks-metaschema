@@ -1,7 +1,55 @@
-[build-system]
-requires = [
-    "setuptools>=42",
-    "wheel",
-    "setuptools_scm>=6.2"
+[project]
+name = "ga4gh.gks.metaschema"
+authors = [
+    {name = "Alex Wagner", email = "alex.wagner@nationwidechildrens.org"},
 ]
+readme = "README.md"
+description = "GA4GH Genomic Knowledge Standards meta-schema tools"
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+keywords = [
+    "bioinformatics",
+    "ga4gh",
+    "genomics",
+    "hgvs",
+    "spdi",
+    "variation"
+]
+requires-python = ">=3.12"
+dynamic = ["version", "dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/ga4gh/gks-metaschema"
+Documentation = "https://github.com/ga4gh/gks-metaschema"
+Changelog = "https://github.com/ga4gh/gks-metaschema/releases"
+Source = "https://github.com/ga4gh/gks-metaschema"
+"Bug Tracker" = "https://github.com/ga4gh/gks-metaschema/issues"
+
+[tool.setuptools.dynamic]
+dependencies = {file = [".requirements.txt"]}
+
+[tool.setuptools_scm]
+
+[project.scripts]
+jsy2js = "ga4gh.gks.metaschema.scripts.jsy2js:cli"
+source2jsy = "ga4gh.gks.metaschema.scripts.source2jsy:cli"
+y2t = "ga4gh.gks.metaschema.scripts.y2t:cli"
+source2mergedjsy = "ga4gh.gks.metaschema.scripts.source2mergedjsy:cli"
+source2splitjs = "ga4gh.gks.metaschema.scripts.source2splitjs:cli"
+source2classes = "ga4gh.gks.metaschema.scripts.source2classes:cli"
+
+[build-system]
+requires = ["setuptools>=65.3", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"

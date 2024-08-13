@@ -94,8 +94,10 @@ def split_defs_to_js(root_proc, mode='json'):
         with open(target_path, 'w') as f:
             json.dump(out_doc, f, indent=3, sort_keys=False)
 
-
-if __name__ == '__main__':
+def cli():
     args = parser.parse_args()
     p = YamlSchemaProcessor(Path(args.infile))
     split_defs_to_js(p)
+
+if __name__ == '__main__':
+    cli()
