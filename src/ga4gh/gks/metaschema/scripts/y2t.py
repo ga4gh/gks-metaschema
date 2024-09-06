@@ -15,12 +15,11 @@ def resolve_type(class_property_definition):
     elif '$ref' in class_property_definition:
         ref = class_property_definition['$ref']
         identifier = ref.split('/')[-1]
-        if ref.startswith('#'):
-            return f':ref:`{identifier}`'
-        else:
-            return f'`{identifier} <{ref}>`_'
+        return f':ref:`{identifier}`'
     elif '$refCurie' in class_property_definition:
-        return class_property_definition['$refCurie']
+        ref = class_property_definition['$refCurie']
+        identifier = ref.split('/')[-1]
+        return f':ref:`{identifier}`'
     elif 'oneOf' in class_property_definition or 'anyOf' in class_property_definition:
         kw = 'oneOf'
         if 'anyOf' in class_property_definition:
