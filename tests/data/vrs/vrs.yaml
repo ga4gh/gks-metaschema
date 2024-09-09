@@ -303,6 +303,11 @@ $defs:
     - copyChange
     - location
     additionalProperties: false
+  Location:
+    description: A contiguous segment of a biological sequence.
+    $ref: '#/$defs/SequenceLocation'
+    discriminator:
+      propertyName: type
   SequenceLocation:
     maturity: draft
     ga4ghDigest:

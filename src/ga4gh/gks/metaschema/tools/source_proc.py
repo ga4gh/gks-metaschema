@@ -63,10 +63,14 @@ class YamlSchemaProcessor:
         #   If it inherits from a class, register the inheritance
         for cls, cls_def in self.raw_defs.items():
             cls_url = f'#/{self.schema_def_keyword}/{cls}'
-            if self.class_is_abstract(cls) and 'oneOf' in cls_def:
+            if self.class_is_abstract(cls) and ('oneOf' in cls_def or '$ref' in cls_def):
                 maps_to_urls = self.has_children_urls.get(cls_url, set())
                 maps_to = self.has_children.get(cls, set())
-                for record in cls_def['oneOf']:
+                if 'oneOf' in cls_def:
+                    records = cls_def['oneOf']
+                else:
+                    records = [{'$ref': cls_def['$ref']}]
+                for record in records:
                     if not isinstance(record, dict):
                         continue
                     assert len(record) == 1
@@ -440,7 +444,7 @@ class YamlSchemaProcessor:
                 schema_definition.pop('ga4ghDigest', None)
                 schema_definition.pop('header_level', None)
                 self.concretize_js_object(schema_definition)
-                if 'oneOf' not in schema_definition and 'allOf' not in schema_definition:
+                if 'oneOf' not in schema_definition and 'allOf' not in schema_definition and '$ref' not in schema_definition:
                     abstract_class_removals.append(schema_class)
             if 'description' in schema_definition:
                 schema_definition['description'] = \
