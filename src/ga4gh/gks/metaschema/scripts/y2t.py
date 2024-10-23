@@ -65,6 +65,20 @@ def get_ancestor_with_attributes(class_name, proc):
 def main(proc_schema):
     for class_name, class_definition in proc_schema.defs.items():
         with open(proc_schema.def_fp / (class_name + '.rst'), "w") as f:
+            maturity = class_definition.get('maturity', '')
+            if maturity == 'draft':
+                print("""
+.. warning:: This data class is at a **draft** maturity level and may change
+    significantly in future releases. Maturity levels are described in 
+    the :ref:`maturity-model`.
+                      
+                    """, file=f)
+            elif maturity == 'trial use':
+                print("""
+.. note:: This data class is at a **trial use** maturity level and may change
+    in future releases. Maturity levels are described in the :ref:`maturity-model`.
+                      
+                    """, file=f)
             print("**Computational Definition**\n", file=f)
             print(class_definition['description'], file=f)
             if proc_schema.class_is_passthrough(class_name):
