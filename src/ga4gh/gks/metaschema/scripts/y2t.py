@@ -2,8 +2,9 @@
 """convert input .yaml to .rst artifacts"""
 
 import os
-import sys
 import pathlib
+import sys
+
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 
@@ -24,13 +25,13 @@ def resolve_type(class_property_definition):
         kw = 'oneOf'
         if 'anyOf' in class_property_definition:
             kw = 'anyOf'
-        deprecated_types = class_property_definition.get('deprecated', list())
-        resolved_deprecated = list()
-        resolved_active = list()
+        deprecated_types = class_property_definition.get('deprecated', [])
+        resolved_deprecated = []
+        resolved_active = []
         for property_type in class_property_definition[kw]:
             resolved_type = resolve_type(property_type)
             if property_type in deprecated_types:
-                resolved_deprecated.append(resolved_type + f' (deprecated)')
+                resolved_deprecated.append(resolved_type + ' (deprecated)')
             else:
                 resolved_active.append(resolved_type)
         return ' | '.join(resolved_active + resolved_deprecated)

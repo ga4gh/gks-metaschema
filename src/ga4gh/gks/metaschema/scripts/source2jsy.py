@@ -2,7 +2,9 @@
 
 import pathlib
 import sys
+
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
+
 
 def cli():
     source_file = pathlib.Path(sys.argv[1])

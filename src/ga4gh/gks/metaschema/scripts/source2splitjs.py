@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
-from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 import argparse
-import re
-import os
 import copy
 import json
+import os
+import re
+from pathlib import Path
+
+from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 parser = argparse.ArgumentParser()
 parser.add_argument("infile")
@@ -26,7 +27,7 @@ def _redirect_refs(obj, dest_path, root_proc, mode):
                     ref = parts[0]
                     fragment = ''
                 else:
-                    raise ValueError(f'Expected only one fragment operator.')
+                    raise ValueError('Expected only one fragment operator.')
                 if fragment:
                     m = frag_re.match(fragment)
                     assert m is not None
@@ -75,7 +76,7 @@ def split_defs_to_js(root_proc, mode='json'):
         target_path = fp / f'{cls}'
         out_doc = copy.deepcopy(root_proc.for_js)
         if cls in root_proc.has_protected_members:
-            def_dict = dict()
+            def_dict = {}
             keep = False
             for protected_cls in root_proc.has_protected_members[cls]:
                 if root_proc.raw_defs[protected_cls]['protectedClassOf'] == cls:

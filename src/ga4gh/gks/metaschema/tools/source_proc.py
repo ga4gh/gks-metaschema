@@ -2,11 +2,12 @@
 """convert yaml on stdin to json on stdout"""
 import copy
 import json
-import yaml
 import re
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 from urllib.parse import urlparse
+
+import yaml
 
 SCHEMA_DEF_KEYWORD_BY_VERSION = {
     "https://json-schema.org/draft-07/schema": "definitions",
@@ -30,24 +31,24 @@ class YamlSchemaProcessor:
         self.id = self.raw_schema['$id']
         self.yaml_key = self.raw_schema.get('yaml-target', 'yaml')
         self.json_key = self.raw_schema.get('json-target', 'json')
-        self.defs_key = self.raw_schema.get('def-target', f'def')
+        self.defs_key = self.raw_schema.get('def-target', 'def')
         # schema_root_name = str(self.schema_fp.stem)[:-7]  # removes "-source"
         self.yaml_fp = self.schema_fp.parent / self.yaml_key
         self.json_fp = self.schema_fp.parent / self.json_key
         self.def_fp = self.schema_fp.parent / self.defs_key
         # self.def_fp = self.schema_fp.parent / self.raw_schema.get('def-target', f'def/{schema_root_name}')
-        self.namespaces = self.raw_schema.get('namespaces', list())
+        self.namespaces = self.raw_schema.get('namespaces', [])
         self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[self.raw_schema['$schema']]
         self.raw_defs = self.raw_schema.get(self.schema_def_keyword, None)
-        self.imports = dict()
+        self.imports = {}
         self.import_dependencies()
         self.strict = self.raw_schema.get('strict', False)
         self.enforce_ordered = self.raw_schema.get('enforce_ordered', self.strict)
         self._init_from_raw()
 
     def _init_from_raw(self):
-        self.has_children_urls = dict()
-        self.has_children = dict()
+        self.has_children_urls = {}
+        self.has_children = {}
         self.build_inheritance_dicts()
         self.has_protected_members = defaultdict(set)
         self.processed_schema = copy.deepcopy(self.raw_schema)
@@ -104,9 +105,9 @@ class YamlSchemaProcessor:
     def merge_imported(self):
         # register all import namespaces and create process order
         # note: relying on max_recursion_depth errors and not checking for cyclic imports
-        self.import_locations = dict()
-        self.import_processors = dict()
-        self.import_process_order = list()
+        self.import_locations = {}
+        self.import_processors = {}
+        self.import_process_order = []
         self._register_merge_import(self)
 
         # check that all classes defined in imports are unique
@@ -119,7 +120,7 @@ class YamlSchemaProcessor:
         for key in self.import_process_order:
             self.namespaces[key] = f'#/{self.schema_def_keyword}/'
             other = self.import_processors[key]
-            other_ns = other.raw_schema.get('namespaces', list())
+            other_ns = other.raw_schema.get('namespaces', [])
             if other_ns:
                 for ns in other_ns:
                     if ns not in self.import_process_order:
@@ -137,7 +138,7 @@ class YamlSchemaProcessor:
             self.raw_defs[cls] = self._check_local_defs_property(self.raw_defs[cls])
 
         # clear imports
-        self.imports = dict()
+        self.imports = {}
 
         # update title
         self.raw_schema['title'] = self.raw_schema['title'] + '-Merged-Imports'
@@ -152,7 +153,7 @@ class YamlSchemaProcessor:
                 if isinstance(v, dict):
                     obj[k] = self._check_local_defs_property(v)
                 elif isinstance(v, list):
-                    l = list()
+                    l = []  # noqa: E741
                     for element in v:
                         l.append(self._check_local_defs_property(element))
                     obj[k] = l
@@ -184,7 +185,7 @@ class YamlSchemaProcessor:
         return schema
 
     def import_dependencies(self):
-        for dependency in self.raw_schema.get('imports', list()):
+        for dependency in self.raw_schema.get('imports', []):
             fp = Path(self.raw_schema['imports'][dependency])
             if not fp.is_absolute():
                 base_path = self.schema_fp.parent
@@ -333,7 +334,7 @@ class YamlSchemaProcessor:
         if self.class_is_primitive(schema_class):
             self.processed_classes.add(schema_class)
             return
-        inherited_properties = dict()
+        inherited_properties = {}
         inherited_required = set()
         inherits = processed_class_def.get('inherits', None)
         if inherits is not None:
@@ -341,7 +342,7 @@ class YamlSchemaProcessor:
             # extract properties / heritableProperties and required / heritableRequired from inherited_class
             # currently assumes inheritance from abstract classes only–will break otherwise
             inherited_properties |= copy.deepcopy(inherited_class['heritableProperties'])
-            inherited_required |= set(inherited_class.get('heritableRequired', list()))
+            inherited_required |= set(inherited_class.get('heritableRequired', []))
 
             # inherit ga4ghDigest keys
             if 'ga4ghDigest' in processed_class_def or 'ga4ghDigest' in inherited_class:
@@ -353,8 +354,8 @@ class YamlSchemaProcessor:
                     pass
                 else:
                     ga4ghDigest_keys = set(inherited_class['ga4ghDigest']['keys'])
-                    ga4ghDigest_keys |= set(processed_class_def['ga4ghDigest'].get('keys', list()))
-                    processed_class_def['ga4ghDigest']['keys'] = sorted(list(ga4ghDigest_keys))
+                    ga4ghDigest_keys |= set(processed_class_def['ga4ghDigest'].get('keys', []))
+                    processed_class_def['ga4ghDigest']['keys'] = sorted(ga4ghDigest_keys)
 
         if self.class_is_abstract(schema_class):
             prop_k = 'heritableProperties'
@@ -362,8 +363,8 @@ class YamlSchemaProcessor:
         else:
             prop_k = 'properties'
             req_k = 'required'
-        raw_class_properties = raw_class_def.get(prop_k, dict())  # Nested inheritance!
-        processed_class_properties = processed_class_def.get(prop_k, dict())
+        raw_class_properties = raw_class_def.get(prop_k, {})  # Nested inheritance!
+        processed_class_properties = processed_class_def.get(prop_k, {})
         processed_class_required = set(processed_class_def.get(req_k, []))
         # Process refs
         self.process_property_tree_refs(raw_class_properties, processed_class_properties)
@@ -409,7 +410,7 @@ class YamlSchemaProcessor:
             if self.class_is_ga4gh_identifiable(schema_class):
                 assert isinstance(processed_class_def['ga4ghDigest']['prefix'], str), schema_class
                 assert processed_class_def['ga4ghDigest']['prefix'] != '', schema_class
-                l = len(processed_class_def['ga4ghDigest']['keys'])
+                l = len(processed_class_def['ga4ghDigest']['keys'])  # noqa: E741
                 assert l >= 2, \
                     f'GA4GH identifiable objects are expected to be defined by at least 2 properties, {schema_class} has {l}.'
                 assert 'type' in processed_class_def['ga4ghDigest']['keys'], \
@@ -417,7 +418,7 @@ class YamlSchemaProcessor:
                     # Two properites should be `type` and at least one other field
 
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
-        processed_class_def[req_k] = sorted(list(inherited_required | processed_class_required))
+        processed_class_def[req_k] = sorted(inherited_required | processed_class_required)
         if self.strict and not self.class_is_abstract(schema_class):
             processed_class_def['additionalProperties'] = False
         self.processed_classes.add(schema_class)
@@ -434,8 +435,8 @@ class YamlSchemaProcessor:
         self.for_js.pop('strict', None)
         self.for_js.pop('enforce_ordered', None)
         self.for_js.pop('imports', None)
-        abstract_class_removals = list()
-        for schema_class, schema_definition in self.for_js.get(self.schema_def_keyword, dict()).items():
+        abstract_class_removals = []
+        for schema_class, schema_definition in self.for_js.get(self.schema_def_keyword, {}).items():
             schema_definition.pop('inherits', None)
             schema_definition.pop('protectedClassOf', None)
             if self.class_is_abstract(schema_class):
@@ -469,7 +470,7 @@ class YamlSchemaProcessor:
             # do the same check for each member
             ref_list = js_obj['oneOf']
             descendents = set()
-            inlined = list()
+            inlined = []
             for ref in ref_list:
                 if '$ref' not in ref:
                     inlined.append(ref)

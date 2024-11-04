@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-import yaml
 import json
 import sys
+
+import yaml
+
 
 def cli():
     yaml_schema = yaml.load(sys.stdin, Loader=yaml.SafeLoader)

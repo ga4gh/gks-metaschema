@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import argparse
-from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 from pathlib import Path
+
+from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 parser = argparse.ArgumentParser()
 parser.add_argument("infile")
