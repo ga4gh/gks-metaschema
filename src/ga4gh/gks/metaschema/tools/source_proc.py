@@ -413,10 +413,10 @@ class YamlSchemaProcessor:
                 l = len(processed_class_def["ga4ghDigest"]["keys"])  # noqa: E741
                 assert (
                     l >= 2
-                ), f"GA4GH identifiable objects are expected to be defined by at least 2 properties, {schema_class} has {l}."
+                ), f"GA4GH identifiable objects are expected to be defined by at least 2 properties, {schema_class} has {l}."  # noqa: E501
                 assert (
                     "type" in processed_class_def["ga4ghDigest"]["keys"]
-                ), f"GA4GH identifiable objects are expected to include the class type but not included for {schema_class}."
+                ), f"GA4GH identifiable objects are expected to include the class type but not included for {schema_class}."  # noqa: E501
                 # Two properites should be `type` and at least one other field
 
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
