@@ -75,6 +75,7 @@ select = [
     "W"
 ]
 fixable = ["ALL"]
+ignore = ["C901"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
