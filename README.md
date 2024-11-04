@@ -1,5 +1,7 @@
 # gks-metaschema
-Tools and scripts for parsing the GKS standards metaschemas
+
+This repository houses tools and scripts for parsing the GKS standards
+metaschemas.
 
 ## Getting started
 
