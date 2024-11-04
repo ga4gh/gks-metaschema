@@ -1,10 +1,26 @@
 #!/usr/bin/env python3
 """convert input .yaml to .rst artifacts"""
 
+from io import TextIOWrapper
 import os
 import sys
 import pathlib
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
+
+
+# Mapping to corresponding hex color code and code for maturity status
+MATURITY_MAPPING: dict[str, tuple[str, str]] = {
+    "draft": ("D3D3D3", "D"),
+    "trial_use": ("FFFF99", "TU"),
+    "normative": ("B6D7A8", "N"),
+    "deprecated": ("EA9999", "DP")
+}
+
+# Mapping to corresponding code for ordered property in arrays
+ORDERED_MAPPING: dict[bool, str] = {
+    True: "OL",
+    False: "UL"
+}
 
 
 def resolve_type(class_property_definition):
@@ -62,6 +78,66 @@ def get_ancestor_with_attributes(class_name, proc):
     return class_name
 
 
+
+def add_ga4gh_digest(class_definition: dict, f: TextIOWrapper) -> None:
+    """Add GA4GH Digest table
+
+    Will only include this table if both ``prefix`` and ``keys`` are provided
+
+    :param class_definition: Model definition
+    :param f: RST file
+    """
+    ga4gh_digest = class_definition.get("ga4ghDigest") or {}
+    if ga4gh_digest:
+        ga4gh_prefix = ga4gh_digest.get("prefix") or ""
+        ga4gh_keys = ga4gh_digest.get("keys") or []
+        if ga4gh_prefix and ga4gh_keys:
+            print(f"""
+**GA4GH Digest**
+
+.. list-table::
+    :class: clean-wrap
+    :header-rows: 1
+    :align: left
+    :widths: auto
+
+    *  - Prefix
+       - Keys
+
+    *  - {ga4gh_prefix}
+       - {str(ga4gh_digest.get("keys") or [])}\n""", file=f)
+
+
+def resolve_flags(class_property_attributes: dict) -> str:
+    """Add badges for flags (maturity and ordered property)
+
+    :param class_property_attributes: Property attributes for a class
+    :return: Output for flag badges
+    """
+    flags = ""
+    maturity = class_property_attributes.get("maturity")
+
+    if maturity is not None:
+        background_color, maturity_code = MATURITY_MAPPING.get(maturity, (None, None))
+        if background_color and maturity_code:
+            flags += f"""
+                        .. raw:: html
+
+                            <span style="background-color: #{background_color}; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: block; margin-bottom: 5px;">{maturity_code}</span>"""
+
+    ordered = class_property_attributes.get("ordered")
+    ordered_code = ORDERED_MAPPING.get(ordered, None)
+
+    if ordered_code is not None:
+        if not flags:
+            flags += """
+                        .. raw:: html\n"""
+
+        flags += f"""
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: block; margin-bottom: 5px;">{ordered_code}</span>"""
+    return flags
+
+
 def main(proc_schema):
     for class_name, class_definition in proc_schema.defs.items():
         with open(proc_schema.def_fp / (class_name + '.rst'), "w") as f:
@@ -97,6 +173,9 @@ def main(proc_schema):
                 inheritance = f"Some {class_name} attributes are inherited from :ref:`{ancestor}`.\n"
             else:
                 inheritance = ""
+
+            add_ga4gh_digest(class_definition, f)
+
             print("\n**Information Model**", file=f)
             print(f"""
 {inheritance}
@@ -107,12 +186,14 @@ def main(proc_schema):
    :widths: auto
 
    *  - Field
+      - Flags
       - Type
       - Limits
       - Description""", file=f)
             for class_property_name, class_property_attributes in class_definition[p].items():
                 print(f"""\
    *  - {class_property_name}
+      - {resolve_flags(class_property_attributes)}
       - {resolve_type(class_property_attributes)}
       - {resolve_cardinality(class_property_name, class_property_attributes, class_definition)}
       - {class_property_attributes.get('description', '')}""", file=f)

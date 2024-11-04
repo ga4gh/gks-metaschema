@@ -1,8 +1,8 @@
 
 .. warning:: This data class is at a **draft** maturity level and may change
-    significantly in future releases. Maturity levels are described in 
+    significantly in future releases. Maturity levels are described in
     the :ref:`maturity-model`.
-                      
+
                     
 **Computational Definition**
 
@@ -18,18 +18,22 @@ Representation of a variation by a specified nomenclature or syntax for a Variat
    :widths: auto
 
    *  - Field
+      - Flags
       - Type
       - Limits
       - Description
    *  - syntax
+      - 
       - string
       - 1..1
       - 
    *  - value
+      - 
       - string
       - 1..1
       - 
    *  - syntax_version
+      - 
       - string
       - 0..1
       - 
