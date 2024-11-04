@@ -4,8 +4,15 @@
 import os
 import pathlib
 import sys
+from pathlib import Path
+
+from jinja2 import Environment, FileSystemLoader
 
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
+
+templates_dir = Path(__file__).resolve().parents[4] / "templates"
+env = Environment(loader=FileSystemLoader(templates_dir))
+
 
 
 def resolve_type(class_property_definition: dict) -> str:
@@ -87,22 +94,22 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
         with open(proc_schema.def_fp / (class_name + ".rst"), "w") as f:
             maturity = class_definition.get("maturity", "")
             if maturity == "draft":
+                template = env.get_template("maturity")
                 print(
-                    """
-.. warning:: This data class is at a **draft** maturity level and may change
-    significantly in future releases. Maturity levels are described in 
-    the :ref:`maturity-model`.
-                      
-                    """,
+                    template.render(
+                        info="warning",
+                        maturity_level="draft",
+                        modifier="significantly"
+                    ),
                     file=f,
                 )
             elif maturity == "trial use":
                 print(
-                    """
-.. note:: This data class is at a **trial use** maturity level and may change
-    in future releases. Maturity levels are described in the :ref:`maturity-model`.
-                      
-                    """,
+                    template.render(
+                        info="note",
+                        maturity_level="trial use",
+                        modifier=""
+                    ),
                     file=f,
                 )
             print("**Computational Definition**\n", file=f)
