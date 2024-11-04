@@ -10,3 +10,6 @@ metaschemas.
 - Activate the virtual environment: `source venv/bin/activate`
 - Install dependencies: `pip install -e .[dev]`
 - Run the test suite: `pytest`
+- Create an environment variable `PROJECT_ROOT_DIR` and make its value
+  the absolute path to this repository.
+- Set up the `pre-commit` hook: `cp ./scripts/pre-commit ./.git/hooks/`

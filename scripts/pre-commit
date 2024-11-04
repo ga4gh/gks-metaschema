@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# This pre-commit script should be placed in the .git/hooks/ directory.
+# It runs code quality checks prior to a commit.
+
+if [[ -z "${PROJECT_ROOT_DIR}" ]]; then
+    echo "Please set the PROJECT_ROOT_DIR environment variable."
+    exit 1
+else
+    cd "$PROJECT_ROOT_DIR" || exit 1
+fi
+
+# Immediately exit if there's an error.
+set -e
+
+ruff check                   # Run the linter.
+ruff check --select I --fix  # Sort imports.
+ruff format                  # Run the formatter.
+pytest                       # Run the test suite.
