@@ -1,11 +1,13 @@
 # gks-metaschema
 
 Tools and scripts for parsing the GA4GH Genomic Knowledge Standards (GKS) metaschemas.
-The metaschema processor converts [JSON Schema Version 2020-12](json-schema.org/draft/2020-12/schema)
-in YAML to reStructuredText and JSON files.
+The metaschema processor (MSP) converts
+[JSON Schema Version 2020-12](json-schema.org/draft/2020-12/schema) in YAML to
+reStructuredText (RST) and JSON files.
 
 Currently used in:
 
+* [GKS-Core](https://github.com/ga4gh/gks-core)
 * [VRS](https://github.com/ga4gh/vrs)
 * [VA-Spec](https://github.com/ga4gh/va-spec/)
 * [Cat-VRS](https://github.com/ga4gh/cat-vrs)
@@ -18,7 +20,8 @@ Currently used in:
 
 ### Installation Steps
 
-Fork the repo at <https://github.com/ga4gh/gks-metaschema>.
+Fork the repo at <https://github.com/ga4gh/gks-metaschema>, and initialize a development
+environment.
 
     git clone git@github.com:YOUR_GITHUB_ID/gks-metaschema.git
     cd gks-metaschema
