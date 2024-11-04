@@ -8,7 +8,11 @@ import sys
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 
-def resolve_type(class_property_definition):
+def resolve_type(class_property_definition: dict) -> str:
+    """Resolves a class definition to a concrete type.
+
+    :param class_property_definition: type definition, "_Not Specified_" if undetermined
+    """
     if "type" in class_property_definition:
         if class_property_definition["type"] == "array":
             return resolve_type(class_property_definition["items"])
@@ -39,8 +43,13 @@ def resolve_type(class_property_definition):
         return "_Not Specified_"
 
 
-def resolve_cardinality(class_property_name, class_property_attributes, class_definition):
-    """Resolve class property cardinality from yaml definition"""
+def resolve_cardinality(class_property_name: str, class_property_attributes: dict, class_definition: dict) -> str:
+    """Resolves class property cardinality from YAML definition.
+
+    :param class_property_name: class property name
+    :param class_property_attributes: class property attributes
+    :param class_definition: class definition
+    """
     if class_property_name in class_definition.get("required", []):
         min_count = "1"
     elif class_property_name in class_definition.get("heritableRequired", []):
@@ -55,7 +64,12 @@ def resolve_cardinality(class_property_name, class_property_attributes, class_de
     return f"{min_count}..{max_count}"
 
 
-def get_ancestor_with_attributes(class_name, proc):
+def get_ancestor_with_attributes(class_name: str, proc: YamlSchemaProcessor) -> str:
+    """Returns the ancestor class of the class name
+
+    :param class_name: class name
+    :param proc: yaml schema processor
+    """
     if proc.class_is_passthrough(class_name):
         raw_def, proc = proc.get_local_or_inherited_class(class_name, raw=True)
         ancestor = raw_def.get("inherits")
@@ -63,7 +77,12 @@ def get_ancestor_with_attributes(class_name, proc):
     return class_name
 
 
-def main(proc_schema):
+def main(proc_schema: YamlSchemaProcessor) -> None:
+    """
+    Generates the .rst file for each of the classes in the schema
+
+    :param proc_schema: schema processor object
+    """
     for class_name, class_definition in proc_schema.defs.items():
         with open(proc_schema.def_fp / (class_name + ".rst"), "w") as f:
             maturity = class_definition.get("maturity", "")
