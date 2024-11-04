@@ -11,26 +11,27 @@ from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 root = Path(__file__).parent
 
-processor = YamlSchemaProcessor(root / 'data/vrs/vrs-source.yaml')
-processor.js_yaml_dump(open(root /'data/vrs/vrs.yaml', 'w'))
-target = yaml.load(open(root /'data/vrs/vrs.yaml'), Loader=yaml.SafeLoader)
+processor = YamlSchemaProcessor(root / "data/vrs/vrs-source.yaml")
+processor.js_yaml_dump(open(root / "data/vrs/vrs.yaml", "w"))
+target = yaml.load(open(root / "data/vrs/vrs.yaml"), Loader=yaml.SafeLoader)
+
 
 def test_mv_is_passthrough():
-    assert processor.class_is_passthrough('MolecularVariation')
+    assert processor.class_is_passthrough("MolecularVariation")
 
 
 def test_se_not_passthrough():
-    assert not processor.class_is_passthrough('SequenceExpression')
+    assert not processor.class_is_passthrough("SequenceExpression")
 
 
 def test_class_is_subclass():
-    assert processor.class_is_subclass('Haplotype', 'Variation')
-    assert not processor.class_is_subclass('Haplotype', 'Location')
+    assert processor.class_is_subclass("Haplotype", "Variation")
+    assert not processor.class_is_subclass("Haplotype", "Location")
 
 
 def test_yaml_create():
-    p = YamlSchemaProcessor(root /'data/gks-common/core-source.yaml')
-    p.js_yaml_dump(open(root /'data/gks-common/core.yaml', 'w'))
+    p = YamlSchemaProcessor(root / "data/gks-common/core-source.yaml")
+    p.js_yaml_dump(open(root / "data/gks-common/core.yaml", "w"))
     assert True
 
 
@@ -40,14 +41,14 @@ def test_yaml_target_match():
 
 
 def test_merged_create():
-    p = YamlSchemaProcessor(root /'data/vrs/vrs-source.yaml')
+    p = YamlSchemaProcessor(root / "data/vrs/vrs-source.yaml")
     p.merge_imported()
     assert True
 
 
 def test_split_create():
     split_defs_to_js(processor)
-    p = YamlSchemaProcessor(root /'data/gnomAD/gnomad-caf-source.yaml')
+    p = YamlSchemaProcessor(root / "data/gnomAD/gnomad-caf-source.yaml")
     split_defs_to_js(p)
     assert True
 

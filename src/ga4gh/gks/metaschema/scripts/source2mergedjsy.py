@@ -12,5 +12,6 @@ def cli():
     p.merge_imported()
     p.js_yaml_dump(sys.stdout)
 
+
 if __name__ == "__main__":
     cli()
