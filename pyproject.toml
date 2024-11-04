@@ -28,7 +28,16 @@ keywords = [
     "variation"
 ]
 requires-python = ">=3.12"
-dynamic = ["version", "dependencies"]
+dependencies = [
+    "pyyaml"
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff==0.7.2"
+]
 
 [project.urls]
 Homepage = "https://github.com/ga4gh/gks-metaschema"
@@ -36,9 +45,6 @@ Documentation = "https://github.com/ga4gh/gks-metaschema"
 Changelog = "https://github.com/ga4gh/gks-metaschema/releases"
 Source = "https://github.com/ga4gh/gks-metaschema"
 "Bug Tracker" = "https://github.com/ga4gh/gks-metaschema/issues"
-
-[tool.setuptools.dynamic]
-dependencies = {file = [".requirements.txt"]}
 
 [tool.setuptools_scm]
 
