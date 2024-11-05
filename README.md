@@ -49,6 +49,7 @@ The metaschema processor expects the following hierarchy:
     │   |   ├── gks-schema-source.yaml
     │   |   ├── Makefile
     │   |   ├── prune.mk
+    │   ├── Makefile
 
 * `docs`: [Sphinx](https://www.sphinx-doc.org/en/master/index.html) documentation
     directory. **Must** be named `docs`.
@@ -59,13 +60,14 @@ The metaschema processor expects the following hierarchy:
 * `schema`: Schema directory. Can also contain submodules for other GKS product schemas.
   * `gks_schema`: Schema directory for GKS product. The directory name should reflect
     the product, e.g. `vrs`.
-  * `gks-schema-source.yaml`: Source document for the JSON Schema 2020-12. The file name
-        should reflect the standard, e.g. `vrs-source.yaml`. The  file name **must** end
-        with `-source.yaml`.
+    * `gks-schema-source.yaml`: Source document for the JSON Schema 2020-12. The file name
+          should reflect the standard, e.g. `vrs-source.yaml`. The  file name **must** end
+          with `-source.yaml`.
+    * `Makefile`: Commands to create the reStructuredText and JSON files.
+          This file should not change across GKS projects.
+    * `prune.mk`: Cleanup of files in `def` and `json` directories based on source document.
+          This file should not change across GKS projects.
   * `Makefile`: Commands to create the reStructuredText and JSON files.
-        This file should not change across GKS projects.
-  * `prune.mk`: Cleanup of files in `def` and `json` directories based on source document.
-        This file should not change across GKS projects.
 
 ### Contributing to the schema
 
