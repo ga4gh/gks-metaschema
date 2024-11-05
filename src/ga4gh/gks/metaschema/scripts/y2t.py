@@ -13,7 +13,7 @@ MATURITY_MAPPING: dict[str, tuple[str, str]] = {
     "draft": ("D3D3D3", "D"),
     "trial_use": ("FFFF99", "TU"),
     "normative": ("B6D7A8", "N"),
-    "deprecated": ("EA9999", "DP")
+    "deprecated": ("EA9999", "X")
 }
 
 # Mapping to corresponding code for ordered property in arrays
