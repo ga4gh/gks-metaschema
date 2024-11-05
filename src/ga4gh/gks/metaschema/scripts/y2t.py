@@ -117,21 +117,23 @@ def resolve_flags(class_property_attributes: dict) -> str:
     if maturity is not None:
         background_color, maturity_code = MATURITY_MAPPING.get(maturity, (None, None))
         if background_color and maturity_code:
+            title = f"{maturity.replace("_", " ").title()} Maturity Level"
             flags += f"""
                         .. raw:: html
 
-                            <span style="background-color: #{background_color}; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;">{maturity_code}</span>"""
+                            <span style="background-color: #{background_color}; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="{title}">{maturity_code}</span>"""
 
     ordered = class_property_attributes.get("ordered")
     ordered_code = ORDERED_MAPPING.get(ordered, None)
 
     if ordered_code is not None:
+        title = "Ordered" if ordered else "Unordered"
         if not flags:
             flags += """
                         .. raw:: html\n"""
 
         flags += f"""
-                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;">{ordered_code}</span>"""
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="{title}">{ordered_code}</span>"""
     return flags
 
 
