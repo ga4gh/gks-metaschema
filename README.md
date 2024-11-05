@@ -87,6 +87,7 @@ The file structure will now look like:
     │   |   ├── gks-schema-source.yaml
     │   |   ├── Makefile
     │   |   ├── prune.mk
+    │   ├── Makefile
 
 ### Contributing to the docs
 
