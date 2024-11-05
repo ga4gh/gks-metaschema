@@ -8,6 +8,21 @@
 
 An explicit expression of a Sequence.
 
+**GA4GH Digest**
+
+.. list-table::
+    :class: clean-wrap
+    :header-rows: 1
+    :align: left
+    :widths: auto
+
+    *  - Prefix
+       - Keys
+
+    *  - None
+       - ['sequence', 'type']
+
+
 **Information Model**
 
 Some LiteralSequenceExpression attributes are inherited from :ref:`SequenceExpression`.

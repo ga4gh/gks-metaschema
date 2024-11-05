@@ -2,6 +2,21 @@
 
 A contextual value object for which a GA4GH computed identifier can be created.
 
+**GA4GH Digest**
+
+.. list-table::
+    :class: clean-wrap
+    :header-rows: 1
+    :align: left
+    :widths: auto
+
+    *  - Prefix
+       - Keys
+
+    *  - None
+       - ['type']
+
+
 **Information Model**
 
 Some Ga4ghIdentifiableObject attributes are inherited from :ref:`gks.core:Entity`.

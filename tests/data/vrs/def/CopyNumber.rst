@@ -2,6 +2,21 @@
 
 A measure of the copies of a :ref:`Location` within a system (e.g. genome, cell, etc.)
 
+**GA4GH Digest**
+
+.. list-table::
+    :class: clean-wrap
+    :header-rows: 1
+    :align: left
+    :widths: auto
+
+    *  - Prefix
+       - Keys
+
+    *  - None
+       - ['location', 'type']
+
+
 **Information Model**
 
 Some CopyNumber attributes are inherited from :ref:`Variation`.

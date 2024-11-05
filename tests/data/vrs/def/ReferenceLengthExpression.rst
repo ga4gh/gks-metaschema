@@ -8,6 +8,21 @@
 
 An expression of a length of a sequence from a repeating reference.
 
+**GA4GH Digest**
+
+.. list-table::
+    :class: clean-wrap
+    :header-rows: 1
+    :align: left
+    :widths: auto
+
+    *  - Prefix
+       - Keys
+
+    *  - None
+       - ['length', 'repeatSubunitLength', 'type']
+
+
 **Information Model**
 
 Some ReferenceLengthExpression attributes are inherited from :ref:`SequenceExpression`.

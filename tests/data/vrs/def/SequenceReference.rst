@@ -8,6 +8,21 @@
 
 A sequence of nucleic or amino acid character codes.
 
+**GA4GH Digest**
+
+.. list-table::
+    :class: clean-wrap
+    :header-rows: 1
+    :align: left
+    :widths: auto
+
+    *  - Prefix
+       - Keys
+
+    *  - None
+       - []
+
+
 **Information Model**
 
 Some SequenceReference attributes are inherited from :ref:`gks.core:Entity`.
