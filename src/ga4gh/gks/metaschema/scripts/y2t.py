@@ -18,8 +18,8 @@ MATURITY_MAPPING: dict[str, tuple[str, str]] = {
 
 # Mapping to corresponding code for ordered property in arrays
 ORDERED_MAPPING: dict[bool, str] = {
-    True: "OL",
-    False: "UL"
+    True: "&#8595;",
+    False: "&#8942;"
 }
 
 
@@ -120,7 +120,7 @@ def resolve_flags(class_property_attributes: dict) -> str:
             flags += f"""
                         .. raw:: html
 
-                            <span style="background-color: #{background_color}; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: block; margin-bottom: 5px;">{maturity_code}</span>"""
+                            <span style="background-color: #{background_color}; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;">{maturity_code}</span>"""
 
     ordered = class_property_attributes.get("ordered")
     ordered_code = ORDERED_MAPPING.get(ordered, None)
@@ -131,7 +131,7 @@ def resolve_flags(class_property_attributes: dict) -> str:
                         .. raw:: html\n"""
 
         flags += f"""
-                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: block; margin-bottom: 5px;">{ordered_code}</span>"""
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;">{ordered_code}</span>"""
     return flags
 
 
