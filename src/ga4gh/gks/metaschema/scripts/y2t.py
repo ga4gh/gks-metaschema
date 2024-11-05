@@ -89,10 +89,8 @@ def add_ga4gh_digest(class_definition: dict, f: TextIOWrapper) -> None:
     """
     ga4gh_digest = class_definition.get("ga4ghDigest") or {}
     if ga4gh_digest:
-        ga4gh_prefix = ga4gh_digest.get("prefix") or ""
-        ga4gh_keys = ga4gh_digest.get("keys") or []
-        if ga4gh_prefix and ga4gh_keys:
-            print(f"""
+        ga4gh_prefix = ga4gh_digest.get("prefix") or "None"
+        print(f"""
 **GA4GH Digest**
 
 .. list-table::
