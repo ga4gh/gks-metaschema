@@ -89,7 +89,6 @@ def add_ga4gh_digest(class_definition: dict, f: TextIOWrapper) -> None:
     """
     ga4gh_digest = class_definition.get("ga4ghDigest") or {}
     if ga4gh_digest:
-        ga4gh_prefix = ga4gh_digest.get("prefix") or "None"
         print(f"""
 **GA4GH Digest**
 
@@ -102,7 +101,7 @@ def add_ga4gh_digest(class_definition: dict, f: TextIOWrapper) -> None:
     *  - Prefix
        - Keys
 
-    *  - {ga4gh_prefix}
+    *  - {ga4gh_digest.get("prefix") or "None"}
        - {str(ga4gh_digest.get("keys") or [])}\n""", file=f)
 
 
@@ -143,15 +142,15 @@ def main(proc_schema):
             if maturity == 'draft':
                 print("""
 .. warning:: This data class is at a **draft** maturity level and may change
-    significantly in future releases. Maturity levels are described in 
+    significantly in future releases. Maturity levels are described in
     the :ref:`maturity-model`.
-                      
+
                     """, file=f)
             elif maturity == 'trial use':
                 print("""
 .. note:: This data class is at a **trial use** maturity level and may change
     in future releases. Maturity levels are described in the :ref:`maturity-model`.
-                      
+
                     """, file=f)
             print("**Computational Definition**\n", file=f)
             print(class_definition['description'], file=f)
