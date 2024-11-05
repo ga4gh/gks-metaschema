@@ -2,6 +2,7 @@ import os
 import shutil
 from pathlib import Path
 
+import pytest
 import yaml
 
 from ga4gh.gks.metaschema.scripts.source2classes import main as s2c
@@ -64,3 +65,7 @@ def test_docs_create():
     os.makedirs(defs)
     y2t(processor)
     assert True
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

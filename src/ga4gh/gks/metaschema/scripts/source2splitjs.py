@@ -13,7 +13,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument("infile")
 
 
-def _redirect_refs(obj, dest_path, root_proc, mode):
+def _redirect_refs(obj: dict|list, dest_path: Path, root_proc: YamlSchemaProcessor, mode: str) -> dict|list:
+    """Process the list of references and returns the list of classes
+
+    :param obj: list of schema objects
+    :param dest_path: destination output path
+    :param root_proc: the root YamlSchemaProcessor
+    :param mode: output mode of "json" or "yaml"
+    """
     frag_re = re.compile(r"(/\$defs|definitions)/(\w+)")
     if isinstance(obj, list):
         return [_redirect_refs(x, dest_path, root_proc, mode) for x in obj]
@@ -60,7 +67,12 @@ def _redirect_refs(obj, dest_path, root_proc, mode):
         return obj
 
 
-def split_defs_to_js(root_proc, mode="json"):
+def split_defs_to_js(root_proc: YamlSchemaProcessor, mode: str="json") -> None:
+    """Splits the classes defined in the schema into json files.
+
+    :param root_proc: root YamlSchemaProcessor
+    :param mode: str, defaults to "json"
+    """
     if mode == "json":
         fp = root_proc.json_fp
     elif mode == "yaml":
