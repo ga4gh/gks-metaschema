@@ -2,12 +2,10 @@
 # This pre-commit script should be placed in the .git/hooks/ directory.
 # It runs code quality checks prior to a commit.
 
-if [[ -z "${PROJECT_ROOT_DIR}" ]]; then
-    echo "Please set the PROJECT_ROOT_DIR environment variable."
-    exit 1
-else
-    cd "$PROJECT_ROOT_DIR" || exit 1
-fi
+
+# Get and change to the root of the repo
+project_root_dir=`git rev-parse --show-toplevel`
+cd "$project_root_dir" || exit 1
 
 # Immediately exit if there's an error.
 set -e
