@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import argparse
-from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 from pathlib import Path
+
+from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 parser = argparse.ArgumentParser()
 parser.add_argument("infile")
@@ -13,10 +14,12 @@ def main(proc):
             continue
         print(cls)
 
+
 def cli():
     args = parser.parse_args()
     p = YamlSchemaProcessor(Path(args.infile))
     main(p)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     cli()

@@ -28,7 +28,17 @@ keywords = [
     "variation"
 ]
 requires-python = ">=3.12"
-dynamic = ["version", "dependencies"]
+dependencies = [
+    "pyyaml",
+    "Jinja2"
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff==0.7.2"
+]
 
 [project.urls]
 Homepage = "https://github.com/ga4gh/gks-metaschema"
@@ -36,9 +46,6 @@ Documentation = "https://github.com/ga4gh/gks-metaschema"
 Changelog = "https://github.com/ga4gh/gks-metaschema/releases"
 Source = "https://github.com/ga4gh/gks-metaschema"
 "Bug Tracker" = "https://github.com/ga4gh/gks-metaschema/issues"
-
-[tool.setuptools.dynamic]
-dependencies = {file = [".requirements.txt"]}
 
 [tool.setuptools_scm]
 
@@ -53,3 +60,27 @@ source2classes = "ga4gh.gks.metaschema.scripts.source2classes:cli"
 [build-system]
 requires = ["setuptools>=65.3", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
+
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "C",
+    "F",
+    "I",
+    "E",
+    "W"
+]
+fixable = ["ALL"]
+ignore = ["C901"]
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false

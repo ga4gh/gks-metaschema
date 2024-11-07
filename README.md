@@ -1,5 +1,6 @@
 # gks-metaschema
 
+
 Tools and scripts for parsing the GA4GH Genomic Knowledge Standards (GKS) metaschemas.
 The metaschema processor (MSP) converts
 [JSON Schema Version 2020-12](json-schema.org/draft/2020-12/schema) in YAML to
@@ -27,6 +28,12 @@ environment.
     cd gks-metaschema
     make devready
     source venv/3.12/bin/activate
+
+
+Set up the `pre-commit` hook
+
+    cp ./scripts/pre-commit ./.git/hooks/
+
 
 ### Testing
 
