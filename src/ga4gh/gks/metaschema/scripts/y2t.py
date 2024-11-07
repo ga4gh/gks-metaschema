@@ -165,8 +165,8 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
     for class_name, class_definition in proc_schema.defs.items():
         with open(proc_schema.def_fp / (class_name + ".rst"), "w") as f:
             maturity = class_definition.get("maturity", "")
+            template = env.get_template("maturity")
             if maturity == "draft":
-                template = env.get_template("maturity")
                 print(
                     template.render(info="warning", maturity_level="draft", modifier="significantly"),
                     file=f,
