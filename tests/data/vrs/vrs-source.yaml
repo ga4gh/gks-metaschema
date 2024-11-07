@@ -15,8 +15,13 @@ type: object
 strict: true
 
 imports:
-  gks.core: ../gks-common/core-source.yaml
-
+  # gks.core: ../gks-common/core-source.yaml
+  gks.core:
+    org: clingen-data-model
+    repo: gks-metaschema
+    path: tests/data/gks-common/core-source.yaml
+    sha: fe2995181d06896f567f81ca4550b3b02830b1e5
+  
 namespaces:
   gks.common: ../gks-common/$defs/
 

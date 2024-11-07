@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from collections import defaultdict
 from urllib.parse import urlparse
+from ga4gh.gks.metaschema.tools.schema_import import retrieve_import
 
 SCHEMA_DEF_KEYWORD_BY_VERSION = {
     "https://json-schema.org/draft-07/schema": "definitions",
@@ -183,17 +184,31 @@ class YamlSchemaProcessor:
             schema = yaml.load(f, Loader=yaml.SafeLoader)
         return schema
 
+    def import_dependency_from_path(self, dependency, fp):
+        if self.imported:
+            root_fp = self.root_schema_fp
+        else:
+            root_fp = self.schema_fp
+        self.imports[dependency] = YamlSchemaProcessor(fp, root_fp=root_fp)    
+    
+    def import_embedded_dependency(self, dependency):
+        fp = Path(self.raw_schema['imports'][dependency])
+        if not fp.is_absolute():
+            base_path = self.schema_fp.parent
+            fp = base_path.joinpath(fp)
+        self.import_dependency_from_path(dependency, fp)
+
+    def import_github_reference_dependency(self, dependency):
+        spec = self.raw_schema['imports'][dependency]
+        ref_path = retrieve_import(spec)
+        self.import_dependency_from_path(dependency, ref_path)
+
     def import_dependencies(self):
         for dependency in self.raw_schema.get('imports', list()):
-            fp = Path(self.raw_schema['imports'][dependency])
-            if not fp.is_absolute():
-                base_path = self.schema_fp.parent
-                fp = base_path.joinpath(fp)
-            if self.imported:
-                root_fp = self.root_schema_fp
+            if isinstance(self.raw_schema['imports'][dependency], str):
+                self.import_embedded_dependency(dependency)
             else:
-                root_fp = self.schema_fp
-            self.imports[dependency] = YamlSchemaProcessor(fp, root_fp=root_fp)
+                self.import_github_reference_dependency(dependency)
 
     def process_schema(self):
         if self.defs is None:
