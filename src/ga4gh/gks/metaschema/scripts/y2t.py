@@ -17,7 +17,7 @@ env = Environment(loader=FileSystemLoader(templates_dir))
 # Mapping to corresponding hex color code and code for maturity status
 MATURITY_MAPPING: dict[str, tuple[str, str]] = {
     "draft": ("D3D3D3", "D"),
-    "trial_use": ("FFFF99", "TU"),
+    "trial use": ("FFFF99", "TU"),
     "normative": ("B6D7A8", "N"),
     "deprecated": ("EA9999", "X"),
 }
@@ -136,7 +136,7 @@ def resolve_flags(class_property_attributes: dict) -> str:
     if maturity is not None:
         background_color, maturity_code = MATURITY_MAPPING.get(maturity, (None, None))
         if background_color and maturity_code:
-            title = f"{maturity.replace("_", " ").title()} Maturity Level"
+            title = f"{maturity.title()} Maturity Level"
             flags += f"""
                         .. raw:: html
 
