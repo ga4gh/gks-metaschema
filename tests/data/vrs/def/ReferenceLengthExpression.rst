@@ -2,9 +2,25 @@
     significantly in future releases. Maturity levels are described in
     the :ref:`maturity-model`.
 
+
 **Computational Definition**
 
 An expression of a length of a sequence from a repeating reference.
+
+**GA4GH Digest**
+
+.. list-table::
+    :class: clean-wrap
+    :header-rows: 1
+    :align: left
+    :widths: auto
+
+    *  - Prefix
+       - Keys
+
+    *  - None
+       - ['length', 'repeatSubunitLength', 'type']
+
 
 **Information Model**
 
@@ -17,38 +33,50 @@ Some ReferenceLengthExpression attributes are inherited from :ref:`SequenceExpre
    :widths: auto
 
    *  - Field
+      - Flags
       - Type
       - Limits
       - Description
    *  - id
+      -
       - string
       - 0..1
       - The 'logical' identifier of the entity in the system of record, e.g. a UUID. This 'id' is  unique within a given system. The identified entity may have a different 'id' in a different  system, or may refer to an 'id' for the shared concept in another system (e.g. a CURIE).
    *  - label
+      -
       - string
       - 0..1
       - A primary label for the entity.
    *  - description
+      -
       - string
       - 0..1
       - A free-text description of the entity.
    *  - extensions
+      -
+                        .. raw:: html
+
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: block; margin-bottom: 5px;">OL</span>
       - :ref:`Extension`
       - 0..m
-      - 
+      -
    *  - type
+      -
       - string
       - 1..1
       - MUST be "ReferenceLengthExpression"
    *  - length
+      -
       - integer | :ref:`Range`
       - 1..1
       - The number of residues in the expressed sequence.
    *  - sequence
+      -
       - :ref:`SequenceString`
       - 0..1
       - the :ref:`Sequence` encoded by the Reference Length Expression.
    *  - repeatSubunitLength
+      -
       - integer
       - 1..1
       - The number of residues in the repeat subunit.
