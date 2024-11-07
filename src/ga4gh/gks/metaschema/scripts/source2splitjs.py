@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("infile")
 
 
-def _redirect_refs(obj: dict|list, dest_path: Path, root_proc: YamlSchemaProcessor, mode: str) -> dict|list:
+def _redirect_refs(obj: dict | list, dest_path: Path, root_proc: YamlSchemaProcessor, mode: str) -> dict | list:
     """Process the list of references and returns the list of classes
 
     :param obj: list of schema objects
@@ -67,7 +67,7 @@ def _redirect_refs(obj: dict|list, dest_path: Path, root_proc: YamlSchemaProcess
         return obj
 
 
-def split_defs_to_js(root_proc: YamlSchemaProcessor, mode: str="json") -> None:
+def split_defs_to_js(root_proc: YamlSchemaProcessor, mode: str = "json") -> None:
     """Splits the classes defined in the schema into json files.
 
     :param root_proc: root YamlSchemaProcessor
