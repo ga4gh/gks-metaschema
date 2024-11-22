@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# This pre-commit script should be placed in the .git/hooks/ directory.
+# It runs code quality checks prior to a commit.
+
+
+# Get and change to the root of the repo
+project_root_dir=`git rev-parse --show-toplevel`
+cd "$project_root_dir" || exit 1
+
+# Immediately exit if there's an error.
+set -e
+
+ruff check                   # Run the linter.
+ruff check --select I --fix  # Sort imports.
+ruff format                  # Run the formatter.
+pytest                       # Run the test suite.

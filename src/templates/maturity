@@ -1,0 +1,4 @@
+.. {{ info }}:: This data class is at a **{{ maturity_level }}** maturity level and may \
+    change{{ ' ' if modifier else '' }}{{ modifier }} in future releases. Maturity \
+    levels are described in the :ref:`maturity-model`.
+
