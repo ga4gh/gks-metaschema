@@ -1,0 +1,44 @@
+
+.. warning:: This data class is at a **draft** maturity level and may change
+    significantly in future releases. Maturity levels are described in 
+    the :ref:`maturity-model`.
+                      
+                    
+**Computational Definition**
+
+An expression describing a :ref:`Sequence`.
+
+**Information Model**
+
+Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
+
+.. list-table::
+   :class: clean-wrap
+   :header-rows: 1
+   :align: left
+   :widths: auto
+
+   *  - Field
+      - Type
+      - Limits
+      - Description
+   *  - id
+      - string
+      - 0..1
+      - The 'logical' identifier of the entity in the system of record, e.g. a UUID. This 'id' is  unique within a given system. The identified entity may have a different 'id' in a different  system, or may refer to an 'id' for the shared concept in another system (e.g. a CURIE).
+   *  - label
+      - string
+      - 0..1
+      - A primary label for the entity.
+   *  - description
+      - string
+      - 0..1
+      - A free-text description of the entity.
+   *  - extensions
+      - :ref:`Extension`
+      - 0..m
+      - 
+   *  - type
+      - string
+      - 1..1
+      - The SequenceExpression class type. MUST match child class type.

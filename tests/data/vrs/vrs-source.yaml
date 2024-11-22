@@ -31,12 +31,14 @@ $defs:
 
   ValueObject:
     inherits: gks.core:Entity
+    maturity: draft
     description: >-
       A contextual value whose equality is based on value, not identity.
       See https://en.wikipedia.org/wiki/Value_object for more on Value Objects.
 
   Ga4ghIdentifiableObject:
     inherits: ValueObject
+    maturity: draft
     description: >-
       A contextual value object for which a GA4GH computed identifier can be created.
     ga4ghDigest:
@@ -52,6 +54,7 @@ $defs:
 
   Variation:
     inherits: Ga4ghIdentifiableObject
+    maturity: draft
     description: >-
       A representation of the state of one or more biomolecules.
     oneOf:
@@ -88,6 +91,7 @@ $defs:
 
   MolecularVariation:
     inherits: Variation
+    maturity: draft
     description: >-
       A :ref:`variation` on a contiguous molecule.
     oneOf:
@@ -98,6 +102,7 @@ $defs:
 
   SystemicVariation:
     inherits: Variation
+    maturity: draft
     description: >-
       A Variation of multiple molecules in the context of a system, e.g.
       a genome, sample, or homologous chromosomes.
@@ -186,6 +191,7 @@ $defs:
   # SystemicVariation
 
   CopyNumber:
+    maturity: draft
     ga4ghDigest:
       keys:
         - location
@@ -300,6 +306,7 @@ $defs:
 
   Location:
     inherits: Ga4ghIdentifiableObject
+    maturity: draft
     description: >-
       A contiguous segment of a biological sequence.
     $ref: "#/$defs/SequenceLocation"
@@ -388,6 +395,7 @@ $defs:
 
   SequenceExpression:
     inherits: ValueObject
+    maturity: draft
     ga4ghDigest:
       keys:
         - type

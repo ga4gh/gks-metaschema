@@ -1,0 +1,19 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/SequenceExpression",
+   "title": "SequenceExpression",
+   "type": "object",
+   "maturity": "draft",
+   "description": "An expression describing a Sequence.",
+   "oneOf": [
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/LiteralSequenceExpression"
+      },
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/ReferenceLengthExpression"
+      }
+   ],
+   "discriminator": {
+      "propertyName": "type"
+   }
+}
