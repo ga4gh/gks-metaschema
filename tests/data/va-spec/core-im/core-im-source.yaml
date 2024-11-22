@@ -17,6 +17,7 @@ namespaces:
 $defs:
   InformationEntity:
     inherits: gks.core:Entity
+    maturity: draft
     description: >-
       InformationEntities are abstract (non-physical) entities that are about something (i.e. they carry 
       information about things in the real world).
@@ -170,6 +171,7 @@ $defs:
     required: [ "value" ]
   Statement:
     inherits: InformationEntity
+    maturity: draft
     description: >-
       A Statement (aka ‘Assertion’) represents a claim of purported truth as made by a particular agent, 
       on a particular occasion.
@@ -201,6 +203,7 @@ $defs:
       - direction
   VariantStatement:
     inherits: Statement
+    maturity: draft
     description: >-
       A :ref:`Statement` describing the impact of a variant.
     heritableProperties:
@@ -213,6 +216,7 @@ $defs:
         description: A variant that is the subject of the Statement.
   VariantClassification:
     inherits: VariantStatement
+    maturity: draft
     description: >-
       A :ref:`VariantStatement` classifying the impact of a variant.
     heritableProperties:
@@ -226,6 +230,7 @@ $defs:
       - classification
   VariantStudySummary:
     inherits: VariantStatement
+    maturity: draft
     description: >-
       A :ref:`Statement` summarizing evidence about the impact of a variant from
       one or more studies.

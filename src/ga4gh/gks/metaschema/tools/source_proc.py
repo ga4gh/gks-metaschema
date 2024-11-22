@@ -19,6 +19,12 @@ link_re = re.compile(r'`(.*?)\s?\<(.*)\>`_')
 curie_re = re.compile(r'(\S+):(\S+)')
 defs_re = re.compile(r'#/(\$defs|definitions)/.*')
 
+maturity_levels = {
+    'deprecated': 0,
+    'draft': 1,
+    'trial use': 2,
+    'normative': 3
+}
 
 class YamlSchemaProcessor:
 
@@ -54,6 +60,7 @@ class YamlSchemaProcessor:
         self.defs = self.processed_schema.get(self.schema_def_keyword, None)
         self.processed_classes = set()
         self.process_schema()
+        self.check_processed_schema()
         self.for_js = copy.deepcopy(self.processed_schema)
         self.clean_for_js()
 
@@ -202,6 +209,20 @@ class YamlSchemaProcessor:
         for schema_class in self.defs:
             self.process_schema_class(schema_class)
 
+    def check_processed_schema(self):
+        for cls in self.processed_classes:
+            cls_def = self.defs[cls]
+            if 'inherits' in cls_def:
+                inherited_cls_name = cls_def['inherits']
+                if ':' in inherited_cls_name:
+                    namespace, inherited_cls_split_name = inherited_cls_name.split(':')
+                    inherited_cls_def = self.imports[namespace].defs[inherited_cls_split_name]
+                else:
+                    inherited_cls_def = self.defs[inherited_cls_name]
+                assert inherited_cls_def['maturity'] >= cls_def['maturity'], \
+                  f"Maturity of {cls} is greater than parent class {inherited_cls_name}."
+            pass
+
     def class_is_abstract(self, schema_class):
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
         return 'properties' not in schema_class_def and not self.class_is_primitive(schema_class)
@@ -318,10 +339,10 @@ class YamlSchemaProcessor:
             return
         processed_class_def = self.processed_schema[self.schema_def_keyword][schema_class]
 
-        # Check GKS maturity model on all public, concrete classes
-        if not (self.class_is_protected(schema_class) or self.class_is_abstract(schema_class)):
-            assert 'maturity' in processed_class_def, schema_class
-            assert processed_class_def['maturity'] in ['draft', 'trial use', 'normative', 'deprecated'], schema_class
+        # Check GKS maturity model on all defined classes
+        # if not (self.class_is_protected(schema_class) or self.class_is_abstract(schema_class)):
+        assert 'maturity' in processed_class_def, schema_class
+        assert processed_class_def['maturity'] in maturity_levels, schema_class
 
         if self.class_is_protected(schema_class):
             containing_class = self.raw_defs[schema_class]['protectedClassOf']

@@ -5,6 +5,7 @@ strict: true
 
 $defs:
   Entity:
+    maturity: draft
     description: >-
       Entity is the root class of ‘core’ classes model - those that have identifiers and other general 
       metadata like labels, xrefs, urls, descriptions, etc. All core classes descend from and inherit 
@@ -30,6 +31,7 @@ $defs:
 
   MappableEntity:
     inherits: Entity
+    maturity: draft
     description: an Entity that is mappable to codings in other terminology systems.
     heritableProperties:
       mappings:
@@ -125,6 +127,7 @@ $defs:
 
   DomainEntity:
     inherits: MappableEntity
+    maturity: draft
     description: >-
       An Entity that is specific to a particular biomedical domain such as disease, therapeutics,
       or genes.
