@@ -4,7 +4,7 @@
 
 **Computational Definition**
 
-An expression describing a :ref:`Sequence`.
+An explicit expression of a Sequence.
 
 **GA4GH Digest**
 
@@ -18,12 +18,12 @@ An expression describing a :ref:`Sequence`.
        - Keys
 
     *  - None
-       - ['type']
+       - ['sequence', 'type']
 
 
 **Information Model**
 
-Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
+Some LiteralSequenceExpression attributes are inherited from :ref:`SequenceExpression`.
 
 .. list-table::
    :class: clean-wrap
@@ -63,4 +63,9 @@ Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
       - 
       - string
       - 1..1
-      - The SequenceExpression class type. MUST match child class type.
+      - MUST be "LiteralSequenceExpression"
+   *  - sequence
+      - 
+      - :ref:`SequenceString`
+      - 1..1
+      - the literal sequence

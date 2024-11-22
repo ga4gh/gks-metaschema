@@ -4,7 +4,7 @@
 
 **Computational Definition**
 
-An expression describing a :ref:`Sequence`.
+A sequence of nucleic or amino acid character codes.
 
 **GA4GH Digest**
 
@@ -18,12 +18,12 @@ An expression describing a :ref:`Sequence`.
        - Keys
 
     *  - None
-       - ['type']
+       - []
 
 
 **Information Model**
 
-Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
+Some SequenceReference attributes are inherited from :ref:`gks.core:Entity`.
 
 .. list-table::
    :class: clean-wrap
@@ -62,5 +62,15 @@ Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
    *  - type
       - 
       - string
+      - 0..1
+      - 
+   *  - refgetAccession
+      - 
+      - string
       - 1..1
-      - The SequenceExpression class type. MUST match child class type.
+      - A `GA4GH RefGet <http://samtools.github.io/hts-specs/refget.html>` identifier for the referenced sequence,  using the sha512t24u digest.
+   *  - residueAlphabet
+      - 
+      - string
+      - 0..1
+      - The interpretation of the character codes referred to by the refget accession, where "aa" specifies an amino acid character set, and "na" specifies a nucleic acid character set.

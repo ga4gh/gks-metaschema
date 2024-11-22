@@ -4,7 +4,7 @@
 
 **Computational Definition**
 
-An expression describing a :ref:`Sequence`.
+An expression of a length of a sequence from a repeating reference.
 
 **GA4GH Digest**
 
@@ -18,12 +18,12 @@ An expression describing a :ref:`Sequence`.
        - Keys
 
     *  - None
-       - ['type']
+       - ['length', 'repeatSubunitLength', 'type']
 
 
 **Information Model**
 
-Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
+Some ReferenceLengthExpression attributes are inherited from :ref:`SequenceExpression`.
 
 .. list-table::
    :class: clean-wrap
@@ -63,4 +63,19 @@ Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
       - 
       - string
       - 1..1
-      - The SequenceExpression class type. MUST match child class type.
+      - MUST be "ReferenceLengthExpression"
+   *  - length
+      - 
+      - integer | :ref:`Range`
+      - 1..1
+      - The number of residues in the expressed sequence.
+   *  - sequence
+      - 
+      - :ref:`SequenceString`
+      - 0..1
+      - the :ref:`Sequence` encoded by the Reference Length Expression.
+   *  - repeatSubunitLength
+      - 
+      - integer
+      - 1..1
+      - The number of residues in the repeat subunit.

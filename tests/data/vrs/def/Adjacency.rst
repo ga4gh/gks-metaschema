@@ -4,7 +4,7 @@
 
 **Computational Definition**
 
-An expression describing a :ref:`Sequence`.
+The `Adjacency` class can represent either the termination of a sequence or the adjoining of the end of a sequence with the beginning of an adjacent sequence, potentially with an intervening linker sequence.
 
 **GA4GH Digest**
 
@@ -17,13 +17,13 @@ An expression describing a :ref:`Sequence`.
     *  - Prefix
        - Keys
 
-    *  - None
-       - ['type']
+    *  - AJ
+       - ['adjoinedSequences', 'linker', 'type']
 
 
 **Information Model**
 
-Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
+Some Adjacency attributes are inherited from :ref:`Variation`.
 
 .. list-table::
    :class: clean-wrap
@@ -62,5 +62,31 @@ Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
    *  - type
       - 
       - string
-      - 1..1
-      - The SequenceExpression class type. MUST match child class type.
+      - 0..1
+      - MUST be "Adjacency".
+   *  - digest
+      - 
+      - string
+      - 0..1
+      - A sha512t24u digest created using the VRS Computed Identifier algorithm.
+   *  - expressions
+      - 
+                        .. raw:: html
+
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Unordered">&#8942;</span>
+      - :ref:`Expression`
+      - 0..m
+      - 
+   *  - adjoinedSequences
+      - 
+                        .. raw:: html
+
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Ordered">&#8595;</span>
+      - :ref:`IRI` | :ref:`Location`
+      - 1..2
+      - The terminal sequence or pair of adjoined sequences that defines in the adjacency.
+   *  - linker
+      - 
+      - :ref:`SequenceExpression`
+      - 0..1
+      - The sequence found between adjoined sequences.

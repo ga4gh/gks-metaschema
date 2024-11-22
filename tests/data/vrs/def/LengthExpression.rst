@@ -4,7 +4,7 @@
 
 **Computational Definition**
 
-An expression describing a :ref:`Sequence`.
+A sequence expressed only by its length.
 
 **GA4GH Digest**
 
@@ -18,12 +18,12 @@ An expression describing a :ref:`Sequence`.
        - Keys
 
     *  - None
-       - ['type']
+       - ['length', 'type']
 
 
 **Information Model**
 
-Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
+Some LengthExpression attributes are inherited from :ref:`SequenceExpression`.
 
 .. list-table::
    :class: clean-wrap
@@ -63,4 +63,9 @@ Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
       - 
       - string
       - 1..1
-      - The SequenceExpression class type. MUST match child class type.
+      - MUST be "LengthExpression"
+   *  - length
+      - 
+      - :ref:`Range` | integer
+      - 0..1
+      - 

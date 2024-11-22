@@ -4,7 +4,7 @@
 
 **Computational Definition**
 
-An expression describing a :ref:`Sequence`.
+A :ref:`Location` defined by an interval on a referenced :ref:`Sequence`.
 
 **GA4GH Digest**
 
@@ -17,13 +17,13 @@ An expression describing a :ref:`Sequence`.
     *  - Prefix
        - Keys
 
-    *  - None
-       - ['type']
+    *  - SL
+       - ['end', 'sequenceReference', 'start', 'type']
 
 
 **Information Model**
 
-Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
+Some SequenceLocation attributes are inherited from :ref:`Ga4ghIdentifiableObject`.
 
 .. list-table::
    :class: clean-wrap
@@ -62,5 +62,25 @@ Some SequenceExpression attributes are inherited from :ref:`gks.core:Entity`.
    *  - type
       - 
       - string
-      - 1..1
-      - The SequenceExpression class type. MUST match child class type.
+      - 0..1
+      - MUST be "SequenceLocation"
+   *  - digest
+      - 
+      - string
+      - 0..1
+      - A sha512t24u digest created using the VRS Computed Identifier algorithm.
+   *  - sequenceReference
+      - 
+      - :ref:`IRI` | :ref:`SequenceReference`
+      - 0..1
+      - A :ref:`SequenceReference`.
+   *  - start
+      - 
+      - integer | :ref:`Range`
+      - 0..1
+      - The start coordinate or range of the SequenceLocation. The minimum value of this coordinate or range is 0. MUST represent a coordinate or range less than or equal to the value of `end`.
+   *  - end
+      - 
+      - integer | :ref:`Range`
+      - 0..1
+      - The end coordinate or range of the SequenceLocation. The minimum value of this coordinate or range is 0. MUST represent a coordinate or range greater than or equal to the value of `start`.
