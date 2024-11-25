@@ -20,6 +20,5 @@ def cli():
     p = YamlSchemaProcessor(Path(args.infile))
     main(p)
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     cli()
