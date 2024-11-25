@@ -220,6 +220,8 @@ class YamlSchemaProcessor:
                     inherited_cls_def = self.imports[namespace].defs[inherited_cls_split_name]
                 else:
                     inherited_cls_def = self.defs[inherited_cls_name]
+                assert 'maturity' in cls_def, cls
+                assert 'maturity' in inherited_cls_def, inherited_cls_name
                 assert inherited_cls_def['maturity'] >= cls_def['maturity'], \
                   f"Maturity of {cls} is greater than parent class {inherited_cls_name}."
             pass
@@ -340,8 +342,7 @@ class YamlSchemaProcessor:
             return
         processed_class_def = self.processed_schema[self.schema_def_keyword][schema_class]
 
-        # Check GKS maturity model on all defined classes
-        # if not (self.class_is_protected(schema_class) or self.class_is_abstract(schema_class)):
+        # Check GKS maturity model on all schemas
         assert 'maturity' in processed_class_def, schema_class
         assert processed_class_def['maturity'] in maturity_levels, schema_class
 
