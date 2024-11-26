@@ -103,7 +103,7 @@ def add_ga4gh_digest(class_definition: dict, f: TextIOWrapper) -> None:
     :param class_definition: Model definition
     :param f: RST file
     """
-    ga4gh_digest = class_definition.get("ga4gh", dict())
+    ga4gh_digest = class_definition.get("ga4gh", {})
     if ga4gh_digest:
         print(
             f"""
@@ -119,7 +119,7 @@ def add_ga4gh_digest(class_definition: dict, f: TextIOWrapper) -> None:
        - Inherent
 
     *  - {ga4gh_digest.get("prefix", None)}
-       - {str(ga4gh_digest.get("inherent", list()))}\n""",
+       - {str(ga4gh_digest.get("inherent", []))}\n""",
             file=f,
         )
 
