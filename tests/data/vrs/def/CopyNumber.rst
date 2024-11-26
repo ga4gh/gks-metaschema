@@ -15,7 +15,7 @@ A measure of the copies of a :ref:`Location` within a system (e.g. genome, cell,
     :widths: auto
 
     *  - Prefix
-       - Keys
+       - Inherent
 
     *  - None
        - ['location', 'type']

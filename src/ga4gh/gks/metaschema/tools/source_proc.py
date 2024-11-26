@@ -236,7 +236,7 @@ class YamlSchemaProcessor:
 
     def class_is_ga4gh_identifiable(self, schema_class):
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
-        return "ga4ghDigest" in schema_class_def and "prefix" in schema_class_def["ga4ghDigest"]
+        return "ga4gh" in schema_class_def and "prefix" in schema_class_def["ga4gh"]
 
     def class_is_passthrough(self, schema_class):
         if not self.class_is_abstract(schema_class):
@@ -366,17 +366,17 @@ class YamlSchemaProcessor:
             inherited_properties |= copy.deepcopy(inherited_class["heritableProperties"])
             inherited_required |= set(inherited_class.get("heritableRequired", []))
 
-            # inherit ga4ghDigest keys
-            if "ga4ghDigest" in processed_class_def or "ga4ghDigest" in inherited_class:
-                if "ga4ghDigest" not in processed_class_def:
+            # inherit ga4gh keys
+            if "ga4gh" in processed_class_def or "ga4gh" in inherited_class:
+                if "ga4gh" not in processed_class_def:
                     assert self.class_is_abstract(schema_class), f"{schema_class} is missing a defined prefix."
-                    processed_class_def["ga4ghDigest"] = copy.deepcopy(inherited_class["ga4ghDigest"])
-                elif "ga4ghDigest" not in inherited_class:
+                    processed_class_def["ga4gh"] = copy.deepcopy(inherited_class["ga4gh"])
+                elif "ga4gh" not in inherited_class:
                     pass
                 else:
-                    ga4ghDigest_keys = set(inherited_class["ga4ghDigest"]["keys"])
-                    ga4ghDigest_keys |= set(processed_class_def["ga4ghDigest"].get("keys", []))
-                    processed_class_def["ga4ghDigest"]["keys"] = sorted(ga4ghDigest_keys)
+                    ga4gh_inherent = set(inherited_class["ga4gh"]["inherent"])
+                    ga4gh_inherent |= set(processed_class_def["ga4gh"].get("inherent", []))
+                    processed_class_def["ga4gh"]["inherent"] = sorted(ga4gh_inherent)
 
         if self.class_is_abstract(schema_class):
             prop_k = "heritableProperties"
@@ -430,14 +430,14 @@ class YamlSchemaProcessor:
             assert "type" in processed_class_def, schema_class
             assert processed_class_def["type"] == "object", schema_class
             if self.class_is_ga4gh_identifiable(schema_class):
-                assert isinstance(processed_class_def["ga4ghDigest"]["prefix"], str), schema_class
-                assert processed_class_def["ga4ghDigest"]["prefix"] != "", schema_class
-                l = len(processed_class_def["ga4ghDigest"]["keys"])  # noqa: E741
+                assert isinstance(processed_class_def["ga4gh"]["prefix"], str), schema_class
+                assert processed_class_def["ga4gh"]["prefix"] != "", schema_class
+                l = len(processed_class_def["ga4gh"]["inherent"])  # noqa: E741
                 assert (
                     l >= 2
                 ), f"GA4GH identifiable objects are expected to be defined by at least 2 properties, {schema_class} has {l}."  # noqa: E501
                 assert (
-                    "type" in processed_class_def["ga4ghDigest"]["keys"]
+                    "type" in processed_class_def["ga4gh"]["inherent"]
                 ), f"GA4GH identifiable objects are expected to include the class type but not included for {schema_class}."  # noqa: E501
                 # Two properites should be `type` and at least one other field
 
@@ -466,7 +466,7 @@ class YamlSchemaProcessor:
             if self.class_is_abstract(schema_class):
                 schema_definition.pop("heritableProperties", None)
                 schema_definition.pop("heritableRequired", None)
-                schema_definition.pop("ga4ghDigest", None)
+                schema_definition.pop("ga4gh", None)
                 schema_definition.pop("header_level", None)
                 self.concretize_js_object(schema_definition)
                 if (

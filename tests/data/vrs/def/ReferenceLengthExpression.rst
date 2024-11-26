@@ -15,7 +15,7 @@ An expression of a length of a sequence from a repeating reference.
     :widths: auto
 
     *  - Prefix
-       - Keys
+       - Inherent
 
     *  - None
        - ['length', 'repeatSubunitLength', 'type']

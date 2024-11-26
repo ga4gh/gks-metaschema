@@ -15,7 +15,7 @@ The absolute count of discrete copies of a :ref:`Location` or :ref:`Gene`, withi
     :widths: auto
 
     *  - Prefix
-       - Keys
+       - Inherent
 
     *  - CN
        - ['copies', 'location', 'type']

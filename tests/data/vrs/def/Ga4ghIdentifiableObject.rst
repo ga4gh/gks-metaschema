@@ -15,7 +15,7 @@ A contextual value object for which a GA4GH computed identifier can be created.
     :widths: auto
 
     *  - Prefix
-       - Keys
+       - Inherent
 
     *  - None
        - ['type']
