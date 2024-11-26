@@ -15,7 +15,7 @@ An assessment of the copy number of a :ref:`Location` or a :ref:`Gene` within a 
     :widths: auto
 
     *  - Prefix
-       - Keys
+       - Inherent
 
     *  - CX
        - ['copyChange', 'location', 'type']

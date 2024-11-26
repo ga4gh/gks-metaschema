@@ -4,9 +4,9 @@
    "title": "Adjacency",
    "type": "object",
    "maturity": "draft",
-   "ga4ghDigest": {
+   "ga4gh": {
       "prefix": "AJ",
-      "keys": [
+      "inherent": [
          "adjoinedSequences",
          "linker",
          "type"

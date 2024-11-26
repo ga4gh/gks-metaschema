@@ -4,7 +4,7 @@
    "title": "SequenceReference",
    "type": "object",
    "maturity": "draft",
-   "ga4ghDigest": {
+   "ga4gh": {
       "assigned": true
    },
    "description": "A sequence of nucleic or amino acid character codes.",

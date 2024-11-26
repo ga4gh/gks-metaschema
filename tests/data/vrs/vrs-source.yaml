@@ -41,8 +41,8 @@ $defs:
     maturity: draft
     description: >-
       A contextual value object for which a GA4GH computed identifier can be created.
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
         - type
     heritableProperties:
       type:
@@ -122,9 +122,9 @@ $defs:
 
   Allele:
     maturity: draft
-    ga4ghDigest:
+    ga4gh:
       prefix: VA
-      keys:
+      inherent:
         - location
         - state
     inherits: MolecularVariation
@@ -152,9 +152,9 @@ $defs:
 
   Haplotype:
     maturity: draft
-    ga4ghDigest:
+    ga4gh:
       prefix: HT
-      keys:
+      inherent:
         - members
     inherits: MolecularVariation
     description: >-
@@ -192,8 +192,8 @@ $defs:
 
   CopyNumber:
     maturity: draft
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
         - location
     inherits: SystemicVariation
     description: >-
@@ -209,8 +209,8 @@ $defs:
 
   CopyNumberCount:
     maturity: draft
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
         - copies
       prefix: CN
     inherits: CopyNumber
@@ -235,8 +235,8 @@ $defs:
 
   CopyNumberChange:
     maturity: draft
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
         - copyChange
       prefix: CX
     inherits: CopyNumber
@@ -263,8 +263,8 @@ $defs:
 
 #  Genotype:
 #    maturity: draft
-#    ga4ghDigest:
-#      keys:
+#    ga4gh:
+#      inherent:
 #        - members
 #        - count
 #      prefix: GT
@@ -315,8 +315,8 @@ $defs:
 
   SequenceLocation:
     maturity: draft
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
         - start
         - end
         - sequenceReference
@@ -356,7 +356,7 @@ $defs:
   SequenceReference:
     maturity: draft
     inherits: ValueObject
-    ga4ghDigest:
+    ga4gh:
       assigned: true # This special property indicates that the `digest` field follows an alternate convention
                      # and is expected to have the value assigned following that convention. For SequenceReference,
                      # it is expected the digest will be the refget accession value without the `SQ.` prefix.
@@ -396,8 +396,8 @@ $defs:
   SequenceExpression:
     inherits: ValueObject
     maturity: draft
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
         - type
     description: >-
       An expression describing a :ref:`Sequence`.
@@ -420,8 +420,8 @@ $defs:
   ReferenceLengthExpression:
     maturity: draft
     inherits: SequenceExpression
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
         - length
         - repeatSubunitLength
     description: >-
@@ -451,8 +451,8 @@ $defs:
   LengthExpression:
     maturity: draft
     inherits: SequenceExpression
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
         - length
     type: object
     description: A sequence expressed only by its length.
@@ -470,8 +470,8 @@ $defs:
   LiteralSequenceExpression:
     maturity: draft
     inherits: SequenceExpression
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
         - sequence
     description: An explicit expression of a Sequence.
     type: object
@@ -493,8 +493,8 @@ $defs:
 #  GenotypeMember:
 #    privateTo: Genotype
 #    inherits: ValueObject
-#    ga4ghDigest:
-#      keys:
+#    ga4gh:
+#      inherent:
 #        - count
 #        - variation
 #    description: >-
@@ -560,9 +560,9 @@ $defs:
 
   Adjacency:
     maturity: draft
-    ga4ghDigest:
+    ga4gh:
       prefix: AJ
-      keys:
+      inherent:
         - type
         - adjoinedSequences
         - linker

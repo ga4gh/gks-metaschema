@@ -61,9 +61,9 @@ $defs:
       propertyName: type
   Allele:
     maturity: draft
-    ga4ghDigest:
+    ga4gh:
       prefix: VA
-      keys:
+      inherent:
       - location
       - state
       - type
@@ -119,9 +119,9 @@ $defs:
     additionalProperties: false
   Haplotype:
     maturity: draft
-    ga4ghDigest:
+    ga4gh:
       prefix: HT
-      keys:
+      inherent:
       - members
       - type
     description: An ordered set of co-occurring variants on the same molecule.
@@ -182,8 +182,8 @@ $defs:
     additionalProperties: false
   CopyNumberCount:
     maturity: draft
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
       - copies
       - location
       - type
@@ -240,8 +240,8 @@ $defs:
     additionalProperties: false
   CopyNumberChange:
     maturity: draft
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
       - copyChange
       - location
       - type
@@ -314,8 +314,8 @@ $defs:
       propertyName: type
   SequenceLocation:
     maturity: draft
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
       - end
       - sequenceReference
       - start
@@ -374,7 +374,7 @@ $defs:
     additionalProperties: false
   SequenceReference:
     maturity: draft
-    ga4ghDigest:
+    ga4gh:
       assigned: true
     type: object
     description: A sequence of nucleic or amino acid character codes.
@@ -425,8 +425,8 @@ $defs:
       propertyName: type
   ReferenceLengthExpression:
     maturity: draft
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
       - length
       - repeatSubunitLength
       - type
@@ -473,8 +473,8 @@ $defs:
     additionalProperties: false
   LengthExpression:
     maturity: draft
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
       - length
       - type
     type: object
@@ -511,8 +511,8 @@ $defs:
     additionalProperties: false
   LiteralSequenceExpression:
     maturity: draft
-    ga4ghDigest:
-      keys:
+    ga4gh:
+      inherent:
       - sequence
       - type
     description: An explicit expression of a Sequence.
@@ -575,9 +575,9 @@ $defs:
     pattern: ^[A-Z*\-]*$
   Adjacency:
     maturity: draft
-    ga4ghDigest:
+    ga4gh:
       prefix: AJ
-      keys:
+      inherent:
       - adjoinedSequences
       - linker
       - type
