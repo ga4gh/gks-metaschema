@@ -63,15 +63,19 @@ class YamlSchemaProcessor:
 
     def build_inheritance_dicts(self):
         # For all classes:
-        #   If an abstract class, register oneOf enumerations
+        #   If an abstract class, register oneOf/anyOf enumerations
         #   If it inherits from a class, register the inheritance
         for cls, cls_def in self.raw_defs.items():
             cls_url = f"#/{self.schema_def_keyword}/{cls}"
-            if self.class_is_abstract(cls) and ("oneOf" in cls_def or "$ref" in cls_def):
+            if self.class_is_container(cls):
                 maps_to_urls = self.has_children_urls.get(cls_url, set())
                 maps_to = self.has_children.get(cls, set())
                 if "oneOf" in cls_def:
                     records = cls_def["oneOf"]
+                elif "anyOf" in cls_def:
+                    records = cls_def["anyOf"]
+                elif "allOf" in cls_def:
+                    records = cls_def["allOf"]
                 else:
                     records = [{"$ref": cls_def["$ref"]}]
                 for record in records:
@@ -226,6 +230,10 @@ class YamlSchemaProcessor:
     def class_is_abstract(self, schema_class):
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
         return "properties" not in schema_class_def and not self.class_is_primitive(schema_class)
+
+    def class_is_container(self, schema_class):
+        cls_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
+        return self.class_is_abstract(schema_class) and ("oneOf" in cls_def or "anyOf" in cls_def or "allOf" in cls_def)
 
     def class_is_protected(self, schema_class):
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
@@ -386,6 +394,14 @@ class YamlSchemaProcessor:
         processed_class_required = set(processed_class_def.get(req_k, []))
         # Process refs
         self.process_property_tree_refs(raw_class_properties, processed_class_properties)
+        if self.class_is_container(schema_class):
+            if "anyOf" in raw_class_def:
+                key = "anyOf"
+            elif "oneOf" in raw_class_def:
+                key = "oneOf"
+            elif "allOf" in raw_class_def:
+                key = "allOf"
+            self.process_property_tree_refs(raw_class_def[key], processed_class_def[key])
 
         for prop, prop_attribs in processed_class_properties.items():
             # Mix in inherited properties
