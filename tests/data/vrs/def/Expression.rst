@@ -21,17 +21,17 @@ Representation of a variation by a specified nomenclature or syntax for a Variat
       - Limits
       - Description
    *  - syntax
-      - 
+      -
       - string
       - 1..1
-      - 
+      -
    *  - value
-      - 
+      -
       - string
       - 1..1
-      - 
+      -
    *  - syntax_version
-      - 
+      -
       - string
       - 0..1
-      - 
+      -

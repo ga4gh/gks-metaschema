@@ -3,7 +3,7 @@ $id: "https://w3id.org/ga4gh/schema/gk-pilot/main/gnomAD/gnomad-caf-source.yaml"
 title: gnomAD Cohort Allele Frequency definitions
 type: object
 
-imports: 
+imports:
   va.caf: ../va-spec/profiles/caf/caf-source.yaml
 
 $defs:
@@ -49,31 +49,31 @@ $defs:
             type: boolean
           lowComplexityRegion:
             description: >-
-              This flag indicates the variant is found in a low complexity 
+              This flag indicates the variant is found in a low complexity
               region. These regions were identified
               with the symmetric DUST algorithm at a score threshold of 30.
             type: boolean
           lowConfidenceLossOfFunctionError:
             description: >-
-              Low confidence in predicted Loss of Function (pLoF), where 
+              Low confidence in predicted Loss of Function (pLoF), where
               variant is determined by LOFTEE
               to be unlikely loss of function for a transcript.
             type: boolean
           lossOfFunctionWarning:
             description: >-
-              A warning provided by LOFTEE to use caution when interpreting 
+              A warning provided by LOFTEE to use caution when interpreting
               the transcript or variant.
             type: boolean
           noncodingTranscriptError:
             description: >-
-              Marked in a putative loss of function category by VEP 
+              Marked in a putative loss of function category by VEP
               (essential splice, stop-gained, or frameshift)
               but appears on a non-protein-coding transcript.
             type: boolean
           heterozygousSkewedAlleleCount:
             description: >-
-              The count of individuals called as heterozygous for this variant 
-              with a skewed allele balance, indicating some of these individuals 
+              The count of individuals called as heterozygous for this variant
+              with a skewed allele balance, indicating some of these individuals
               may be miscalled homozygous alternative allele.
             type: integer
         additionalProperties: false

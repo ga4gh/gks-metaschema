@@ -4,7 +4,7 @@ A measure of the frequency of an Allele in a cohort.
 
 
     **Information Model**
-    
+
 Some CohortAlleleFrequency attributes are inherited from :ref:`va.core:InformationEntity`.
 
     .. list-table::
@@ -12,7 +12,7 @@ Some CohortAlleleFrequency attributes are inherited from :ref:`va.core:Informati
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -32,11 +32,11 @@ Some CohortAlleleFrequency attributes are inherited from :ref:`va.core:Informati
        *  - extensions
           - `Extension <../../core-im/../../gks-common/core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1
-          - 
+          -
        *  - specifiedBy
           - `Method <../../core-im/core.json#/$defs/Method>`_ | `IRI <../../gks-common/core.json#/$defs/IRI>`_
           - 0..1
@@ -44,7 +44,7 @@ Some CohortAlleleFrequency attributes are inherited from :ref:`va.core:Informati
        *  - contributions
           - `Contribution <../../core-im/core.json#/$defs/Contribution>`_
           - 0..m
-          - 
+          -
        *  - isReportedIn
           - `Document <../../core-im/core.json#/$defs/Document>`_ | `IRI <../../gks-common/core.json#/$defs/IRI>`_
           - 0..m
@@ -52,7 +52,7 @@ Some CohortAlleleFrequency attributes are inherited from :ref:`va.core:Informati
        *  - recordMetadata
           - None
           - 0..1
-          - 
+          -
        *  - derivedFrom
           - object
           - 0..1
@@ -60,32 +60,32 @@ Some CohortAlleleFrequency attributes are inherited from :ref:`va.core:Informati
        *  - focusAllele
           - `Allele <../../../vrs/vrs.json#/$defs/Allele>`_ | string
           - 1..1
-          - 
+          -
        *  - focusAlleleCount
           - integer
           - 1..1
-          - 
+          -
        *  - locusAlleleCount
           - integer
           - 1..1
-          - 
+          -
        *  - alleleFrequency
           - number
           - 1..1
-          - 
+          -
        *  - cohort
           - object
           - 1..1
-          - 
+          -
        *  - ancillaryResults
           - object
           - 0..1
-          - 
+          -
        *  - qualityMeasures
           - object
           - 0..1
-          - 
+          -
        *  - subcohortFrequency
           - :ref:`CohortAlleleFrequency`
           - 0..m
-          - 
+          -

@@ -3,13 +3,13 @@
 The group maximum filtering allele frequency at 95% CI
 
     **Information Model**
-    
+
     .. list-table::
        :class: clean-wrap
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -17,11 +17,11 @@ The group maximum filtering allele frequency at 95% CI
        *  - frequency
           - number
           - 1..1
-          - 
+          -
        *  - confidenceInterval
           - number
           - 1..1
-          - 
+          -
        *  - groupId
           - string
           - 1..1

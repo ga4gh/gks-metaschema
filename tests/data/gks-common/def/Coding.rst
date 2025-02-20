@@ -3,13 +3,13 @@
 a concept codified by a terminology system.
 
     **Information Model**
-    
+
     .. list-table::
        :class: clean-wrap
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits

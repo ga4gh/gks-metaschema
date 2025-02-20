@@ -3,13 +3,13 @@
 Entity is the root class of ‘core’ classes model - those that have identifiers and other general  metadata like labels, xrefs, urls, descriptions, etc. All core classes descend from and inherit  its attributes.
 
     **Information Model**
-    
+
     .. list-table::
        :class: clean-wrap
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -29,4 +29,4 @@ Entity is the root class of ‘core’ classes model - those that have identifie
        *  - extensions
           - :ref:`Extension`
           - 0..m
-          - 
+          -

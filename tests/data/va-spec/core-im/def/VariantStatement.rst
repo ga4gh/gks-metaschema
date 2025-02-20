@@ -3,7 +3,7 @@
 A :ref:`Statement` describing the impact of a variant.
 
     **Information Model**
-    
+
 Some VariantStatement attributes are inherited from :ref:`Statement`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some VariantStatement attributes are inherited from :ref:`Statement`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,11 +31,11 @@ Some VariantStatement attributes are inherited from :ref:`Statement`.
        *  - extensions
           - `Extension <../../gks-common/core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1
-          - 
+          -
        *  - specifiedBy
           - :ref:`Method` | `IRI <../../gks-common/core.json#/$defs/IRI>`_
           - 0..1
@@ -43,7 +43,7 @@ Some VariantStatement attributes are inherited from :ref:`Statement`.
        *  - contributions
           - :ref:`Contribution`
           - 0..m
-          - 
+          -
        *  - isReportedIn
           - :ref:`Document` | `IRI <../../gks-common/core.json#/$defs/IRI>`_
           - 0..m
@@ -51,7 +51,7 @@ Some VariantStatement attributes are inherited from :ref:`Statement`.
        *  - recordMetadata
           - None
           - 0..1
-          - 
+          -
        *  - predicate
           - string
           - 0..1

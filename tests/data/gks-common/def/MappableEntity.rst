@@ -3,7 +3,7 @@
 an Entity that is mappable to codings in other terminology systems.
 
     **Information Model**
-    
+
 Some MappableEntity attributes are inherited from :ref:`Entity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some MappableEntity attributes are inherited from :ref:`Entity`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,8 +31,8 @@ Some MappableEntity attributes are inherited from :ref:`Entity`.
        *  - extensions
           - :ref:`Extension`
           - 0..m
-          - 
+          -
        *  - mappings
           - :ref:`Mapping`
           - 0..m
-          - 
+          -

@@ -3,7 +3,7 @@
 A mapping to a concept in a terminology system.
 
     **Information Model**
-    
+
 Some Mapping attributes are inherited from :ref:`Entity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some Mapping attributes are inherited from :ref:`Entity`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,11 +31,11 @@ Some Mapping attributes are inherited from :ref:`Entity`.
        *  - extensions
           - :ref:`Extension`
           - 0..m
-          - 
+          -
        *  - coding
           - :ref:`Coding`
           - 1..1
-          - 
+          -
        *  - relation
           - string
           - 1..1

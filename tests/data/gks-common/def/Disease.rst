@@ -3,7 +3,7 @@
 A particular abnormal condition that negatively affects the structure or function  of all or part of an organism and is not immediately due to any external injury.
 
     **Information Model**
-    
+
 Some Disease attributes are inherited from :ref:`core:DomainEntity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some Disease attributes are inherited from :ref:`core:DomainEntity`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,11 +31,11 @@ Some Disease attributes are inherited from :ref:`core:DomainEntity`.
        *  - extensions
           - `Extension <core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - mappings
           - `Mapping <core.json#/$defs/Mapping>`_
           - 0..m
-          - 
+          -
        *  - aliases
           - string
           - 0..m

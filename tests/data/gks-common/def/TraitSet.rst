@@ -3,7 +3,7 @@
 A set of phenotype and/or disease concepts that together constitute a condition.
 
     **Information Model**
-    
+
 Some TraitSet attributes are inherited from :ref:`core:DomainEntity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some TraitSet attributes are inherited from :ref:`core:DomainEntity`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,11 +31,11 @@ Some TraitSet attributes are inherited from :ref:`core:DomainEntity`.
        *  - extensions
           - `Extension <core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - mappings
           - `Mapping <core.json#/$defs/Mapping>`_
           - 0..m
-          - 
+          -
        *  - aliases
           - string
           - 0..m
@@ -47,4 +47,4 @@ Some TraitSet attributes are inherited from :ref:`core:DomainEntity`.
        *  - traits
           - :ref:`Disease` | :ref:`Phenotype`
           - 2..m
-          - 
+          -

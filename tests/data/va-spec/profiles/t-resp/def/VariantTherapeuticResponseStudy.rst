@@ -3,7 +3,7 @@
 A study summarization describing the role of a variant in modulating the response of a neoplasm to drug administration or other therapeutic procedure.
 
     **Information Model**
-    
+
 Some VariantTherapeuticResponseStudy attributes are inherited from :ref:`va.core:VariantStudySummary`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some VariantTherapeuticResponseStudy attributes are inherited from :ref:`va.core
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,7 +31,7 @@ Some VariantTherapeuticResponseStudy attributes are inherited from :ref:`va.core
        *  - extensions
           - `Extension <../../core-im/../../gks-common/core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1
@@ -43,11 +43,11 @@ Some VariantTherapeuticResponseStudy attributes are inherited from :ref:`va.core
        *  - contributions
           - `Contribution <../../core-im/core.json#/$defs/Contribution>`_
           - 0..m
-          - 
+          -
        *  - recordMetadata
           - None
           - 0..1
-          - 
+          -
        *  - direction
           - string
           - 1..1

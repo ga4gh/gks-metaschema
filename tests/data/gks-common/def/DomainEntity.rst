@@ -3,7 +3,7 @@
 An Entity that is specific to a particular biomedical domain such as disease, therapeutics, or genes.
 
     **Information Model**
-    
+
 Some DomainEntity attributes are inherited from :ref:`MappableEntity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some DomainEntity attributes are inherited from :ref:`MappableEntity`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,15 +31,15 @@ Some DomainEntity attributes are inherited from :ref:`MappableEntity`.
        *  - extensions
           - :ref:`Extension`
           - 0..m
-          - 
+          -
        *  - mappings
           - :ref:`Mapping`
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1
-          - 
+          -
        *  - aliases
           - string
           - 0..m

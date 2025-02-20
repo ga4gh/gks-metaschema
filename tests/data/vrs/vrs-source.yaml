@@ -74,8 +74,8 @@ $defs:
     privateTo: Variation
     maturity: draft
     description: >-
-      Representation of a variation by a specified nomenclature or syntax for a Variation object. 
-      Common examples of expressions for the description of molecular variation include the HGVS 
+      Representation of a variation by a specified nomenclature or syntax for a Variation object.
+      Common examples of expressions for the description of molecular variation include the HGVS
       and ISCN nomenclatures.
     properties:
       syntax:
@@ -178,12 +178,12 @@ $defs:
             - $ref: "#/$defs/Allele"
             - $refCurie: gks.common:IRI
         description: >-
-          A list of :ref:`Alleles <Allele>` and :ref:`Adjacencies <Adjacency>` that comprise a Haplotype. 
+          A list of :ref:`Alleles <Allele>` and :ref:`Adjacencies <Adjacency>` that comprise a Haplotype.
           Members must share the same reference sequence as adjacent members. Alleles should not have
-          overlapping or adjacent coordinates with neighboring Alleles. Neighboring alleles should be ordered 
-          by ascending coordinates, unless represented on a DNA inversion (following an Adjacency with 
-          end-defined adjoinedSequences), in which case they should be ordered in descending coordinates. 
-          Sequence references MUST be consistent for all members between and including the end of one 
+          overlapping or adjacent coordinates with neighboring Alleles. Neighboring alleles should be ordered
+          by ascending coordinates, unless represented on a DNA inversion (following an Adjacency with
+          end-defined adjoinedSequences), in which case they should be ordered in descending coordinates.
+          Sequence references MUST be consistent for all members between and including the end of one
           Adjacency and the beginning of another.
     required: [ "members" ]
 
@@ -368,7 +368,7 @@ $defs:
         const: SequenceReference
       refgetAccession:
         description: >-
-          A `GA4GH RefGet <http://samtools.github.io/hts-specs/refget.html>` identifier for the referenced sequence, 
+          A `GA4GH RefGet <http://samtools.github.io/hts-specs/refget.html>` identifier for the referenced sequence,
           using the sha512t24u digest.
         type: string
         pattern: '^SQ.[0-9A-Za-z_\-]{32}$'
@@ -568,7 +568,7 @@ $defs:
         - linker
     inherits: MolecularVariation
     description:
-      The `Adjacency` class can represent either the termination of a sequence 
+      The `Adjacency` class can represent either the termination of a sequence
       or the adjoining of the end of a sequence with the beginning of an
       adjacent sequence, potentially with an intervening linker sequence.
     type: object

@@ -3,7 +3,7 @@
 A set of instructions that specify how to achieve some objective (e.g. experimental protocols,  curation guidelines, rule sets, etc.)
 
     **Information Model**
-    
+
 Some Method attributes are inherited from :ref:`gks.core:Entity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some Method attributes are inherited from :ref:`gks.core:Entity`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,7 +31,7 @@ Some Method attributes are inherited from :ref:`gks.core:Entity`.
        *  - extensions
           - `Extension <../../gks-common/core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 0..1
@@ -39,7 +39,7 @@ Some Method attributes are inherited from :ref:`gks.core:Entity`.
        *  - isReportedIn
           - `IRI <../../gks-common/core.json#/$defs/IRI>`_ | :ref:`Document`
           - 0..1
-          - 
+          -
        *  - subtype
           - `Coding <../../gks-common/core.json#/$defs/Coding>`_
           - 0..1

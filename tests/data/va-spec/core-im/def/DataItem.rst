@@ -3,7 +3,7 @@
 An InformationEntity representing an individual piece of data, generated/acquired through methods  which reliably produce truthful information about something.
 
     **Information Model**
-    
+
 Some DataItem attributes are inherited from :ref:`InformationEntity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some DataItem attributes are inherited from :ref:`InformationEntity`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,7 +31,7 @@ Some DataItem attributes are inherited from :ref:`InformationEntity`.
        *  - extensions
           - `Extension <../../gks-common/core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1
@@ -43,7 +43,7 @@ Some DataItem attributes are inherited from :ref:`InformationEntity`.
        *  - contributions
           - :ref:`Contribution`
           - 0..m
-          - 
+          -
        *  - isReportedIn
           - :ref:`Document` | `IRI <../../gks-common/core.json#/$defs/IRI>`_
           - 0..m
@@ -51,7 +51,7 @@ Some DataItem attributes are inherited from :ref:`InformationEntity`.
        *  - recordMetadata
           - None
           - 0..1
-          - 
+          -
        *  - subtype
           - `Coding <../../gks-common/core.json#/$defs/Coding>`_
           - 0..1
@@ -59,8 +59,8 @@ Some DataItem attributes are inherited from :ref:`InformationEntity`.
        *  - value
           - string
           - 1..1
-          - 
+          -
        *  - unit
           - {'$ref': '../../gks-common/core.json#/$defs/Coding'}
           - 0..1
-          - 
+          -
