@@ -72,7 +72,8 @@ select = [
     "F",
     "I",
     "E",
-    "W"
+    "W",
+    "RUF100",
 ]
 fixable = ["ALL"]
 ignore = [

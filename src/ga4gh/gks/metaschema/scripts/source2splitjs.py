@@ -13,7 +13,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("infile")
 
 
-def _redirect_refs(obj: dict | list, dest_path: Path, root_proc: YamlSchemaProcessor, mode: str) -> dict | list:
+def _redirect_refs(
+    obj: dict | list, dest_path: Path, root_proc: YamlSchemaProcessor, mode: str
+) -> dict | list:
     """Process the list of references and returns the list of classes
 
     :param obj: list of schema objects
@@ -92,7 +94,9 @@ def split_defs_to_js(root_proc: YamlSchemaProcessor, mode: str = "json") -> None
             keep = False
             for protected_cls in root_proc.has_protected_members[cls]:
                 if root_proc.raw_defs[protected_cls]["protectedClassOf"] == cls:
-                    def_dict[protected_cls] = copy.deepcopy(root_proc.defs[protected_cls])
+                    def_dict[protected_cls] = copy.deepcopy(
+                        root_proc.defs[protected_cls]
+                    )
                     keep = True
             if keep:
                 out_doc[kw] = _redirect_refs(def_dict, target_path, root_proc, mode)

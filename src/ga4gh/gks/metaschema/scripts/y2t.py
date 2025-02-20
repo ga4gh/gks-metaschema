@@ -61,7 +61,9 @@ def resolve_type(class_property_definition: dict) -> str:
         return "_Not Specified_"
 
 
-def resolve_cardinality(class_property_name: str, class_property_attributes: dict, class_definition: dict) -> str:
+def resolve_cardinality(
+    class_property_name: str, class_property_attributes: dict, class_definition: dict
+) -> str:
     """Resolves class property cardinality from YAML definition.
 
     :param class_property_name: class property name
@@ -140,7 +142,7 @@ def resolve_flags(class_property_attributes: dict) -> str:
             flags += f"""
                         .. raw:: html
 
-                            <span style="background-color: #{background_color}; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="{title}">{maturity_code}</span>"""  # noqa: E501
+                            <span style="background-color: #{background_color}; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="{title}">{maturity_code}</span>"""
 
     ordered = class_property_attributes.get("ordered")
     ordered_code = ORDERED_MAPPING.get(ordered, None)
@@ -152,7 +154,7 @@ def resolve_flags(class_property_attributes: dict) -> str:
                         .. raw:: html\n"""
 
         flags += f"""
-                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="{title}">{ordered_code}</span>"""  # noqa: E501
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="{title}">{ordered_code}</span>"""
     return flags
 
 
@@ -168,12 +170,16 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
             template = env.get_template("maturity")
             if maturity == "draft":
                 print(
-                    template.render(info="warning", maturity_level="draft", modifier="significantly"),
+                    template.render(
+                        info="warning", maturity_level="draft", modifier="significantly"
+                    ),
                     file=f,
                 )
             elif maturity == "trial use":
                 print(
-                    template.render(info="note", maturity_level="trial use", modifier=""),
+                    template.render(
+                        info="note", maturity_level="trial use", modifier=""
+                    ),
                     file=f,
                 )
             print("**Computational Definition**\n", file=f)
@@ -214,7 +220,9 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
       - Description""",
                 file=f,
             )
-            for class_property_name, class_property_attributes in class_definition[p].items():
+            for class_property_name, class_property_attributes in class_definition[
+                p
+            ].items():
                 print(
                     f"""\
    *  - {class_property_name}
