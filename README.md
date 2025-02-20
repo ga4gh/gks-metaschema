@@ -30,9 +30,9 @@ environment.
     source venv/3.12/bin/activate
 
 
-Set up the `pre-commit` hook
+Set up `pre-commit` hooks:
 
-    cp ./scripts/pre-commit ./.git/hooks/
+    pre-commit install
 
 
 ### Testing
