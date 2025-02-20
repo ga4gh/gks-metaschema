@@ -1,7 +1,6 @@
 .. warning:: This data class is at a **draft** maturity level and may \
     change significantly in future releases. Maturity \
     levels are described in the :ref:`maturity-model`.
-
 **Computational Definition**
 
 The `Adjacency` class can represent either the termination of a sequence or the adjoining of the end of a sequence with the beginning of an adjacent sequence, potentially with an intervening linker sequence.
@@ -40,7 +39,7 @@ Some Adjacency attributes are inherited from :ref:`Variation`.
       -
       - string
       - 0..1
-      - The 'logical' identifier of the entity in the system of record, e.g. a UUID. This 'id' is  unique within a given system. The identified entity may have a different 'id' in a different  system, or may refer to an 'id' for the shared concept in another system (e.g. a CURIE).
+      - The 'logical' identifier of the entity in the system of record, e.g. a UUID. This 'id' is unique within a given system. The identified entity may have a different 'id' in a different system, or may refer to an 'id' for the shared concept in another system (e.g. a CURIE).
    *  - label
       -
       - string

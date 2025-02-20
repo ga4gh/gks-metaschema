@@ -4,32 +4,6 @@
    "title": "GnomadCAF",
    "type": "object",
    "$defs": {
-      "GrpMaxFAF95": {
-         "description": "The group maximum filtering allele frequency at 95% CI",
-         "protectedClassOf": "GnomadCAF",
-         "type": "object",
-         "maturity": "draft",
-         "properties": {
-            "frequency": {
-               "type": "number"
-            },
-            "confidenceInterval": {
-               "type": "number",
-               "const": 0.95,
-               "default": 0.95
-            },
-            "groupId": {
-               "type": "string",
-               "description": "The genetic ancestry group from which the max frequency was calculated."
-            }
-         },
-         "required": [
-            "confidenceInterval",
-            "frequency",
-            "groupId"
-         ],
-         "additionalProperties": false
-      },
       "GnomadCafProperties": {
          "description": "Additional properties specific to the gnomAD CAF model.",
          "protectedClassOf": "GnomadCAF",
@@ -77,23 +51,23 @@
                      "type": "boolean"
                   },
                   "lowComplexityRegion": {
-                     "description": "This flag indicates the variant is found in a low complexity  region. These regions were identified with the symmetric DUST algorithm at a score threshold of 30.",
+                     "description": "This flag indicates the variant is found in a low complexity region. These regions were identified with the symmetric DUST algorithm at a score threshold of 30.",
                      "type": "boolean"
                   },
                   "lowConfidenceLossOfFunctionError": {
-                     "description": "Low confidence in predicted Loss of Function (pLoF), where  variant is determined by LOFTEE to be unlikely loss of function for a transcript.",
+                     "description": "Low confidence in predicted Loss of Function (pLoF), where variant is determined by LOFTEE to be unlikely loss of function for a transcript.",
                      "type": "boolean"
                   },
                   "lossOfFunctionWarning": {
-                     "description": "A warning provided by LOFTEE to use caution when interpreting  the transcript or variant.",
+                     "description": "A warning provided by LOFTEE to use caution when interpreting the transcript or variant.",
                      "type": "boolean"
                   },
                   "noncodingTranscriptError": {
-                     "description": "Marked in a putative loss of function category by VEP  (essential splice, stop-gained, or frameshift) but appears on a non-protein-coding transcript.",
+                     "description": "Marked in a putative loss of function category by VEP (essential splice, stop-gained, or frameshift) but appears on a non-protein-coding transcript.",
                      "type": "boolean"
                   },
                   "heterozygousSkewedAlleleCount": {
-                     "description": "The count of individuals called as heterozygous for this variant  with a skewed allele balance, indicating some of these individuals  may be miscalled homozygous alternative allele.",
+                     "description": "The count of individuals called as heterozygous for this variant with a skewed allele balance, indicating some of these individuals may be miscalled homozygous alternative allele.",
                      "type": "integer"
                   }
                },
@@ -101,6 +75,32 @@
             }
          },
          "required": []
+      },
+      "GrpMaxFAF95": {
+         "description": "The group maximum filtering allele frequency at 95% CI",
+         "protectedClassOf": "GnomadCAF",
+         "type": "object",
+         "maturity": "draft",
+         "properties": {
+            "frequency": {
+               "type": "number"
+            },
+            "confidenceInterval": {
+               "type": "number",
+               "const": 0.95,
+               "default": 0.95
+            },
+            "groupId": {
+               "type": "string",
+               "description": "The genetic ancestry group from which the max frequency was calculated."
+            }
+         },
+         "required": [
+            "confidenceInterval",
+            "frequency",
+            "groupId"
+         ],
+         "additionalProperties": false
       }
    },
    "maturity": "draft",
