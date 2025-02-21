@@ -61,9 +61,7 @@ def resolve_type(class_property_definition: dict) -> str:
         return "_Not Specified_"
 
 
-def resolve_cardinality(
-    class_property_name: str, class_property_attributes: dict, class_definition: dict
-) -> str:
+def resolve_cardinality(class_property_name: str, class_property_attributes: dict, class_definition: dict) -> str:
     """Resolves class property cardinality from YAML definition.
 
     :param class_property_name: class property name
@@ -170,17 +168,13 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
             template = env.get_template("maturity")
             if maturity == "draft":
                 print(
-                    template.render(
-                        info="warning", maturity_level="draft", modifier="significantly"
-                    ),
+                    template.render(info="warning", maturity_level="draft", modifier="significantly"),
                     file=f,
                 )
                 print(file=f)
             elif maturity == "trial use":
                 print(
-                    template.render(
-                        info="note", maturity_level="trial use", modifier=""
-                    ),
+                    template.render(info="note", maturity_level="trial use", modifier=""),
                     file=f,
                 )
                 print(file=f)
@@ -222,15 +216,13 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
       - Description""",
                 file=f,
             )
-            for class_property_name, class_property_attributes in class_definition[
-                p
-            ].items():
+            for class_property_name, class_property_attributes in class_definition[p].items():
                 class_definition_formatted = f"""\
    *  - {class_property_name}
       - {resolve_flags(class_property_attributes)}
       - {resolve_type(class_property_attributes)}
       - {resolve_cardinality(class_property_name, class_property_attributes, class_definition)}
-      - {class_property_attributes.get('description', '')}"""
+      - {class_property_attributes.get("description", "")}"""
                 class_definition_formatted = "\n".join(
                     line.rstrip() for line in class_definition_formatted.splitlines()
                 )

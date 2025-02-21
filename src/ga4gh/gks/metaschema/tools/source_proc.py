@@ -40,9 +40,7 @@ class YamlSchemaProcessor:
         self.def_fp = self.schema_fp.parent / self.defs_key
         # self.def_fp = self.schema_fp.parent / self.raw_schema.get('def-target', f'def/{schema_root_name}')
         self.namespaces = self.raw_schema.get("namespaces", [])
-        self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[
-            self.raw_schema["$schema"]
-        ]
+        self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[self.raw_schema["$schema"]]
         self.raw_defs = self.raw_schema.get(self.schema_def_keyword, None)
         self.imports = {}
         self.import_dependencies()
@@ -170,9 +168,7 @@ class YamlSchemaProcessor:
                     match = defs_re.match(v)
                     assert match, v
                     if match.group(1) != self.schema_def_keyword:
-                        obj[k] = re.sub(
-                            re.escape(match.group(1)), self.schema_def_keyword, v
-                        )
+                        obj[k] = re.sub(re.escape(match.group(1)), self.schema_def_keyword, v)
         except AttributeError:
             return obj
         return obj
@@ -221,9 +217,7 @@ class YamlSchemaProcessor:
                 inherited_cls_name = cls_def["inherits"]
                 if ":" in inherited_cls_name:
                     namespace, inherited_cls_split_name = inherited_cls_name.split(":")
-                    inherited_cls_def = self.imports[namespace].defs[
-                        inherited_cls_split_name
-                    ]
+                    inherited_cls_def = self.imports[namespace].defs[inherited_cls_split_name]
                 else:
                     inherited_cls_def = self.defs[inherited_cls_name]
                 assert "maturity" in cls_def, cls
@@ -235,15 +229,11 @@ class YamlSchemaProcessor:
 
     def class_is_abstract(self, schema_class):
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
-        return "properties" not in schema_class_def and not self.class_is_primitive(
-            schema_class
-        )
+        return "properties" not in schema_class_def and not self.class_is_primitive(schema_class)
 
     def class_is_container(self, schema_class):
         cls_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
-        return self.class_is_abstract(schema_class) and (
-            "oneOf" in cls_def or "anyOf" in cls_def or "allOf" in cls_def
-        )
+        return self.class_is_abstract(schema_class) and ("oneOf" in cls_def or "anyOf" in cls_def or "allOf" in cls_def)
 
     def class_is_protected(self, schema_class):
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
@@ -256,9 +246,7 @@ class YamlSchemaProcessor:
     def class_is_passthrough(self, schema_class):
         if not self.class_is_abstract(schema_class):
             return False
-        raw_class_definition, _ = self.get_local_or_inherited_class(
-            schema_class, raw=True
-        )
+        raw_class_definition, _ = self.get_local_or_inherited_class(schema_class, raw=True)
         if (
             "heritableProperties" not in raw_class_definition
             and "properties" not in raw_class_definition
@@ -300,9 +288,7 @@ class YamlSchemaProcessor:
                     del processed_node[k]
                 elif k == "$ref" and v.startswith("#/") and self.imported:
                     # TODO: fix below hard-coded name convention, yuck.
-                    rel_root = self.schema_fp.parent.relative_to(
-                        self.root_schema_fp.parent, walk_up=True
-                    )
+                    rel_root = self.schema_fp.parent.relative_to(self.root_schema_fp.parent, walk_up=True)
                     schema_stem = self.schema_fp.stem.split("-")[0]
                     processed_node[k] = str(rel_root / f"{schema_stem}.json{v}")
                 else:
@@ -317,26 +303,18 @@ class YamlSchemaProcessor:
         if len(components) == 1:
             inherited_class_name = components[0]
             if raw:
-                inherited_class = self.raw_schema[self.schema_def_keyword][
-                    inherited_class_name
-                ]
+                inherited_class = self.raw_schema[self.schema_def_keyword][inherited_class_name]
             else:
                 self.process_schema_class(inherited_class_name)
-                inherited_class = self.processed_schema[self.schema_def_keyword][
-                    inherited_class_name
-                ]
+                inherited_class = self.processed_schema[self.schema_def_keyword][inherited_class_name]
             proc = self
         elif len(components) == 2:
             inherited_class_name = components[1]
             proc = self.imports[components[0]]
             if raw:
-                inherited_class = proc.raw_schema[proc.schema_def_keyword][
-                    inherited_class_name
-                ]
+                inherited_class = proc.raw_schema[proc.schema_def_keyword][inherited_class_name]
             else:
-                inherited_class = proc.processed_schema[proc.schema_def_keyword][
-                    inherited_class_name
-                ]
+                inherited_class = proc.processed_schema[proc.schema_def_keyword][inherited_class_name]
         else:
             raise ValueError
         return inherited_class, proc
@@ -355,9 +333,7 @@ class YamlSchemaProcessor:
             raise ValueError("mode must be json or yaml")
         if self.class_is_protected(schema_class):
             frag_containing_class = self.raw_defs[schema_class]["protectedClassOf"]
-            class_ref = (
-                f"{frag_containing_class}#/{self.schema_def_keyword}/{schema_class}"
-            )
+            class_ref = f"{frag_containing_class}#/{self.schema_def_keyword}/{schema_class}"
         else:
             class_ref = schema_class
         parsed_url = urlparse(self.id)
@@ -369,9 +345,7 @@ class YamlSchemaProcessor:
         raw_class_def = self.raw_schema[self.schema_def_keyword][schema_class]
         if schema_class in self.processed_classes:
             return
-        processed_class_def = self.processed_schema[self.schema_def_keyword][
-            schema_class
-        ]
+        processed_class_def = self.processed_schema[self.schema_def_keyword][schema_class]
 
         # Check GKS maturity model on all schemas
         assert "maturity" in processed_class_def, schema_class
@@ -394,27 +368,19 @@ class YamlSchemaProcessor:
             inherited_class, proc = self.get_local_or_inherited_class(inherits)
             # extract properties / heritableProperties and required / heritableRequired from inherited_class
             # currently assumes inheritance from abstract classes only–will break otherwise
-            inherited_properties |= copy.deepcopy(
-                inherited_class["heritableProperties"]
-            )
+            inherited_properties |= copy.deepcopy(inherited_class["heritableProperties"])
             inherited_required |= set(inherited_class.get("heritableRequired", []))
 
             # inherit ga4gh keys
             if "ga4gh" in processed_class_def or "ga4gh" in inherited_class:
                 if "ga4gh" not in processed_class_def:
-                    assert self.class_is_abstract(
-                        schema_class
-                    ), f"{schema_class} is missing a defined prefix."
-                    processed_class_def["ga4gh"] = copy.deepcopy(
-                        inherited_class["ga4gh"]
-                    )
+                    assert self.class_is_abstract(schema_class), f"{schema_class} is missing a defined prefix."
+                    processed_class_def["ga4gh"] = copy.deepcopy(inherited_class["ga4gh"])
                 elif "ga4gh" not in inherited_class:
                     pass
                 else:
                     ga4gh_inherent = set(inherited_class["ga4gh"]["inherent"])
-                    ga4gh_inherent |= set(
-                        processed_class_def["ga4gh"].get("inherent", [])
-                    )
+                    ga4gh_inherent |= set(processed_class_def["ga4gh"].get("inherent", []))
                     processed_class_def["ga4gh"]["inherent"] = sorted(ga4gh_inherent)
 
         if self.class_is_abstract(schema_class):
@@ -427,9 +393,7 @@ class YamlSchemaProcessor:
         processed_class_properties = processed_class_def.get(prop_k, {})
         processed_class_required = set(processed_class_def.get(req_k, []))
         # Process refs
-        self.process_property_tree_refs(
-            raw_class_properties, processed_class_properties
-        )
+        self.process_property_tree_refs(raw_class_properties, processed_class_properties)
         if self.class_is_container(schema_class):
             if "anyOf" in raw_class_def:
                 key = "anyOf"
@@ -437,9 +401,7 @@ class YamlSchemaProcessor:
                 key = "oneOf"
             elif "allOf" in raw_class_def:
                 key = "allOf"
-            self.process_property_tree_refs(
-                raw_class_def[key], processed_class_def[key]
-            )
+            self.process_property_tree_refs(raw_class_def[key], processed_class_def[key])
 
         for prop, prop_attribs in processed_class_properties.items():
             # Mix in inherited properties
@@ -457,9 +419,7 @@ class YamlSchemaProcessor:
                     if "$ref" in inherited_properties[extended_property]:
                         inherited_properties[extended_property].pop("$ref")
                 # merge and clean up inherited properties
-                processed_class_properties[prop] = inherited_properties[
-                    extended_property
-                ]
+                processed_class_properties[prop] = inherited_properties[extended_property]
                 processed_class_properties[prop].update(prop_attribs)
                 processed_class_properties[prop].pop("extends")
                 inherited_properties.pop(extended_property)
@@ -469,9 +429,7 @@ class YamlSchemaProcessor:
                     processed_class_required.add(prop)
             # Validate required array attribute for GKS specs
             if self.enforce_ordered and prop_attribs.get("type", "") == "array":
-                assert (
-                    "ordered" in prop_attribs
-                ), f"{schema_class}.{prop} missing ordered attribute."
+                assert "ordered" in prop_attribs, f"{schema_class}.{prop} missing ordered attribute."
                 assert isinstance(prop_attribs["ordered"], bool)
             if self.strict and prop_attribs.get("type", "") == "object":
                 assert (
@@ -485,9 +443,7 @@ class YamlSchemaProcessor:
             assert "type" in processed_class_def, schema_class
             assert processed_class_def["type"] == "object", schema_class
             if self.class_is_ga4gh_identifiable(schema_class):
-                assert isinstance(
-                    processed_class_def["ga4gh"]["prefix"], str
-                ), schema_class
+                assert isinstance(processed_class_def["ga4gh"]["prefix"], str), schema_class
                 assert processed_class_def["ga4gh"]["prefix"] != "", schema_class
                 l = len(processed_class_def["ga4gh"]["inherent"])  # noqa: E741
                 assert (
@@ -499,9 +455,7 @@ class YamlSchemaProcessor:
                 # Two properites should be `type` and at least one other field
 
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
-        processed_class_def[req_k] = sorted(
-            inherited_required | processed_class_required
-        )
+        processed_class_def[req_k] = sorted(inherited_required | processed_class_required)
         if self.strict and not self.class_is_abstract(schema_class):
             processed_class_def["additionalProperties"] = False
         self.processed_classes.add(schema_class)
@@ -519,9 +473,7 @@ class YamlSchemaProcessor:
         self.for_js.pop("enforce_ordered", None)
         self.for_js.pop("imports", None)
         abstract_class_removals = []
-        for schema_class, schema_definition in self.for_js.get(
-            self.schema_def_keyword, {}
-        ).items():
+        for schema_class, schema_definition in self.for_js.get(self.schema_def_keyword, {}).items():
             schema_definition.pop("inherits", None)
             schema_definition.pop("protectedClassOf", None)
             if self.class_is_abstract(schema_class):
@@ -537,15 +489,11 @@ class YamlSchemaProcessor:
                 ):
                     abstract_class_removals.append(schema_class)
             if "description" in schema_definition:
-                schema_definition["description"] = self._scrub_rst_markup(
-                    schema_definition["description"]
-                )
+                schema_definition["description"] = self._scrub_rst_markup(schema_definition["description"])
             if "properties" in schema_definition:
                 for p, p_def in schema_definition["properties"].items():
                     if "description" in p_def:
-                        p_def["description"] = self._scrub_rst_markup(
-                            p_def["description"]
-                        )
+                        p_def["description"] = self._scrub_rst_markup(p_def["description"])
                     self.concretize_js_object(p_def)
 
         for cls in abstract_class_removals:
