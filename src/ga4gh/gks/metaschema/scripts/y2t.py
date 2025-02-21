@@ -175,6 +175,7 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
                     ),
                     file=f,
                 )
+                print(file=f)
             elif maturity == "trial use":
                 print(
                     template.render(
@@ -182,6 +183,7 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
                     ),
                     file=f,
                 )
+                print(file=f)
             print("**Computational Definition**\n", file=f)
             print(class_definition["description"], file=f)
             if proc_schema.class_is_passthrough(class_name):
