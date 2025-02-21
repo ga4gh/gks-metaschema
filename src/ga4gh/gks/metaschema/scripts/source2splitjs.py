@@ -110,6 +110,7 @@ def split_defs_to_js(root_proc: YamlSchemaProcessor, mode: str = "json") -> None
         out_doc["$id"] = root_proc.get_class_uri(cls, mode)
         with open(target_path, "w") as f:
             json.dump(out_doc, f, indent=3, sort_keys=False)
+            f.write("\n")
 
 
 def cli():
