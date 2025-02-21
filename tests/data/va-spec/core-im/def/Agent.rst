@@ -3,7 +3,7 @@
 An autonomous actor (person, organization, or computational agent) that bears some form of responsibility for an activity taking place, for the existence of an entity, or for  another agent’s activity.
 
     **Information Model**
-    
+
 Some Agent attributes are inherited from :ref:`gks.core:Entity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some Agent attributes are inherited from :ref:`gks.core:Entity`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,7 +31,7 @@ Some Agent attributes are inherited from :ref:`gks.core:Entity`.
        *  - extensions
           - `Extension <../../gks-common/core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 0..1
@@ -39,8 +39,8 @@ Some Agent attributes are inherited from :ref:`gks.core:Entity`.
        *  - name
           - string
           - 0..1
-          - 
+          -
        *  - subtype
           - string
           - 0..1
-          - 
+          -

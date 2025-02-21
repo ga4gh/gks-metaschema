@@ -3,7 +3,7 @@
 A categorical variation domain is defined first by a sequence derived from a canonical `Location  <https://vrs.ga4gh.org/en/2.0/terms_and_model.html#Location>`_ , which is representative of  a collection of congruent Locations. The change or count of this sequence is also described, either by a numeric value (e.g. "3 or more copies") or categorical representation (e.g. "high-level gain").  Categorical CNVs may optionally be defined by rules specifying the location match characteristics for  member CNVs.
 
     **Information Model**
-    
+
 Some CategoricalCnv attributes are inherited from :ref:`CategoricalVariation`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some CategoricalCnv attributes are inherited from :ref:`CategoricalVariation`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,11 +31,11 @@ Some CategoricalCnv attributes are inherited from :ref:`CategoricalVariation`.
        *  - extensions
           - `Extension <../gks-common/core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - mappings
           - `Mapping <../gks-common/core.json#/$defs/Mapping>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1

@@ -140,7 +140,7 @@ def resolve_flags(class_property_attributes: dict) -> str:
             flags += f"""
                         .. raw:: html
 
-                            <span style="background-color: #{background_color}; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="{title}">{maturity_code}</span>"""  # noqa: E501
+                            <span style="background-color: #{background_color}; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="{title}">{maturity_code}</span>"""
 
     ordered = class_property_attributes.get("ordered")
     ordered_code = ORDERED_MAPPING.get(ordered, None)
@@ -152,7 +152,7 @@ def resolve_flags(class_property_attributes: dict) -> str:
                         .. raw:: html\n"""
 
         flags += f"""
-                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="{title}">{ordered_code}</span>"""  # noqa: E501
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="{title}">{ordered_code}</span>"""
     return flags
 
 
@@ -171,11 +171,13 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
                     template.render(info="warning", maturity_level="draft", modifier="significantly"),
                     file=f,
                 )
+                print(file=f)
             elif maturity == "trial use":
                 print(
                     template.render(info="note", maturity_level="trial use", modifier=""),
                     file=f,
                 )
+                print(file=f)
             print("**Computational Definition**\n", file=f)
             print(class_definition["description"], file=f)
             if proc_schema.class_is_passthrough(class_name):
@@ -220,7 +222,7 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
       - {resolve_flags(class_property_attributes)}
       - {resolve_type(class_property_attributes)}
       - {resolve_cardinality(class_property_name, class_property_attributes, class_definition)}
-      - {class_property_attributes.get('description', '')}"""
+      - {class_property_attributes.get("description", "")}"""
                 class_definition_formatted = "\n".join(
                     line.rstrip() for line in class_definition_formatted.splitlines()
                 )

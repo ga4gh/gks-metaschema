@@ -3,7 +3,7 @@
 A therapeutic procedure that involves multiple different therapeutic procedures  performed in combination.
 
     **Information Model**
-    
+
 Some CombinationTherapy attributes are inherited from :ref:`core:DomainEntity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some CombinationTherapy attributes are inherited from :ref:`core:DomainEntity`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,11 +31,11 @@ Some CombinationTherapy attributes are inherited from :ref:`core:DomainEntity`.
        *  - extensions
           - `Extension <core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - mappings
           - `Mapping <core.json#/$defs/Mapping>`_
           - 0..m
-          - 
+          -
        *  - aliases
           - string
           - 0..m

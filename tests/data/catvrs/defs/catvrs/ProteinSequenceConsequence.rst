@@ -3,7 +3,7 @@
 A change that occurs in a protein sequence as a result of genomic changes. Due to the degenerate nature of the genetic code, there are often several genomic changes that can cause a protein sequence consequence. The protein sequence consequence, like a :ref:`CanonicalAllele`, is defined by an `Allele <https://vrs.ga4gh.org/en/2.0/terms_and_model.html#variation>` that is representative of a collection of congruent Protein Alleles that share the same altered codon(s).
 
     **Information Model**
-    
+
 Some ProteinSequenceConsequence attributes are inherited from :ref:`CategoricalVariation`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some ProteinSequenceConsequence attributes are inherited from :ref:`CategoricalV
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,11 +31,11 @@ Some ProteinSequenceConsequence attributes are inherited from :ref:`CategoricalV
        *  - extensions
           - `Extension <gks.common.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - mappings
           - `Mapping <gks.common.json#/$defs/Mapping>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1

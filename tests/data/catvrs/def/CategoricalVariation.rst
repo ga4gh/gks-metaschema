@@ -3,7 +3,7 @@
 A representation of a categorically-defined domain for variation, in which individual  contextual variation instances may be members of the domain.
 
     **Information Model**
-    
+
 Some CategoricalVariation attributes are inherited from :ref:`gks.core:DomainEntity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some CategoricalVariation attributes are inherited from :ref:`gks.core:DomainEnt
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,15 +31,15 @@ Some CategoricalVariation attributes are inherited from :ref:`gks.core:DomainEnt
        *  - extensions
           - `Extension <../gks-common/core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - mappings
           - `Mapping <../gks-common/core.json#/$defs/Mapping>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1
-          - 
+          -
        *  - aliases
           - string
           - 0..m

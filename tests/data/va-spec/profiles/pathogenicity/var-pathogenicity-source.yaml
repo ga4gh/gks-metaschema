@@ -23,7 +23,7 @@ $defs:
     maturity: draft
     inherits: va.core:VariantClassification
     description: >-
-      A :ref:`VariantClassification` describing the role of a variant in causing an 
+      A :ref:`VariantClassification` describing the role of a variant in causing an
       inherited disorder.
     properties:
       type:

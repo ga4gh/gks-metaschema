@@ -3,7 +3,7 @@
 A study summarization supporting or refuting the effect of variant on oncogenesis of a tumor type.
 
     **Information Model**
-    
+
 Some VariantOncogenicityStudy attributes are inherited from :ref:`va.core:VariantStudySummary`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some VariantOncogenicityStudy attributes are inherited from :ref:`va.core:Varian
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,7 +31,7 @@ Some VariantOncogenicityStudy attributes are inherited from :ref:`va.core:Varian
        *  - extensions
           - `Extension <../../core-im/../../gks-common/core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1
@@ -43,11 +43,11 @@ Some VariantOncogenicityStudy attributes are inherited from :ref:`va.core:Varian
        *  - contributions
           - `Contribution <../../core-im/core.json#/$defs/Contribution>`_
           - 0..m
-          - 
+          -
        *  - recordMetadata
           - None
           - 0..1
-          - 
+          -
        *  - direction
           - string
           - 1..1

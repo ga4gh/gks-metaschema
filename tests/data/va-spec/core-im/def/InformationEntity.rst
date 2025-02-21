@@ -3,7 +3,7 @@
 InformationEntities are abstract (non-physical) entities that are about something (i.e. they carry  information about things in the real world).
 
     **Information Model**
-    
+
 Some InformationEntity attributes are inherited from :ref:`gks.core:Entity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some InformationEntity attributes are inherited from :ref:`gks.core:Entity`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,11 +31,11 @@ Some InformationEntity attributes are inherited from :ref:`gks.core:Entity`.
        *  - extensions
           - `Extension <../../gks-common/core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1
-          - 
+          -
        *  - specifiedBy
           - :ref:`Method` | `IRI <../../gks-common/core.json#/$defs/IRI>`_
           - 0..1
@@ -43,7 +43,7 @@ Some InformationEntity attributes are inherited from :ref:`gks.core:Entity`.
        *  - contributions
           - :ref:`Contribution`
           - 0..m
-          - 
+          -
        *  - isReportedIn
           - :ref:`Document` | `IRI <../../gks-common/core.json#/$defs/IRI>`_
           - 0..m
@@ -51,4 +51,4 @@ Some InformationEntity attributes are inherited from :ref:`gks.core:Entity`.
        *  - recordMetadata
           - None
           - 0..1
-          - 
+          -

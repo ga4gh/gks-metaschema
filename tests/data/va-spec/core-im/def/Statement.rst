@@ -3,7 +3,7 @@
 A Statement (aka ‘Assertion’) represents a claim of purported truth as made by a particular agent,  on a particular occasion.
 
     **Information Model**
-    
+
 Some Statement attributes are inherited from :ref:`InformationEntity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some Statement attributes are inherited from :ref:`InformationEntity`.
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,11 +31,11 @@ Some Statement attributes are inherited from :ref:`InformationEntity`.
        *  - extensions
           - `Extension <../../gks-common/core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1
-          - 
+          -
        *  - specifiedBy
           - :ref:`Method` | `IRI <../../gks-common/core.json#/$defs/IRI>`_
           - 0..1
@@ -43,7 +43,7 @@ Some Statement attributes are inherited from :ref:`InformationEntity`.
        *  - contributions
           - :ref:`Contribution`
           - 0..m
-          - 
+          -
        *  - isReportedIn
           - :ref:`Document` | `IRI <../../gks-common/core.json#/$defs/IRI>`_
           - 0..m
@@ -51,7 +51,7 @@ Some Statement attributes are inherited from :ref:`InformationEntity`.
        *  - recordMetadata
           - None
           - 0..1
-          - 
+          -
        *  - subject
           - _Not Specified_
           - 1..1

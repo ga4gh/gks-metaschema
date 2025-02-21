@@ -3,7 +3,7 @@
 A :ref:`VariantClassification` describing the role of a variant in causing an  inherited disorder.
 
     **Information Model**
-    
+
 Some VariantPathogenicity attributes are inherited from :ref:`va.core:VariantClassification`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some VariantPathogenicity attributes are inherited from :ref:`va.core:VariantCla
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,7 +31,7 @@ Some VariantPathogenicity attributes are inherited from :ref:`va.core:VariantCla
        *  - extensions
           - `Extension <../../core-im/../../gks-common/core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1
@@ -43,7 +43,7 @@ Some VariantPathogenicity attributes are inherited from :ref:`va.core:VariantCla
        *  - contributions
           - `Contribution <../../core-im/core.json#/$defs/Contribution>`_
           - 0..m
-          - 
+          -
        *  - isReportedIn
           - `Document <../../core-im/core.json#/$defs/Document>`_ | `IRI <../../gks-common/core.json#/$defs/IRI>`_
           - 0..m
@@ -51,7 +51,7 @@ Some VariantPathogenicity attributes are inherited from :ref:`va.core:VariantCla
        *  - recordMetadata
           - None
           - 0..1
-          - 
+          -
        *  - direction
           - string
           - 1..1

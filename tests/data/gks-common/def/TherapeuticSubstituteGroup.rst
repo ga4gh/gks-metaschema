@@ -3,7 +3,7 @@
 A group of therapeutic procedures that may be treated as substitutes for one another.
 
     **Information Model**
-    
+
 Some TherapeuticSubstituteGroup attributes are inherited from :ref:`core:DomainEntity`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some TherapeuticSubstituteGroup attributes are inherited from :ref:`core:DomainE
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -31,11 +31,11 @@ Some TherapeuticSubstituteGroup attributes are inherited from :ref:`core:DomainE
        *  - extensions
           - `Extension <core.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - mappings
           - `Mapping <core.json#/$defs/Mapping>`_
           - 0..m
-          - 
+          -
        *  - aliases
           - string
           - 0..m

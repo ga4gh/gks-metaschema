@@ -3,7 +3,7 @@
 Some categorical variation concepts are supported by custom nomenclatures or text-descriptive representations for which a categorical variation model does not exist. DescribedVariation is a class that adds requirements and contextual semantics to the `label` and `description` fields to indicate how a categorical variation concept should be evaluated for matching variants.
 
     **Information Model**
-    
+
 Some DescribedVariation attributes are inherited from :ref:`CategoricalVariation`.
 
     .. list-table::
@@ -11,7 +11,7 @@ Some DescribedVariation attributes are inherited from :ref:`CategoricalVariation
        :header-rows: 1
        :align: left
        :widths: auto
-       
+
        *  - Field
           - Type
           - Limits
@@ -23,11 +23,11 @@ Some DescribedVariation attributes are inherited from :ref:`CategoricalVariation
        *  - extensions
           - `Extension <gks.common.json#/$defs/Extension>`_
           - 0..m
-          - 
+          -
        *  - mappings
           - `Mapping <gks.common.json#/$defs/Mapping>`_
           - 0..m
-          - 
+          -
        *  - type
           - string
           - 1..1

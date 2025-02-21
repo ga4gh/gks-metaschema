@@ -19,8 +19,8 @@ $defs:
     privateTo: Variation
     maturity: draft
     description: Representation of a variation by a specified nomenclature or syntax
-      for a Variation object.  Common examples of expressions for the description
-      of molecular variation include the HGVS  and ISCN nomenclatures.
+      for a Variation object. Common examples of expressions for the description of
+      molecular variation include the HGVS and ISCN nomenclatures.
     properties:
       syntax:
         type: string
@@ -73,9 +73,9 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
         description: A primary label for the entity.
@@ -130,9 +130,9 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
         description: A primary label for the entity.
@@ -169,14 +169,14 @@ $defs:
           - $ref: '#/$defs/Adjacency'
           - $ref: '#/$defs/Allele'
           - $ref: ../gks-common/$defs/IRI
-        description: A list of Alleles that comprise a Haplotype.  Members must share
+        description: A list of Alleles that comprise a Haplotype. Members must share
           the same reference sequence as adjacent members. Alleles should not have
           overlapping or adjacent coordinates with neighboring Alleles. Neighboring
-          alleles should be ordered  by ascending coordinates, unless represented
-          on a DNA inversion (following an Adjacency with  end-defined adjoinedSequences),
-          in which case they should be ordered in descending coordinates.  Sequence
+          alleles should be ordered by ascending coordinates, unless represented on
+          a DNA inversion (following an Adjacency with end-defined adjoinedSequences),
+          in which case they should be ordered in descending coordinates. Sequence
           references MUST be consistent for all members between and including the
-          end of one  Adjacency and the beginning of another.
+          end of one Adjacency and the beginning of another.
     required:
     - members
     additionalProperties: false
@@ -195,9 +195,9 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
         description: A primary label for the entity.
@@ -253,9 +253,9 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
         description: A primary label for the entity.
@@ -327,9 +327,9 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
         description: A primary label for the entity.
@@ -382,9 +382,9 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
         description: A primary label for the entity.
@@ -401,7 +401,7 @@ $defs:
         const: SequenceReference
       refgetAccession:
         description: A `GA4GH RefGet <http://samtools.github.io/hts-specs/refget.html>`
-          identifier for the referenced sequence,  using the sha512t24u digest.
+          identifier for the referenced sequence, using the sha512t24u digest.
         type: string
         pattern: ^SQ.[0-9A-Za-z_\-]{32}$
       residueAlphabet:
@@ -436,9 +436,9 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
         description: A primary label for the entity.
@@ -483,9 +483,9 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
         description: A primary label for the entity.
@@ -521,9 +521,9 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
         description: A primary label for the entity.
@@ -589,9 +589,9 @@ $defs:
       id:
         type: string
         description: The 'logical' identifier of the entity in the system of record,
-          e.g. a UUID. This 'id' is  unique within a given system. The identified
-          entity may have a different 'id' in a different  system, or may refer to
-          an 'id' for the shared concept in another system (e.g. a CURIE).
+          e.g. a UUID. This 'id' is unique within a given system. The identified entity
+          may have a different 'id' in a different system, or may refer to an 'id'
+          for the shared concept in another system (e.g. a CURIE).
       label:
         type: string
         description: A primary label for the entity.
