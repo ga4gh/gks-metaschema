@@ -215,15 +215,16 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
                 file=f,
             )
             for class_property_name, class_property_attributes in class_definition[p].items():
-                print(
-                    f"""\
+                class_definition_formatted = f"""\
    *  - {class_property_name}
       - {resolve_flags(class_property_attributes)}
       - {resolve_type(class_property_attributes)}
       - {resolve_cardinality(class_property_name, class_property_attributes, class_definition)}
-      - {class_property_attributes.get('description', '')}""",
-                    file=f,
+      - {class_property_attributes.get('description', '')}"""
+                class_definition_formatted = "\n".join(
+                    line.rstrip() for line in class_definition_formatted.splitlines()
                 )
+                print(class_definition_formatted, file=f)
 
 
 def cli():
