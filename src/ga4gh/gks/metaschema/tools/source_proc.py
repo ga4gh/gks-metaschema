@@ -81,7 +81,7 @@ class YamlSchemaProcessor:
                 for record in records:
                     if not isinstance(record, dict):
                         continue
-                    assert len(record) == 1
+
                     if "$ref" in record:
                         mapped = record["$ref"]
                     elif "$refCurie" in record:
