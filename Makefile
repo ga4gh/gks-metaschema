@@ -8,7 +8,7 @@ VEDIR=venv/${PYV}
 .PHONY: venv/%
 venv/%:
 	python$* -m venv $@; \
-	source $@/bin/activate; \
+	. $@/bin/activate; \
 	python -m ensurepip --upgrade; \
 	pip install --upgrade pip setuptools
 
@@ -20,7 +20,7 @@ develop setup:
 #=> devready: create venv, install prerequisites, install pkg in develop mode
 .PHONY: devready
 devready:
-	make ${VEDIR} && source ${VEDIR}/bin/activate && make develop
+	make ${VEDIR} && . ${VEDIR}/bin/activate && make develop
 	@echo '#################################################################################'
 	@echo '###  Do not forget to `source ${VEDIR}/bin/activate` to use this environment  ###'
 	@echo '#################################################################################'
