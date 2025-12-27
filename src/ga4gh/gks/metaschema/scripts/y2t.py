@@ -199,8 +199,8 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
 
             add_ga4gh_digest(class_definition, f)
 
+            print("\n**Information Model**", file=f)
             if class_definition[p].items():
-                print("\n**Information Model**", file=f)
                 print(
                     f"""
 {inheritance}
