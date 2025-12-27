@@ -199,9 +199,10 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
 
             add_ga4gh_digest(class_definition, f)
 
-            print("\n**Information Model**", file=f)
-            print(
-                f"""
+            if class_definition[p].items():
+                print("\n**Information Model**", file=f)
+                print(
+                    f"""
 {inheritance}
 .. list-table::
    :class: clean-wrap
@@ -214,19 +215,19 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
       - Type
       - Limits
       - Description""",
-                file=f,
-            )
-            for class_property_name, class_property_attributes in class_definition[p].items():
-                class_definition_formatted = f"""\
+                    file=f,
+                )
+                for class_property_name, class_property_attributes in class_definition[p].items():
+                    class_definition_formatted = f"""\
    *  - {class_property_name}
       - {resolve_flags(class_property_attributes)}
       - {resolve_type(class_property_attributes)}
       - {resolve_cardinality(class_property_name, class_property_attributes, class_definition)}
       - {class_property_attributes.get("description", "")}"""
-                class_definition_formatted = "\n".join(
-                    line.rstrip() for line in class_definition_formatted.splitlines()
-                )
-                print(class_definition_formatted, file=f)
+                    class_definition_formatted = "\n".join(
+                        line.rstrip() for line in class_definition_formatted.splitlines()
+                    )
+                    print(class_definition_formatted, file=f)
 
 
 def cli():
