@@ -57,8 +57,11 @@ def resolve_type(class_property_definition: dict) -> str:
             else:
                 resolved_active.append(resolved_type)
         return " | ".join(resolved_active + resolved_deprecated)
-    else:
-        return "_Not Specified_"
+    elif "allOf" in class_property_definition and len(class_property_definition) == 1:
+        refs = list(filter(lambda d: "$ref" in d, class_property_definition["allOf"]))
+        if len(refs) == 1:
+            return resolve_type(refs[0])
+    return "_Not Specified_"
 
 
 def resolve_cardinality(class_property_name: str, class_property_attributes: dict, class_definition: dict) -> str:
