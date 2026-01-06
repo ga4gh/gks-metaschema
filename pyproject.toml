@@ -37,7 +37,7 @@ dynamic = ["version"]
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "ruff==0.7.2",
+    "ruff==0.14.10",
     "pre-commit~=4.1.0",
 ]
 
@@ -61,7 +61,6 @@ source2classes = "ga4gh.gks.metaschema.scripts.source2classes:cli"
 [build-system]
 requires = ["setuptools>=65.3", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
-
 
 [tool.ruff]
 line-length = 120
