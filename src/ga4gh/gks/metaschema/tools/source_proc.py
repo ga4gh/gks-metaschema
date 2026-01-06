@@ -222,9 +222,9 @@ class YamlSchemaProcessor:
                     inherited_cls_def = self.defs[inherited_cls_name]
                 assert "maturity" in cls_def, cls
                 assert "maturity" in inherited_cls_def, inherited_cls_name
-                assert (
-                    inherited_cls_def["maturity"] >= cls_def["maturity"]
-                ), f"Maturity of {cls} is greater than parent class {inherited_cls_name}."
+                assert inherited_cls_def["maturity"] >= cls_def["maturity"], (
+                    f"Maturity of {cls} is greater than parent class {inherited_cls_name}."
+                )
             pass
 
     def class_is_abstract(self, schema_class):
@@ -432,9 +432,9 @@ class YamlSchemaProcessor:
                 assert "ordered" in prop_attribs, f"{schema_class}.{prop} missing ordered attribute."
                 assert isinstance(prop_attribs["ordered"], bool)
             if self.strict and prop_attribs.get("type", "") == "object":
-                assert (
-                    prop_attribs.get("additionalProperties", None) is not None
-                ), f'"additionalProperties" expected to be defined in {schema_class}.{prop}'
+                assert prop_attribs.get("additionalProperties", None) is not None, (
+                    f'"additionalProperties" expected to be defined in {schema_class}.{prop}'
+                )
 
         # Validate class structures for GKS specs
         if self.class_is_abstract(schema_class):
@@ -446,12 +446,12 @@ class YamlSchemaProcessor:
                 assert isinstance(processed_class_def["ga4gh"]["prefix"], str), schema_class
                 assert processed_class_def["ga4gh"]["prefix"] != "", schema_class
                 l = len(processed_class_def["ga4gh"]["inherent"])  # noqa: E741
-                assert (
-                    l >= 2
-                ), f"GA4GH identifiable objects are expected to be defined by at least 2 properties, {schema_class} has {l}."
-                assert (
-                    "type" in processed_class_def["ga4gh"]["inherent"]
-                ), f"GA4GH identifiable objects are expected to include the class type but not included for {schema_class}."
+                assert l >= 2, (
+                    f"GA4GH identifiable objects are expected to be defined by at least 2 properties, {schema_class} has {l}."
+                )
+                assert "type" in processed_class_def["ga4gh"]["inherent"], (
+                    f"GA4GH identifiable objects are expected to include the class type but not included for {schema_class}."
+                )
                 # Two properites should be `type` and at least one other field
 
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
