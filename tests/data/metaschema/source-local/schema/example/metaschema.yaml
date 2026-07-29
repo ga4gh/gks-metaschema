@@ -1,0 +1,6 @@
+versions:
+  vrs: 2.2.0
+imports:
+  vrs: config-vrs-source.yaml
+namespaces:
+  vrs: "/ga4gh/schema/vrs/{version}/json/"

@@ -1,0 +1,6 @@
+versions:
+  example: 1.0.0
+imports:
+  vrs: ../vrs/vrs-source.yaml
+namespaces:
+  vrs: "/ga4gh/schema/vrs/{version}/json/"

@@ -1,0 +1,13 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/downstream/1.0.0/downstream-source.yaml"
+title: Downstream
+type: object
+$defs:
+  DownstreamClass:
+    maturity: draft
+    type: object
+    properties:
+      mid:
+        $refCurie: mid:MidClass
+    required:
+      - mid

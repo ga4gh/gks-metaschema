@@ -1,0 +1,5 @@
+versions:
+  catvrs: 1.0.0
+imports:
+  model: model/model-source.yaml
+namespaces: {}

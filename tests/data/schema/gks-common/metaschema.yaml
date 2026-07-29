@@ -1,0 +1,4 @@
+versions:
+  gks-common: 1.x
+imports:
+  core: core-source.yaml
