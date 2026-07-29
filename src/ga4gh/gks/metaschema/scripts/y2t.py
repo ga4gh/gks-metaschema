@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""convert input .yaml to .rst artifacts"""
+"""Generate RST definition artifacts from processed GKS source YAML."""
 
-import os
-import pathlib
 import sys
-from io import TextIOWrapper
 from pathlib import Path
+from typing import TextIO
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -27,9 +25,10 @@ ORDERED_MAPPING: dict[bool, str] = {True: "&#8595;", False: "&#8942;"}
 
 
 def resolve_type(class_property_definition: dict) -> str:
-    """Resolves a class definition to a concrete type.
+    """Resolve a class property definition to a rendered type.
 
-    :param class_property_definition: type definition, "_Not Specified_" if undetermined
+    :param class_property_definition: Property type definition.
+    :return: Rendered type, or ``_Not Specified_`` when undetermined.
     """
     if "type" in class_property_definition:
         if class_property_definition["type"] == "array":
@@ -62,11 +61,12 @@ def resolve_type(class_property_definition: dict) -> str:
 
 
 def resolve_cardinality(class_property_name: str, class_property_attributes: dict, class_definition: dict) -> str:
-    """Resolves class property cardinality from YAML definition.
+    """Resolve class property cardinality from a YAML definition.
 
-    :param class_property_name: class property name
-    :param class_property_attributes: class property attributes
-    :param class_definition: class definition
+    :param class_property_name: Class property name.
+    :param class_property_attributes: Class property attributes.
+    :param class_definition: Class definition.
+    :return: Cardinality string.
     """
     if class_property_name in class_definition.get("required", []):
         min_count = "1"
@@ -83,25 +83,24 @@ def resolve_cardinality(class_property_name: str, class_property_attributes: dic
 
 
 def get_ancestor_with_attributes(class_name: str, proc: YamlSchemaProcessor) -> str:
-    """Returns the ancestor class of the class name
+    """Get the nearest ancestor class with rendered attributes.
 
-    :param class_name: class name
-    :param proc: yaml schema processor
+    :param class_name: Class name.
+    :param proc: Schema processor that owns the class.
+    :return: Ancestor class name.
     """
     if proc.class_is_passthrough(class_name):
-        raw_def, proc = proc.get_local_or_inherited_class(class_name, raw=True)
+        raw_def, proc = proc.get_class_definition(class_name, raw=True)
         ancestor = raw_def.get("inherits")
         return get_ancestor_with_attributes(ancestor, proc)
     return class_name
 
 
-def add_ga4gh_digest(class_definition: dict, f: TextIOWrapper) -> None:
-    """Add GA4GH Digest table
+def add_ga4gh_digest(class_definition: dict, stream: TextIO) -> None:
+    """Add a GA4GH digest table when digest metadata is present.
 
-    Will only include this table if both ``prefix`` and ``inherent`` are provided
-
-    :param class_definition: Model definition
-    :param f: RST file
+    :param class_definition: Model definition.
+    :param stream: Writable RST file stream.
     """
     ga4gh_digest = class_definition.get("ga4gh", {})
     if ga4gh_digest:
@@ -120,15 +119,15 @@ def add_ga4gh_digest(class_definition: dict, f: TextIOWrapper) -> None:
 
     *  - {ga4gh_digest.get("prefix", None)}
        - {str(ga4gh_digest.get("inherent", []))}\n""",
-            file=f,
+            file=stream,
         )
 
 
 def resolve_flags(class_property_attributes: dict) -> str:
-    """Add badges for flags (maturity and ordered property)
+    """Render badges for maturity and ordered-property flags.
 
-    :param class_property_attributes: Property attributes for a class
-    :return: Output for flag badges
+    :param class_property_attributes: Property attributes for a class.
+    :return: Rendered flag badges.
     """
     flags = ""
     maturity = class_property_attributes.get("maturity")
@@ -156,52 +155,75 @@ def resolve_flags(class_property_attributes: dict) -> str:
     return flags
 
 
-def main(proc_schema: YamlSchemaProcessor) -> None:
+def _write_maturity_notice(class_definition: dict, stream: TextIO) -> None:
+    """Write the maturity notice for a class, if one applies.
+
+    :param class_definition: Processed class definition.
+    :param stream: Writable RST file stream.
     """
-    Generates the .rst file for each of the classes in the schema
+    maturity = class_definition.get("maturity", "")
+    template = env.get_template("maturity")
+    if maturity == "draft":
+        print(
+            template.render(info="warning", maturity_level="draft", modifier="significantly"),
+            file=stream,
+        )
+        print(file=stream)
+    elif maturity == "trial use":
+        print(
+            template.render(info="note", maturity_level="trial use", modifier=""),
+            file=stream,
+        )
+        print(file=stream)
 
-    :param proc_schema: schema processor object
+
+def _get_information_model_property_key(
+    class_name: str, class_definition: dict, proc_schema: YamlSchemaProcessor
+) -> str | None:
+    """Get the property map key used for an information model table.
+
+    :param class_name: Class name being rendered.
+    :param class_definition: Processed class definition.
+    :param proc_schema: Schema processor that owns the class.
+    :return: ``heritableProperties`` or ``properties``; ``None`` for primitive
+        classes that do not render an information model.
+    :raises ValueError: If a non-primitive class has no property map.
     """
-    for class_name, class_definition in proc_schema.defs.items():
-        with open(proc_schema.def_fp / (class_name + ".rst"), "w") as f:
-            maturity = class_definition.get("maturity", "")
-            template = env.get_template("maturity")
-            if maturity == "draft":
-                print(
-                    template.render(info="warning", maturity_level="draft", modifier="significantly"),
-                    file=f,
-                )
-                print(file=f)
-            elif maturity == "trial use":
-                print(
-                    template.render(info="note", maturity_level="trial use", modifier=""),
-                    file=f,
-                )
-                print(file=f)
-            print("**Computational Definition**\n", file=f)
-            print(class_definition["description"], file=f)
-            if proc_schema.class_is_passthrough(class_name):
-                continue
-            if "heritableProperties" in class_definition:
-                p = "heritableProperties"
-            elif "properties" in class_definition:
-                p = "properties"
-            elif proc_schema.class_is_primitive(class_name):
-                continue
-            else:
-                raise ValueError(class_name, class_definition)
-            ancestor = proc_schema.raw_defs[class_name].get("inherits")
-            if ancestor:
-                ancestor = get_ancestor_with_attributes(ancestor, proc_schema)
-                inheritance = f"Some {class_name} attributes are inherited from :ref:`{ancestor}`.\n"
-            else:
-                inheritance = ""
+    if "heritableProperties" in class_definition:
+        return "heritableProperties"
+    if "properties" in class_definition:
+        return "properties"
+    if proc_schema.class_is_primitive(class_name):
+        return None
 
-            add_ga4gh_digest(class_definition, f)
+    msg = f"{class_name} is missing heritableProperties or properties."
+    raise ValueError(msg)
 
-            print("\n**Information Model**", file=f)
-            print(
-                f"""
+
+def _get_inheritance_text(class_name: str, proc_schema: YamlSchemaProcessor) -> str:
+    """Get RST text describing inherited attributes.
+
+    :param class_name: Class name being rendered.
+    :param proc_schema: Schema processor that owns the class.
+    :return: Inheritance sentence, or an empty string when the class has no parent.
+    """
+    ancestor = proc_schema.raw_defs[class_name].get("inherits")
+    if not ancestor:
+        return ""
+
+    ancestor = get_ancestor_with_attributes(ancestor, proc_schema)
+    return f"Some {class_name} attributes are inherited from :ref:`{ancestor}`.\n"
+
+
+def _write_information_model_header(inheritance: str, stream: TextIO) -> None:
+    """Write the information model table header.
+
+    :param inheritance: Inheritance sentence to print before the table.
+    :param stream: Writable RST file stream.
+    """
+    print("\n**Information Model**", file=stream)
+    print(
+        f"""
 {inheritance}
 .. list-table::
    :class: clean-wrap
@@ -214,27 +236,85 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
       - Type
       - Limits
       - Description""",
-                file=f,
-            )
-            for class_property_name, class_property_attributes in class_definition[p].items():
-                class_definition_formatted = f"""\
+        file=stream,
+    )
+
+
+def _format_property_row(class_property_name: str, class_property_attributes: dict, class_definition: dict) -> str:
+    """Format one information model property row.
+
+    :param class_property_name: Property name.
+    :param class_property_attributes: Processed property attributes.
+    :param class_definition: Processed class definition.
+    :return: RST list-table row.
+    """
+    class_definition_formatted = f"""\
    *  - {class_property_name}
       - {resolve_flags(class_property_attributes)}
       - {resolve_type(class_property_attributes)}
       - {resolve_cardinality(class_property_name, class_property_attributes, class_definition)}
       - {class_property_attributes.get("description", "")}"""
-                class_definition_formatted = "\n".join(
-                    line.rstrip() for line in class_definition_formatted.splitlines()
-                )
-                print(class_definition_formatted, file=f)
+    return "\n".join(line.rstrip() for line in class_definition_formatted.splitlines())
 
 
-def cli():
-    source_file = pathlib.Path(sys.argv[1])
+def _write_information_model(
+    class_name: str, class_definition: dict, property_key: str, proc_schema: YamlSchemaProcessor, stream: TextIO
+) -> None:
+    """Write an information model table for one class.
+
+    :param class_name: Class name being rendered.
+    :param class_definition: Processed class definition.
+    :param property_key: Property map key to render.
+    :param proc_schema: Schema processor that owns the class.
+    :param stream: Writable RST file stream.
+    """
+    inheritance = _get_inheritance_text(class_name, proc_schema)
+    add_ga4gh_digest(class_definition, stream)
+    _write_information_model_header(inheritance, stream)
+
+    for class_property_name, class_property_attributes in class_definition[property_key].items():
+        print(_format_property_row(class_property_name, class_property_attributes, class_definition), file=stream)
+
+
+def _write_class_rst(class_name: str, class_definition: dict, proc_schema: YamlSchemaProcessor) -> None:
+    """Write the RST artifact for one class.
+
+    :param class_name: Class name being rendered.
+    :param class_definition: Processed class definition.
+    :param proc_schema: Schema processor that owns the class.
+    :raises ValueError: If a non-primitive class has no property map.
+    """
+    with (proc_schema.def_fp / (class_name + ".rst")).open("w", encoding="utf-8") as stream:
+        _write_maturity_notice(class_definition, stream)
+        print("**Computational Definition**\n", file=stream)
+        print(class_definition["description"], file=stream)
+
+        if proc_schema.class_is_passthrough(class_name):
+            return
+
+        property_key = _get_information_model_property_key(class_name, class_definition, proc_schema)
+        if property_key is None:
+            return
+
+        _write_information_model(class_name, class_definition, property_key, proc_schema, stream)
+
+
+def main(proc_schema: YamlSchemaProcessor) -> None:
+    """Generate one RST file for each class in a schema.
+
+    :param proc_schema: Schema processor containing definitions to render.
+    """
+    for class_name, class_definition in proc_schema.defs.items():
+        _write_class_rst(class_name, class_definition, proc_schema)
+
+
+def cli() -> None:
+    """Parse CLI arguments and generate RST definitions from a source schema."""
+    source_file = Path(sys.argv[1])
     p = YamlSchemaProcessor(source_file)
-    os.makedirs(p.def_fp, exist_ok=True)
+    p.def_fp.mkdir(exist_ok=True)
     if p.defs is None:
-        exit(0)
+        raise SystemExit(0)
     main(p)
 
 

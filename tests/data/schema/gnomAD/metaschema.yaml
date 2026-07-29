@@ -1,4 +1,2 @@
-imports:
-  va.caf: ../va-spec/profiles/caf/caf-source.yaml
 namespaces:
-  va.caf: ../va-spec/profiles/caf/caf.json#/$defs/
+  va.caf: /ga4gh/schema/va-spec/1.x/profiles/caf/json/
