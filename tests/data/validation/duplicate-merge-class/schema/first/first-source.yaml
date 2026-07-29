@@ -1,0 +1,9 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/first/1.0.0/first-source.yaml"
+title: First
+type: object
+$defs:
+  Shared:
+    type: object
+    maturity: draft
+    properties: {}

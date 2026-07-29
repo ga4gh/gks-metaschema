@@ -1,0 +1,15 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/example/1.0.0/example-source.yaml"
+title: NonBooleanOrdered
+type: object
+strict: true
+$defs:
+  NonBooleanOrdered:
+    type: object
+    maturity: draft
+    properties:
+      values:
+        type: array
+        ordered: "true"
+        items:
+          type: string

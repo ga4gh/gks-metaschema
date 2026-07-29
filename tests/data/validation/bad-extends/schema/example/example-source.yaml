@@ -1,0 +1,18 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/example/1.0.0/example-source.yaml"
+title: BadExtends
+type: object
+$defs:
+  Parent:
+    maturity: draft
+    heritableProperties:
+      label:
+        type: string
+  Child:
+    type: object
+    inherits: Parent
+    maturity: draft
+    properties:
+      renamed:
+        extends: missing
+        type: string

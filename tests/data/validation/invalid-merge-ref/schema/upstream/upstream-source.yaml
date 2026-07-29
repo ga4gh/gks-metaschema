@@ -1,0 +1,11 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/upstream/1.0.0/upstream-source.yaml"
+title: Upstream
+type: object
+$defs:
+  Upstream:
+    type: object
+    maturity: draft
+    properties:
+      badRef:
+        $ref: "/ga4gh/schema/unmerged/1.0.0/json/Thing"

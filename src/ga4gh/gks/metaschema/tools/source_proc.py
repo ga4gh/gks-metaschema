@@ -130,7 +130,20 @@ class YamlSchemaProcessor:
             out.update(self.get_all_descendants(descendant))
         return out
 
-    def merge_imported(self):
+    def merge_imported(self) -> None:
+        """Merge imported schema definitions into the current processor.
+
+        Imported classes are copied into the root schema, import CURIEs are rewritten
+        to local definition refs, and duplicate class names are rejected.
+
+        Example:
+            If the root schema imports ``vrs`` and references ``vrs:Allele``,
+            ``merge_imported()`` adds the imported VRS definitions and rewrites
+            inherited references to local ``#/$defs/...`` paths.
+
+        :raises ValueError: If merged imports define duplicate classes or contain
+            non-local ``$ref`` values that cannot be merged safely.
+        """
         # register all import namespaces and create process order
         # note: relying on max_recursion_depth errors and not checking for cyclic imports
         self.import_locations = {}
@@ -142,7 +155,15 @@ class YamlSchemaProcessor:
         defined_classes = self.processed_classes
         for key in self.import_process_order:
             other = self.import_processors[key]
-            assert len(defined_classes & other.processed_classes) == 0
+            duplicate_classes = defined_classes & other.processed_classes
+
+            if duplicate_classes:
+                msg = (
+                    f"Imported schema {other.schema_fp} defines duplicate class(es): "
+                    f"{', '.join(sorted(duplicate_classes))}"
+                )
+                raise ValueError(msg)
+
             defined_classes.update(other.processed_classes)
 
         for key in self.import_process_order:
@@ -175,7 +196,19 @@ class YamlSchemaProcessor:
         self.raw_defs = self.raw_schema.get(self.schema_def_keyword, None)
         self._init_from_raw()
 
-    def _check_local_defs_property(self, obj):
+    def _check_local_defs_property(self, obj: object) -> object:
+        """Normalize local definition refs in a schema object.
+
+        Example:
+            ``{"$ref": "#/definitions/Thing"}`` becomes
+            ``{"$ref": "#/$defs/Thing"}`` when the active schema dialect uses
+            ``$defs``.
+
+        :param obj: Schema node to inspect recursively.
+        :return: The schema node with local definition refs normalized.
+        :raises ValueError: If a ``$ref`` is not a local ``$defs`` or
+            ``definitions`` reference.
+        """
         try:
             for k, v in obj.items():
                 if isinstance(v, dict):
@@ -187,19 +220,37 @@ class YamlSchemaProcessor:
                     obj[k] = l
                 elif isinstance(v, str) and k == "$ref":
                     match = defs_re.match(v)
-                    assert match, v
+
+                    if match is None:
+                        msg = f'Expected local "$ref" definition path, got {v}.'
+                        raise ValueError(msg)
+
                     if match.group(1) != self.schema_def_keyword:
                         obj[k] = re.sub(re.escape(match.group(1)), self.schema_def_keyword, v)
         except AttributeError:
             return obj
         return obj
 
-    def _register_merge_import(self, proc):
+    def _register_merge_import(self, proc: "YamlSchemaProcessor") -> None:
+        """Register imports in the order needed for merging.
+
+        Example:
+            If ``root`` imports ``mid`` and ``mid`` imports ``upstream``, this
+            records ``upstream`` before ``mid`` so dependencies merge first.
+
+        :param proc: Processor whose imports should be registered.
+        :raises ValueError: If the same import alias resolves to different files.
+        """
         for name, other in proc.imports.items():
             self._register_merge_import(other)
             if name in self.import_locations:
                 # check that all imports from imported point to same locations
-                assert self.import_locations[name] == other.schema_fp
+                if self.import_locations[name] != other.schema_fp:
+                    msg = (
+                        f"Import {name} resolves to multiple locations: "
+                        f"{self.import_locations[name]} and {other.schema_fp}"
+                    )
+                    raise ValueError(msg)
             else:
                 self.import_locations[name] = other.schema_fp
                 self.import_processors[name] = other
@@ -390,14 +441,24 @@ class YamlSchemaProcessor:
                 root_fp = self.schema_fp
             self.imports[dependency] = YamlSchemaProcessor(fp, root_fp=root_fp)
 
-    def process_schema(self):
+    def process_schema(self) -> None:
+        """Process all source schema class definitions."""
         if self.defs is None:
             return
 
         for schema_class in self.defs:
             self.process_schema_class(schema_class)
 
-    def check_processed_schema(self):
+    def check_processed_schema(self) -> None:
+        """Validate relationships after all classes are processed.
+
+        Example:
+            A ``normative`` class that inherits from a ``draft`` parent is rejected
+            because a child cannot have greater maturity than its parent.
+
+        :raises ValueError: If inherited classes are missing maturity values or a
+            child class has greater maturity than its parent.
+        """
         for cls in self.processed_classes:
             cls_def = self.defs[cls]
             if "inherits" in cls_def:
@@ -407,11 +468,18 @@ class YamlSchemaProcessor:
                     inherited_cls_def = self.imports[namespace].defs[inherited_cls_split_name]
                 else:
                     inherited_cls_def = self.defs[inherited_cls_name]
-                assert "maturity" in cls_def, cls
-                assert "maturity" in inherited_cls_def, inherited_cls_name
-                assert inherited_cls_def["maturity"] >= cls_def["maturity"], (
-                    f"Maturity of {cls} is greater than parent class {inherited_cls_name}."
-                )
+
+                if "maturity" not in cls_def:
+                    msg = f"{cls} is missing a maturity value."
+                    raise ValueError(msg)
+
+                if "maturity" not in inherited_cls_def:
+                    msg = f"{inherited_cls_name} is missing a maturity value."
+                    raise ValueError(msg)
+
+                if inherited_cls_def["maturity"] < cls_def["maturity"]:
+                    msg = f"Maturity of {cls} is greater than parent class {inherited_cls_name}."
+                    raise ValueError(msg)
             pass
 
     def class_is_abstract(self, schema_class):
@@ -533,15 +601,33 @@ class YamlSchemaProcessor:
         revised_path = Path(parsed_id_path).parent.joinpath(export_key, class_ref)
         return str(revised_path)
 
-    def process_schema_class(self, schema_class):
+    def process_schema_class(self, schema_class: str) -> None:
+        """Process and validate one schema class definition.
+
+        This resolves inherited properties, rewrites CURIE refs, applies strict-mode
+        object and array checks, and validates GA4GH identifier metadata.
+
+        Example:
+            A class with ``inherits: Entity`` receives inherited properties before
+            its local ``properties`` are written to ``processed_schema``.
+
+        :param schema_class: Class name under the schema ``$defs`` or
+            ``definitions`` mapping.
+        :raises ValueError: If the class violates required MSP schema structure.
+        """
         raw_class_def = self.raw_schema[self.schema_def_keyword][schema_class]
         if schema_class in self.processed_classes:
             return
         processed_class_def = self.processed_schema[self.schema_def_keyword][schema_class]
 
         # Check GKS maturity model on all schemas
-        assert "maturity" in processed_class_def, schema_class
-        assert processed_class_def["maturity"] in maturity_levels, schema_class
+        if "maturity" not in processed_class_def:
+            msg = f"{schema_class} is missing a maturity value."
+            raise ValueError(msg)
+
+        if processed_class_def["maturity"] not in maturity_levels:
+            msg = f"{schema_class} has unsupported maturity {processed_class_def['maturity']}."
+            raise ValueError(msg)
 
         if self.class_is_protected(schema_class):
             containing_class = self.raw_defs[schema_class]["protectedClassOf"]
@@ -566,7 +652,10 @@ class YamlSchemaProcessor:
             # inherit ga4gh keys
             if "ga4gh" in processed_class_def or "ga4gh" in inherited_class:
                 if "ga4gh" not in processed_class_def:
-                    assert self.class_is_abstract(schema_class), f"{schema_class} is missing a defined prefix."
+                    if not self.class_is_abstract(schema_class):
+                        msg = f"{schema_class} is missing a defined prefix."
+                        raise ValueError(msg)
+
                     processed_class_def["ga4gh"] = copy.deepcopy(inherited_class["ga4gh"])
                 elif "ga4gh" not in inherited_class:
                     pass
@@ -598,8 +687,11 @@ class YamlSchemaProcessor:
         for prop, prop_attribs in processed_class_properties.items():
             # Mix in inherited properties
             if "extends" in prop_attribs:
-                # assert that the extended property is in inherited properties
-                assert prop_attribs["extends"] in inherited_properties
+                # Confirm the source property exists before copying and overriding it.
+                if prop_attribs["extends"] not in inherited_properties:
+                    msg = f"{schema_class}.{prop} extends unknown inherited property {prop_attribs['extends']}."
+                    raise ValueError(msg)
+
                 extended_property = prop_attribs["extends"]
                 # fix $ref and oneOf $ref inheritance
                 if "$ref" in prop_attribs:
@@ -619,31 +711,59 @@ class YamlSchemaProcessor:
                 if extended_property in inherited_required:
                     inherited_required.remove(extended_property)
                     processed_class_required.add(prop)
+
             # Validate required array attribute for GKS specs
             if self.enforce_ordered and prop_attribs.get("type", "") == "array":
-                assert "ordered" in prop_attribs, f"{schema_class}.{prop} missing ordered attribute."
-                assert isinstance(prop_attribs["ordered"], bool)
+                if "ordered" not in prop_attribs:
+                    msg = f"{schema_class}.{prop} missing ordered attribute."
+                    raise ValueError(msg)
+
+                if not isinstance(prop_attribs["ordered"], bool):
+                    msg = f"{schema_class}.{prop} ordered attribute must be a boolean."
+                    raise ValueError(msg)
+
             if self.strict and prop_attribs.get("type", "") == "object":
-                assert prop_attribs.get("additionalProperties", None) is not None, (
-                    f'"additionalProperties" expected to be defined in {schema_class}.{prop}'
-                )
+                if prop_attribs.get("additionalProperties", None) is None:
+                    msg = f'"additionalProperties" expected to be defined in {schema_class}.{prop}'
+                    raise ValueError(msg)
 
         # Validate class structures for GKS specs
         if self.class_is_abstract(schema_class):
-            assert "type" not in processed_class_def, schema_class
+            if "type" in processed_class_def:
+                msg = f"{schema_class} is abstract and should not define type."
+                raise ValueError(msg)
         else:
-            assert "type" in processed_class_def, schema_class
-            assert processed_class_def["type"] == "object", schema_class
+            if "type" not in processed_class_def:
+                msg = f"{schema_class} is missing type."
+                raise ValueError(msg)
+
+            if processed_class_def["type"] != "object":
+                msg = f"{schema_class} type must be object."
+                raise ValueError(msg)
+
             if self.class_is_ga4gh_identifiable(schema_class):
-                assert isinstance(processed_class_def["ga4gh"]["prefix"], str), schema_class
-                assert processed_class_def["ga4gh"]["prefix"] != "", schema_class
+                if not isinstance(processed_class_def["ga4gh"]["prefix"], str):
+                    msg = f"{schema_class} ga4gh.prefix must be a string."
+                    raise ValueError(msg)
+
+                if processed_class_def["ga4gh"]["prefix"] == "":
+                    msg = f"{schema_class} ga4gh.prefix cannot be empty."
+                    raise ValueError(msg)
+
                 l = len(processed_class_def["ga4gh"]["inherent"])  # noqa: E741
-                assert l >= 2, (
-                    f"GA4GH identifiable objects are expected to be defined by at least 2 properties, {schema_class} has {l}."
-                )
-                assert "type" in processed_class_def["ga4gh"]["inherent"], (
-                    f"GA4GH identifiable objects are expected to include the class type but not included for {schema_class}."
-                )
+                if l < 2:
+                    msg = (
+                        "GA4GH identifiable objects are expected to be defined by "
+                        f"at least 2 properties, {schema_class} has {l}."
+                    )
+                    raise ValueError(msg)
+
+                if "type" not in processed_class_def["ga4gh"]["inherent"]:
+                    msg = (
+                        "GA4GH identifiable objects are expected to include the class "
+                        f"type but not included for {schema_class}."
+                    )
+                    raise ValueError(msg)
                 # Two properites should be `type` and at least one other field
 
         processed_class_def[prop_k] = inherited_properties | processed_class_properties

@@ -1,0 +1,6 @@
+versions:
+  root: 1.0.0
+imports:
+  upstream: ../upstream/upstream-source.yaml
+namespaces:
+  upstream: "/ga4gh/schema/upstream/{version}/json/"

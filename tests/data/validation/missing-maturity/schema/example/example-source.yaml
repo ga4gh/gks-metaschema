@@ -1,0 +1,8 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/example/1.0.0/example-source.yaml"
+title: MissingMaturity
+type: object
+$defs:
+  MissingMaturity:
+    type: object
+    properties: {}
