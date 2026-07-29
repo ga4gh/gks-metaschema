@@ -1,0 +1,8 @@
+versions:
+  catvrs: 1.x
+imports:
+  gks.core: ../gks-common/core-source.yaml
+  vrs: ../vrs/vrs-source.yaml
+namespaces:
+  vrs: ../vrs/vrs.yaml#/$defs/
+  gks.core: ../gks-common/core.yaml#/$defs/

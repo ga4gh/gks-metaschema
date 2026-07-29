@@ -1,0 +1,15 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/example/1.0.0/example-source.yaml"
+imports:
+  vrs: vrs-source.yaml
+namespaces:
+  vrs: "/ga4gh/schema/vrs/0.0.0/json/"
+title: Example
+type: object
+$defs:
+  Example:
+    type: object
+    maturity: draft
+    properties:
+      variation:
+        $refCurie: vrs:Variation

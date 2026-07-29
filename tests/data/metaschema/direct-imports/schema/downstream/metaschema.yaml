@@ -1,0 +1,6 @@
+versions:
+  downstream: 1.0.0
+imports:
+  mid: ../mid/mid-source.yaml
+namespaces:
+  mid: "/ga4gh/schema/mid/{version}/json/"

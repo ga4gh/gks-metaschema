@@ -1,0 +1,6 @@
+$id: "https://w3id.org/ga4gh/schema/va-spec/1.1.0/base/profile-source.yaml"
+$defs:
+  Example:
+    $ref: "/ga4gh/schema/va-spec/1.1.0/base/json/VariantPrognosticProposition"
+    # This commented-out ref verifies hard-coded ref checks ignore YAML comments. Do not delete.
+    # $ref: "/ga4gh/schema/va-spec/1.1.0/base/json/CommentedOutProposition"

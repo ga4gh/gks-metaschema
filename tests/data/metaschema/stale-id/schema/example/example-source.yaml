@@ -1,0 +1,5 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/example/{version}/example-source.yaml"
+title: Example
+type: object
+$defs: {}

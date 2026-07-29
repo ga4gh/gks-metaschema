@@ -1,0 +1,6 @@
+versions:
+  vrs: 2.x
+imports:
+  gks.core: ../gks-common/core-source.yaml
+namespaces:
+  gks.common: ../gks-common/$defs/

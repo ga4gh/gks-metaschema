@@ -1,0 +1,13 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/mid/2.0.0/mid-source.yaml"
+title: Mid
+type: object
+$defs:
+  MidClass:
+    maturity: draft
+    type: object
+    properties:
+      upstream:
+        $refCurie: upstream:UpstreamClass
+    required:
+      - upstream

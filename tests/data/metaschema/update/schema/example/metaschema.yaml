@@ -1,0 +1,8 @@
+versions:
+  va-spec: 1.1.0
+  vrs: 2.2.0
+  cat-vrs: 1.2.0
+imports:
+  vrs: ../vrs/vrs-source.yaml
+namespaces:
+  vrs: "/ga4gh/schema/vrs/{version}/json/"

@@ -1,14 +1,29 @@
 #!/usr/bin/env python3
-"""convert yaml on stdin to json on stdout"""
+"""Process GKS source YAML into resolved schema artifacts.
+
+The processor applies product-level metaschema config, resolves imports and
+CURIE references, and prepares JSON/YAML schema output structures.
+"""
 
 import copy
 import json
 import re
+import warnings
 from collections import defaultdict
 from pathlib import Path
 from urllib.parse import urlparse
 
 import yaml
+
+from ga4gh.gks.metaschema.tools.config import (
+    ALLOWED_CONFIG_KEYS,
+    METASCHEMA_FN,
+    find_metaschema_config,
+    find_stale_schema_url_versions,
+    load_imported_versions,
+    load_metaschema_config,
+    render_namespaces,
+)
 
 SCHEMA_DEF_KEYWORD_BY_VERSION = {
     "https://json-schema.org/draft-07/schema": "definitions",
@@ -25,11 +40,17 @@ maturity_levels = {"deprecated": 0, "draft": 1, "trial use": 2, "normative": 3}
 
 
 class YamlSchemaProcessor:
-    def __init__(self, schema_fp, root_fp=None):
-        self.schema_fp = Path(schema_fp)
+    def __init__(self, schema_fp: Path, root_fp: Path | None = None) -> None:
+        """Initialize a YAML schema processor.
+
+        :param schema_fp: Path to the source YAML schema.
+        :param root_fp: Root source YAML path when processing an imported schema.
+        """
+        self.schema_fp = Path(schema_fp).resolve()
         self.imported = root_fp is not None
-        self.root_schema_fp = root_fp
-        self.raw_schema = self.load_schema(schema_fp)
+        self.root_schema_fp = Path(root_fp).resolve() if root_fp is not None else None
+        self.raw_schema = self.load_schema(self.schema_fp)
+        self.apply_metaschema_config()
         self.id = self.raw_schema["$id"]
         self.yaml_key = self.raw_schema.get("yaml-target", "yaml")
         self.json_key = self.raw_schema.get("json-target", "json")
@@ -186,12 +207,178 @@ class YamlSchemaProcessor:
         return
 
     @staticmethod
-    def load_schema(schema_fp):
-        with open(schema_fp) as f:
+    def load_schema(schema_fp: Path) -> dict[str, object]:
+        """Load a source YAML schema file.
+
+        :param schema_fp: Path to the source YAML schema.
+        :return: Parsed schema mapping.
+        """
+        with open(schema_fp, encoding="utf-8") as f:
             schema = yaml.load(f, Loader=yaml.SafeLoader)
         return schema
 
-    def import_dependencies(self):
+    def apply_metaschema_config(self) -> None:
+        """Apply project-level metaschema config to the root source schema.
+
+        Config imports pointing back to the schema currently being loaded are skipped to
+        avoid recursive self-imports. When config is applied, source-local ``imports``
+        and ``namespaces`` are ignored with a warning so the project config remains
+        authoritative.
+
+        Example:
+            A source containing ``$refCurie: vrs:Allele`` receives the configured
+            ``vrs`` import and rendered ``vrs`` namespace from
+            ``schema/<product>/metaschema.yaml``.
+        """
+        config_fp = self.get_metaschema_config_fp()
+        if config_fp is None:
+            return
+
+        config = load_metaschema_config(config_fp)
+        config_versions = load_imported_versions(config_fp, config.imports) | config.versions
+        if "$id" in self.raw_schema:
+            self.validate_schema_id_versions(config_versions)
+
+        # Once a product has metaschema.yaml, source-local config sections are
+        # treated as stale copies and removed before processing.
+        disallowed_keys = ALLOWED_CONFIG_KEYS & set(self.raw_schema)
+        if disallowed_keys:
+            keys = ", ".join(sorted(disallowed_keys))
+            warnings.warn(
+                f"{self.schema_fp} is managed by {config_fp}, so ignoring source-local {keys}. "
+                f"Define these values only in {METASCHEMA_FN}.",
+                stacklevel=2,
+            )
+
+            for key in disallowed_keys:
+                self.raw_schema.pop(key, None)
+
+        # Only attach imports and namespaces that the current source actually
+        # references. This avoids recursive self-imports and unused upstreams.
+        used_namespaces = self._get_used_config_namespaces(config.imports)
+        imports: dict[str, str] = {}
+
+        for key, import_value in config.imports.items():
+            if key not in used_namespaces:
+                continue
+
+            import_fp = Path(import_value)
+
+            if not import_fp.is_absolute():
+                import_fp = config_fp.parent / import_fp
+
+            if import_fp.resolve() == self.schema_fp.resolve():
+                continue
+
+            imports[key] = str(import_fp)
+
+        if imports:
+            self.raw_schema["imports"] = imports
+
+        namespaces = render_namespaces(config.namespaces, config_versions)
+        if namespaces:
+            self.raw_schema["namespaces"] = {key: value for key, value in namespaces.items() if key in used_namespaces}
+
+    def _get_used_config_namespaces(self, config_imports: dict[str, str] | None = None) -> set[str]:
+        """Get namespace aliases referenced by the source schema.
+
+        Example:
+            A schema using ``$refCurie: vrs:Allele`` and
+            ``$ref: "model.json"`` returns ``{"vrs", "model"}`` when the
+            config imports include ``model: model-source.yaml``.
+
+        :param config_imports: Mapping of import aliases to source schema paths.
+        :return: Namespace aliases used by refs, inheritance, or external ``$ref`` paths.
+        """
+        used_namespaces: set[str] = set()
+        import_stems = self._get_config_import_stems(config_imports or {})
+
+        def collect(node: object) -> None:
+            """Collect namespace aliases from a schema node.
+
+            :param node: Source schema node.
+            """
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    if key in {"$refCurie", "inherits"} and isinstance(value, str) and ":" in value:
+                        used_namespaces.add(value.split(":", 1)[0])
+                    elif key == "$ref" and isinstance(value, str):
+                        used_namespaces.update(self._get_ref_import_aliases(value, import_stems))
+                    collect(value)
+            elif isinstance(node, list):
+                for item in node:
+                    collect(item)
+
+        collect(self.raw_schema)
+        return used_namespaces
+
+    @staticmethod
+    def _get_config_import_stems(config_imports: dict[str, str]) -> dict[str, set[str]]:
+        """Get generated artifact stems for configured source imports.
+
+        Example:
+            ``{"model": "model-source.yaml"}`` returns
+            ``{"model": {"model", "model-source"}}``.
+
+        :param config_imports: Mapping of import aliases to source schema paths.
+        :return: Candidate generated artifact stems keyed by alias.
+        """
+        import_stems: dict[str, set[str]] = {}
+        for alias, import_value in config_imports.items():
+            source_stem = Path(import_value).stem
+            artifact_stem = source_stem.removesuffix("-source")
+            import_stems[alias] = {alias, source_stem, artifact_stem}
+        return import_stems
+
+    @staticmethod
+    def _get_ref_import_aliases(ref: str, import_stems: dict[str, set[str]]) -> set[str]:
+        """Get configured import aliases referenced by an external ``$ref``.
+
+        Example:
+            ``model.json#/$defs/CategoricalVariant`` returns ``{"model"}``
+            when ``import_stems["model"]`` contains ``"model"``.
+
+        :param ref: JSON Schema ``$ref`` value.
+        :param import_stems: Candidate generated artifact stems keyed by alias.
+        :return: Import aliases referenced by the ``$ref`` path.
+        """
+        ref_path = ref.split("#", 1)[0]
+        if not ref_path:
+            return set()
+
+        ref_stem = Path(ref_path).stem
+        return {alias for alias, stems in import_stems.items() if ref_stem in stems}
+
+    def validate_schema_id_versions(self, versions: dict[str, str]) -> None:
+        """Validate that the source ``$id`` uses configured concrete versions.
+
+        Example:
+            A source ``$id`` containing ``/vrs/{version}/`` raises when
+            ``versions["vrs"] == "2.2.0"``; the source must contain
+            ``/vrs/2.2.0/``.
+
+        :param versions: Version strings keyed by spec name.
+        :raises ValueError: If the source ``$id`` has a stale or templated version.
+        """
+        stale_versions = find_stale_schema_url_versions(self.raw_schema["$id"], versions)
+        if not stale_versions:
+            return
+
+        messages = [
+            f"{version.spec} $id version is {version.actual_version}; expected {version.expected_version}"
+            for version in stale_versions
+        ]
+        raise ValueError(f"{self.schema_fp}: " + "; ".join(messages))
+
+    def get_metaschema_config_fp(self) -> Path | None:
+        """Find the project-level metaschema config file.
+
+        :return: Path to the owning ``metaschema.yaml`` file, or ``None`` if absent.
+        """
+        return find_metaschema_config(self.schema_fp)
+
+    def import_dependencies(self) -> None:
+        """Load configured imports as child schema processors."""
         for dependency in self.raw_schema.get("imports", []):
             fp = Path(self.raw_schema["imports"][dependency])
             if not fp.is_absolute():
@@ -287,7 +474,12 @@ class YamlSchemaProcessor:
                     processed_node[new_k] = self.resolve_curie(v)
                     del processed_node[k]
                 elif k == "$ref" and v.startswith("#/") and self.imported:
-                    # TODO: fix below hard-coded name convention, yuck.
+                    if self.root_schema_fp is None:
+                        msg = "Imported schema processor is missing a root schema path."
+                        raise ValueError(msg)
+
+                    # Keep imported local refs relative to the root schema output
+                    # tree so split artifacts can still resolve sibling outputs.
                     rel_root = self.schema_fp.parent.relative_to(self.root_schema_fp.parent, walk_up=True)
                     schema_stem = self.schema_fp.stem.split("-")[0]
                     processed_node[k] = str(rel_root / f"{schema_stem}.json{v}")

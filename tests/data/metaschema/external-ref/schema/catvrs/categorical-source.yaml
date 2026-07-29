@@ -1,0 +1,13 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/catvrs/1.0.0/categorical-source.yaml"
+title: Categorical
+type: object
+$defs:
+  CategoricalVariation:
+    maturity: draft
+    type: object
+    properties:
+      subject:
+        $ref: "model.json"
+    required:
+      - subject

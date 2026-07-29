@@ -1,0 +1,14 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/catvrs/1.0.0/model/model-source.yaml"
+title: Model
+type: object
+$defs:
+  CategoricalVariant:
+    maturity: draft
+    type: object
+    properties:
+      type:
+        type: string
+        const: CategoricalVariant
+    required:
+      - type
