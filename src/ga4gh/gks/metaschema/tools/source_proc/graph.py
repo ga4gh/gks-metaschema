@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from ga4gh.gks.metaschema.tools.source_proc.paths import resolve_curie
+
 if TYPE_CHECKING:
     from ga4gh.gks.metaschema.tools.source_proc.processor import YamlSchemaProcessor
 
@@ -234,8 +236,6 @@ def _get_child_ref(processor: YamlSchemaProcessor, record: dict[str, str]) -> st
     :param record: Container child record.
     :return: Concrete child reference.
     """
-    from ga4gh.gks.metaschema.tools.source_proc.paths import resolve_curie
-
     if "$refCurie" in record:
         return resolve_curie(processor, record["$refCurie"])
     return record["$ref"]

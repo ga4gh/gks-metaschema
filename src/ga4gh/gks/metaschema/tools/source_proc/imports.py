@@ -15,10 +15,8 @@ def import_dependencies(processor: YamlSchemaProcessor) -> None:
 
     :param processor: Owning schema processor.
     """
-    from ga4gh.gks.metaschema.tools.source_proc.processor import YamlSchemaProcessor
-
     for alias, imported_path in processor.raw_schema.get("imports", {}).items():
-        processor.imports[alias] = YamlSchemaProcessor(
+        processor.imports[alias] = type(processor)(
             imported_path, root_fp=processor.root_schema_fp or processor.schema_fp
         )
 
@@ -47,7 +45,7 @@ def merge_imported_definitions(processor: YamlSchemaProcessor) -> None:
     processor.imports = {}
     processor.raw_schema["title"] = processor.raw_schema["title"] + "-Merged-Imports"
     processor.raw_defs = processor.raw_schema.get(processor.schema_def_keyword, None)
-    processor._rebuild_processed_state()
+    processor.refresh_processed_state()
 
 
 def _register_import_for_merge(processor: YamlSchemaProcessor, current: YamlSchemaProcessor) -> None:

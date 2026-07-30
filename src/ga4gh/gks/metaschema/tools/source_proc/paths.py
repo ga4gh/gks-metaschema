@@ -9,13 +9,21 @@ from urllib.parse import urlparse
 
 import yaml
 
-from ga4gh.gks.metaschema.tools.source_proc.graph import class_is_protected
-
 if TYPE_CHECKING:
     from ga4gh.gks.metaschema.tools.source_proc.processor import YamlSchemaProcessor
 
 
 DEFS_REF_RE = re.compile(r"#/(\$defs|definitions)/.*")
+
+
+def _is_local_protected_class(processor: YamlSchemaProcessor, schema_class: str) -> bool:
+    """Return whether a local class declares ``protectedClassOf``.
+
+    :param processor: Owning schema processor.
+    :param schema_class: Local class name to inspect.
+    :return: ``True`` when the source definition declares ``protectedClassOf``.
+    """
+    return "protectedClassOf" in processor.raw_defs[schema_class]
 
 
 def load_schema(schema_fp: Path) -> dict[str, object]:
@@ -161,7 +169,7 @@ def get_class_abs_path(processor: YamlSchemaProcessor, schema_class: str, mode: 
         msg = "mode must be json or yaml"
         raise ValueError(msg)
 
-    if class_is_protected(processor, schema_class):
+    if _is_local_protected_class(processor, schema_class):
         containing_class = processor.raw_defs[schema_class]["protectedClassOf"]
         class_ref = f"{containing_class}#/{processor.schema_def_keyword}/{schema_class}"
     else:

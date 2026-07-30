@@ -58,7 +58,7 @@ class YamlSchemaProcessor:
         self._def_fp_override: Path | None = None
         self.imports: dict[str, YamlSchemaProcessor] = {}
         imports.import_dependencies(self)
-        self._rebuild_processed_state()
+        self.refresh_processed_state()
 
     @property
     def id(self) -> str:
@@ -125,8 +125,12 @@ class YamlSchemaProcessor:
         """Return whether ordered property validation is enabled."""
         return cast("bool", self.raw_schema.get("enforce_ordered", self.strict))
 
-    def _rebuild_processed_state(self) -> None:
-        """Rebuild all processor-derived state from ``raw_schema``."""
+    def refresh_processed_state(self) -> None:
+        """Rebuild processor-derived state after mutating source definitions.
+
+        This updates attributes derived from ``raw_schema`` and ``raw_defs``.
+        Call it after either source object is changed in place.
+        """
         self.child_ref_urls_by_parent_ref = {}
         self.child_classes_by_parent = {}
         build_class_relationship_maps(self)
