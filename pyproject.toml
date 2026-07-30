@@ -30,7 +30,8 @@ keywords = [
 requires-python = ">=3.12"
 dependencies = [
     "pyyaml",
-    "Jinja2"
+    "Jinja2",
+    "packaging"
 ]
 dynamic = ["version"]
 
@@ -58,6 +59,7 @@ source2mergedjsy = "ga4gh.gks.metaschema.scripts.source2mergedjsy:cli"
 source2splitjs = "ga4gh.gks.metaschema.scripts.source2splitjs:cli"
 source2classes = "ga4gh.gks.metaschema.scripts.source2classes:cli"
 source2updated = "ga4gh.gks.metaschema.scripts.update_schema_versions:cli"
+gks-release-prep = "ga4gh.gks.metaschema.scripts.release_prep:cli"
 
 [build-system]
 requires = ["setuptools>=65.3", "setuptools_scm>=8"]
