@@ -1,0 +1,9 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/second/1.0.0/second-source.yaml"
+title: Second
+type: object
+$defs:
+  Shared:
+    type: object
+    maturity: draft
+    properties: {}

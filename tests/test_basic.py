@@ -15,6 +15,7 @@ from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 root = Path(__file__).parent
 schema_root = root / "data/schema"
 metaschema_fixtures = root / "data/metaschema"
+validation_fixtures = root / "data/validation"
 
 
 def metaschema_product_fixture(name: str, product: str = "example") -> Path:
@@ -25,6 +26,16 @@ def metaschema_product_fixture(name: str, product: str = "example") -> Path:
     :return: Fixture product directory path.
     """
     return metaschema_fixtures / name / "schema" / product
+
+
+def validation_product_fixture(name: str, product: str = "example") -> Path:
+    """Get a validation fixture product directory.
+
+    :param name: Fixture scenario name.
+    :param product: Product directory name under the fixture schema root.
+    :return: Fixture product directory path.
+    """
+    return validation_fixtures / name / "schema" / product
 
 
 processor = YamlSchemaProcessor(schema_root / "vrs/vrs-source.yaml")
@@ -352,6 +363,55 @@ def test_metaschema_config_rejects_missing_namespace_version():
 
     with pytest.raises(ValueError, match=r"namespace vrs uses \{version\} but no version is configured for vrs"):
         YamlSchemaProcessor(source)
+
+
+def test_processor_rejects_missing_class_maturity():
+    source = validation_product_fixture("missing-maturity") / "example-source.yaml"
+
+    with pytest.raises(ValueError, match="MissingMaturity is missing a maturity value"):
+        YamlSchemaProcessor(source)
+
+
+def test_processor_rejects_array_without_ordered():
+    source = validation_product_fixture("missing-ordered") / "example-source.yaml"
+
+    with pytest.raises(ValueError, match="MissingOrdered.values missing ordered attribute"):
+        YamlSchemaProcessor(source)
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "expected_message"),
+    [
+        ("maturity-inheritance", "Maturity of Child is greater than parent class Parent"),
+        ("bad-extends", "Child.renamed extends unknown inherited property missing"),
+        ("nonbool-ordered", "NonBooleanOrdered.values ordered attribute must be a boolean"),
+        (
+            "missing-additional-properties",
+            '"additionalProperties" expected to be defined in MissingAdditionalProperties.details',
+        ),
+        ("empty-ga4gh-prefix", "EmptyGa4ghPrefix ga4gh.prefix cannot be empty"),
+    ],
+)
+def test_processor_rejects_invalid_source_schema(fixture_name, expected_message):
+    source = validation_product_fixture(fixture_name) / "example-source.yaml"
+
+    with pytest.raises(ValueError, match=expected_message):
+        YamlSchemaProcessor(source)
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "expected_message"),
+    [
+        ("duplicate-merge-class", "defines duplicate class\\(es\\): Shared"),
+        ("invalid-merge-ref", 'Expected local "\\$ref" definition path'),
+    ],
+)
+def test_merge_imported_rejects_invalid_imports(fixture_name, expected_message):
+    source = validation_fixtures / fixture_name / "schema/root/root-source.yaml"
+    processor = YamlSchemaProcessor(source)
+
+    with pytest.raises(ValueError, match=expected_message):
+        processor.merge_imported()
 
 
 if __name__ == "__main__":

@@ -1,0 +1,8 @@
+versions:
+  root: 1.0.0
+imports:
+  first: ../first/first-source.yaml
+  second: ../second/second-source.yaml
+namespaces:
+  first: "/ga4gh/schema/first/{version}/json/"
+  second: "/ga4gh/schema/second/{version}/json/"

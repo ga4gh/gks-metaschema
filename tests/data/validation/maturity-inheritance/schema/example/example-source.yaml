@@ -1,0 +1,13 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/example/1.0.0/example-source.yaml"
+title: MaturityInheritance
+type: object
+$defs:
+  Parent:
+    maturity: draft
+    heritableProperties: {}
+  Child:
+    type: object
+    inherits: Parent
+    maturity: normative
+    properties: {}

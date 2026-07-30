@@ -1,0 +1,13 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/root/1.0.0/root-source.yaml"
+title: Root
+type: object
+$defs:
+  Root:
+    type: object
+    maturity: draft
+    properties:
+      first:
+        $refCurie: first:Shared
+      second:
+        $refCurie: second:Shared
