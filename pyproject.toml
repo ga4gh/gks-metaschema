@@ -25,7 +25,8 @@ dependencies = ["pyyaml", "Jinja2", "packaging"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff==0.14.10", "prek>=0.2.23"]
+tests = ["pytest"]
+dev = ["ruff==0.14.10", "prek>=0.2.23"]
 
 [project.urls]
 Homepage = "https://github.com/ga4gh/gks-metaschema"
