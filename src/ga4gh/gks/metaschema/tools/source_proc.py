@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Process GKS source YAML into resolved schema artifacts.
 
 The processor applies product-level metaschema config, resolves imports and

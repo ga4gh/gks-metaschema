@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Generate RST definition artifacts from processed GKS source YAML."""
 
 import sys

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Write one split JSON Schema artifact per processed class.
 
 Split output rewrites local and imported class refs to the concrete paths
