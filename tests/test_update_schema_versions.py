@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ga4gh.gks.metaschema.scripts.update_schema_versions import (
+from ga4gh.gks.metaschema.tools.release_prep.schema_versions import (
     main as update_schema_versions,
 )
 

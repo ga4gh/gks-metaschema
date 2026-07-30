@@ -23,6 +23,7 @@ from ga4gh.gks.metaschema.tools.config import (
     load_imported_versions,
     load_metaschema_config,
 )
+from ga4gh.gks.metaschema.tools.release_prep.files import write_text_atomically
 
 
 @dataclass(frozen=True)
@@ -360,7 +361,7 @@ def update_source_file(
         return stale_references, source_local_keys
 
     updated_text, _ = replace_schema_url_versions(cleaned_text, versions)
-    file.write_text(updated_text, encoding="utf-8")
+    write_text_atomically(file, updated_text)
     return stale_references, source_local_keys
 
 
@@ -453,9 +454,9 @@ def _print_references(
     if not references:
         return
 
-    print(header, file=sys.stderr)
+    print(header, file=sys.stderr)  # noqa: T201
     for reference in references:
-        print(f"  {formatter(reference)}", file=sys.stderr)
+        print(f"  {formatter(reference)}", file=sys.stderr)  # noqa: T201
 
 
 def _process_source_files(
@@ -539,11 +540,11 @@ def _print_update_reports(
     :param source_local_keys: Source-local config keys that were removed.
     """
     for source_local_key in source_local_keys:
-        print(f"removed {_format_source_local_key(source_local_key)}")
+        print(f"removed {_format_source_local_key(source_local_key)}")  # noqa: T201
 
     changed_files = sorted({str(reference.file) for reference in stale_references})
     for file in changed_files:
-        print(f"updated {file}")
+        print(f"updated {file}")  # noqa: T201
 
 
 def _has_failures(

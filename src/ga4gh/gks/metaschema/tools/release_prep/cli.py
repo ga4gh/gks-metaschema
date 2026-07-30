@@ -12,58 +12,24 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
-import yaml
-
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
-    CommandOutputRunner,
-    CommandRunner,
-    Reporter,
-    SubmoduleUpdate,
-)
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
-    get_product_repo_dir as _get_product_repo_dir,
-)
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
-    infer_submodule_update as _infer_submodule_update,
-)
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
-    infer_submodule_update_from_current_branch as _infer_submodule_update_from_current_branch,
-)
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
-    require_clean_worktree as _require_clean_worktree,
-)
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
-    require_upstream_branch_when_submodule_exists as _require_upstream_branch_when_submodule_exists,
-)
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
-    update_submodule as _update_submodule,
-)
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
-    validate_submodule as _validate_submodule,
-)
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
-    warn_if_product_branch_not_current as _warn_if_product_branch_not_current,
-)
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
-    warn_if_worktree_dirty as _warn_if_worktree_dirty,
-)
-from ga4gh.gks.metaschema.scripts.update_schema_versions import (
-    main as update_schema_versions,
-)
 from ga4gh.gks.metaschema.tools.config import (
     METASCHEMA_FN,
     SUPPRESS_UNSUPPORTED_KEY_WARNING_ENV,
     load_metaschema_config,
 )
+from ga4gh.gks.metaschema.tools.release_prep import (
+    git,
+    product_config,
+    schema_versions,
+    worktree,
+)
 
-SCHEMA_DIR_NAME = "schema"
-VERSIONS_KEY = "versions"
 SOURCE_UPDATE_CHECK_FLAG = "--check"
 SOURCE_UPDATE_DISALLOW_VERSIONED_REFS_FLAG = "--disallow-versioned-refs"
 SOURCE_UPDATE_COMMAND_NAME = "source2updated"
 MAKE_ALL_COMMAND = ("make", "all")
+MAKE_CLEAN_COMMAND = ("make", "clean")
 
 
 def _run_command(command: list[str], cwd: Path) -> None:
@@ -110,65 +76,48 @@ class ReleasePrepSummary:
     product: str
     version: str
     product_dir: Path
-    submodules: list[SubmoduleUpdate]
+    submodules: list[git.SubmoduleUpdate]
     validated_only: bool = False
 
 
-def _resolve_product_dir(repo_dir: Path, product: str) -> Path:
-    """Resolve the product schema directory.
+def _start_release(
+    action: str,
+    product: str,
+    version: str,
+    repo_dir: Path,
+    submodules: list[git.SubmoduleUpdate],
+    output_runner: worktree.CommandOutputRunner,
+    reporter: worktree.Reporter | None,
+    fail_on_dirty: bool,
+) -> Path:
+    """Validate common release inputs and return the product schema directory.
 
-    Example:
-        ``.`` and ``va-spec`` resolves to ``schema/va-spec``.
-
+    :param action: Present-tense action shown in progress messages.
+    :param product: Local product name and version key.
+    :param version: Requested local product version.
     :param repo_dir: Product repository root directory.
     :param product: Product directory/version key.
     :return: Product schema directory.
     :raises ValueError: If the product config cannot be found.
-
     """
-    candidate = repo_dir / SCHEMA_DIR_NAME / product
-
-    if (candidate / METASCHEMA_FN).exists():
-        return candidate.resolve()
-
-    msg = f"No {METASCHEMA_FN} found for product {product}. Checked: {candidate}"
-    raise ValueError(msg)
-
-
-def _infer_product_from_repo_dir(repo_dir: Path) -> str:
-    """Infer the product name from the product repository root directory.
-
-    Example:
-        A repository root path ending in ``va-spec`` returns ``va-spec``.
-
-    :param repo_dir: Product repository root directory.
-    :return: Product directory/version key inferred from the repository name.
-    :raises ValueError: If the repository root name is empty.
-
-    """
-    product = repo_dir.resolve().name
-
-    if product:
-        return product
-
-    msg = f"Could not infer product name from repository root: {repo_dir}"
-    raise ValueError(msg)
-
-
-def _get_schema_build_dir(product_dir: Path) -> Path:
-    """Get the directory where ``make all`` should run.
-
-    :param product_dir: Product schema directory.
-    :return: Parent schema directory when the product lives under ``schema``;
-        otherwise the product directory itself.
-    """
-    if product_dir.parent.name == SCHEMA_DIR_NAME:
-        return product_dir.parent
-
+    _validate_submodule_count(submodules)
+    _report(reporter, f"{action} release for product {product} version {version}")
+    product_dir = product_config.resolve_product_dir(repo_dir, product)
+    _report(reporter, f"Using product schema: {product_dir}")
+    _handle_dirty_worktree(
+        git.get_product_repo_dir(product_dir),
+        f"Product {product}",
+        output_runner,
+        reporter,
+        fail_on_dirty,
+    )
+    _warn_if_downstream_branch_not_current(
+        product_dir, submodules, output_runner, reporter
+    )
     return product_dir
 
 
-def _report(reporter: Reporter | None, message: str) -> None:
+def _report(reporter: worktree.Reporter | None, message: str) -> None:
     """Report release-prep progress when a reporter is configured.
 
     :param reporter: Optional progress reporter, such as ``print``.
@@ -176,58 +125,6 @@ def _report(reporter: Reporter | None, message: str) -> None:
     """
     if reporter is not None:
         reporter(message)
-
-
-def _load_config_document(config_fp: Path) -> dict[str, Any]:
-    """Load raw metaschema config YAML as a mutable mapping.
-
-    Release prep loads raw YAML instead of ``MetaschemaConfig`` because it needs
-    to write the original config document back after changing only ``versions``.
-
-    :param config_fp: Path to ``metaschema.yaml``.
-    :return: Mutable config mapping.
-    :raises TypeError: If the config is not a mapping.
-    """
-    with config_fp.open(encoding="utf-8") as stream:
-        config = yaml.safe_load(stream)
-
-    if config is None:
-        return {}
-
-    if not isinstance(config, dict):
-        msg = f"{config_fp} must contain a YAML mapping."
-        raise TypeError(msg)
-
-    return config
-
-
-def _write_config_document(config_fp: Path, config: dict[str, Any]) -> None:
-    """Write a metaschema config mapping.
-
-    :param config_fp: Path to ``metaschema.yaml``.
-    :param config: Config mapping to write.
-    """
-    with config_fp.open("w", encoding="utf-8") as stream:
-        yaml.dump(config, stream, sort_keys=False)
-
-
-def _update_product_version(config_fp: Path, product: str, version: str) -> None:
-    """Set the local product version in ``metaschema.yaml``.
-
-    :param config_fp: Path to ``metaschema.yaml``.
-    :param product: Product version key to update.
-    :param version: Version to write.
-    :raises TypeError: If the existing ``versions`` section is not a mapping.
-    """
-    config = _load_config_document(config_fp)
-    versions = config.setdefault(VERSIONS_KEY, {})
-
-    if not isinstance(versions, dict):
-        msg = f"{config_fp} versions must be a mapping."
-        raise TypeError(msg)
-
-    versions[product] = version
-    _write_config_document(config_fp, config)
 
 
 def _run_source_update(product_dir: Path, check: bool) -> int:
@@ -242,7 +139,7 @@ def _run_source_update(product_dir: Path, check: bool) -> int:
     if check:
         argv.insert(0, SOURCE_UPDATE_CHECK_FLAG)
 
-    return update_schema_versions(argv)
+    return schema_versions.main(argv)
 
 
 def _suppress_repeated_config_warnings() -> str | None:
@@ -282,7 +179,7 @@ def _source_update_label(check: bool) -> str:
     return " ".join([SOURCE_UPDATE_COMMAND_NAME, *flags])
 
 
-def _validate_submodule_count(submodules: list[SubmoduleUpdate]) -> None:
+def _validate_submodule_count(submodules: list[git.SubmoduleUpdate]) -> None:
     """Validate release prep only targets the immediate upstream submodule.
 
     :param submodules: Requested submodule updates.
@@ -298,9 +195,9 @@ def _validate_submodule_count(submodules: list[SubmoduleUpdate]) -> None:
 
 def _warn_if_downstream_branch_not_current(
     product_dir: Path,
-    submodules: list[SubmoduleUpdate],
-    output_runner: CommandOutputRunner,
-    reporter: Reporter | None,
+    submodules: list[git.SubmoduleUpdate],
+    output_runner: worktree.CommandOutputRunner,
+    reporter: worktree.Reporter | None,
 ) -> None:
     """Warn about product branch freshness for downstream releases.
 
@@ -316,16 +213,16 @@ def _warn_if_downstream_branch_not_current(
     if not submodules:
         return
 
-    _warn_if_product_branch_not_current(
-        _get_product_repo_dir(product_dir), output_runner, reporter
+    worktree.warn_if_product_branch_not_current(
+        git.get_product_repo_dir(product_dir), output_runner, reporter
     )
 
 
 def _handle_dirty_worktree(
     repo_dir: Path,
     label: str,
-    output_runner: CommandOutputRunner,
-    reporter: Reporter | None,
+    output_runner: worktree.CommandOutputRunner,
+    reporter: worktree.Reporter | None,
     fail_on_dirty: bool,
 ) -> None:
     """Warn or fail when a git working tree has uncommitted changes.
@@ -339,20 +236,20 @@ def _handle_dirty_worktree(
         uncommitted changes.
     """
     if fail_on_dirty:
-        _require_clean_worktree(repo_dir, label, output_runner)
+        worktree.require_clean_worktree(repo_dir, label, output_runner)
         return
 
-    _warn_if_worktree_dirty(repo_dir, label, output_runner, reporter)
+    worktree.warn_if_worktree_dirty(repo_dir, label, output_runner, reporter)
 
 
 def validate_release(
     product: str,
     version: str,
     repo_dir: Path = Path(),
-    submodules: list[SubmoduleUpdate] | None = None,
-    runner: CommandRunner = _run_command,
-    output_runner: CommandOutputRunner = _run_command_output,
-    reporter: Reporter | None = None,
+    submodules: list[git.SubmoduleUpdate] | None = None,
+    runner: git.CommandRunner = _run_command,
+    output_runner: worktree.CommandOutputRunner = _run_command_output,
+    reporter: worktree.Reporter | None = None,
     fail_on_dirty: bool = False,
 ) -> ReleasePrepSummary:
     """Validate release-prep inputs without mutating the working tree.
@@ -373,29 +270,25 @@ def validate_release(
         paths are invalid, or submodule validation fails.
     """
     requested_submodules = submodules or []
-    _validate_submodule_count(requested_submodules)
-    _report(reporter, f"Validating release for product {product} version {version}")
-    product_dir = _resolve_product_dir(repo_dir, product)
-    _report(reporter, f"Using product schema: {product_dir}")
-    _handle_dirty_worktree(
-        _get_product_repo_dir(product_dir),
-        f"Product {product}",
+    product_dir = _start_release(
+        "Validating",
+        product,
+        version,
+        repo_dir,
+        requested_submodules,
         output_runner,
         reporter,
         fail_on_dirty,
     )
-    _warn_if_downstream_branch_not_current(
-        product_dir, requested_submodules, output_runner, reporter
-    )
     load_metaschema_config(product_dir / METASCHEMA_FN)
-    resolved_submodules: list[SubmoduleUpdate] = []
+    resolved_submodules: list[git.SubmoduleUpdate] = []
 
     for submodule in requested_submodules:
         _report(
             reporter,
             f"Validating submodule {submodule.identifier} on branch {submodule.branch}",
         )
-        _submodule_dir, _entry, resolved_submodule = _validate_submodule(
+        _submodule_dir, _entry, resolved_submodule = git.validate_submodule(
             submodule,
             product_dir,
             runner,
@@ -422,10 +315,10 @@ def prepare_release(
     product: str,
     version: str,
     repo_dir: Path = Path(),
-    submodules: list[SubmoduleUpdate] | None = None,
-    runner: CommandRunner = _run_command,
-    output_runner: CommandOutputRunner = _run_command_output,
-    reporter: Reporter | None = None,
+    submodules: list[git.SubmoduleUpdate] | None = None,
+    runner: git.CommandRunner = _run_command,
+    output_runner: worktree.CommandOutputRunner = _run_command_output,
+    reporter: worktree.Reporter | None = None,
     fail_on_dirty: bool = False,
 ) -> ReleasePrepSummary:
     """Prepare source and generated files for a product release.
@@ -433,7 +326,7 @@ def prepare_release(
     The function mutates the product ``metaschema.yaml`` by setting the local
     product version, may update the immediate upstream git submodule, updates
     source YAML version references before build validation runs, runs
-    ``make all`` to regenerate artifacts, then verifies the source YAML files
+    ``make clean`` and ``make all`` to regenerate artifacts, then verifies the source YAML files
     are release-ready.
 
     :param product: Product directory/version key.
@@ -453,23 +346,18 @@ def prepare_release(
     :raises subprocess.CalledProcessError: If a git or make command fails.
     """
     requested_submodules = submodules or []
-    _validate_submodule_count(requested_submodules)
-
-    _report(reporter, f"Preparing release for product {product} version {version}")
-    product_dir = _resolve_product_dir(repo_dir, product)
-    _report(reporter, f"Using product schema: {product_dir}")
-    _handle_dirty_worktree(
-        _get_product_repo_dir(product_dir),
-        f"Product {product}",
+    product_dir = _start_release(
+        "Preparing",
+        product,
+        version,
+        repo_dir,
+        requested_submodules,
         output_runner,
         reporter,
         fail_on_dirty,
     )
-    _warn_if_downstream_branch_not_current(
-        product_dir, requested_submodules, output_runner, reporter
-    )
     config_fp = product_dir / METASCHEMA_FN
-    resolved_submodules: list[SubmoduleUpdate] = []
+    resolved_submodules: list[git.SubmoduleUpdate] = []
 
     for submodule in requested_submodules:
         _report(
@@ -477,7 +365,7 @@ def prepare_release(
             f"Updating submodule {submodule.identifier} on branch {submodule.branch}",
         )
         resolved_submodules.append(
-            _update_submodule(
+            git.update_submodule(
                 submodule,
                 product_dir,
                 runner,
@@ -492,7 +380,7 @@ def prepare_release(
         )
 
     _report(reporter, f"Updating {config_fp} version {product}={version}")
-    _update_product_version(config_fp, product, version)
+    product_config.update_product_version(config_fp, product, version)
 
     _report(reporter, "Updating source YAML version references")
     update_exit = _run_source_update(product_dir, check=False)
@@ -501,8 +389,11 @@ def prepare_release(
         raise ValueError(msg)
     previous_warning_suppression = _suppress_repeated_config_warnings()
     try:
-        _report(reporter, f"Running make all in {_get_schema_build_dir(product_dir)}")
-        runner(list(MAKE_ALL_COMMAND), _get_schema_build_dir(product_dir))
+        build_dir = product_config.get_schema_build_dir(product_dir)
+        _report(reporter, f"Running make clean in {build_dir}")
+        runner(list(MAKE_CLEAN_COMMAND), build_dir)
+        _report(reporter, f"Running make all in {build_dir}")
+        runner(list(MAKE_ALL_COMMAND), build_dir)
 
         _report(reporter, "Verifying source YAML version references")
         check_exit = _run_source_update(product_dir, check=True)
@@ -574,10 +465,10 @@ def _print_summary(summary: ReleasePrepSummary) -> None:
     :param summary: Completed release-prep summary.
     """
     action = "validated" if summary.validated_only else "prepared"
-    print(f"{action} {summary.product} {summary.version}")
+    print(f"{action} {summary.product} {summary.version}")  # noqa: T201
     for submodule in summary.submodules:
         checkout_label = "would check out" if summary.validated_only else "checked out"
-        print(
+        print(  # noqa: T201
             f"submodule {submodule.identifier}: branch {submodule.branch}, {checkout_label} {submodule.tag}"
         )
 
@@ -611,22 +502,24 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError(msg)
 
     repo_dir = Path().cwd()
-    product = _infer_product_from_repo_dir(repo_dir)
-    product_dir = _resolve_product_dir(repo_dir, product)
+    product = product_config.infer_product_from_repo_dir(repo_dir)
+    product_dir = product_config.resolve_product_dir(repo_dir, product)
     submodules = None
 
     if args.upstream_branch:
         submodules = [
-            _infer_submodule_update(
+            git.infer_submodule_update(
                 product_dir, args.upstream_branch, args.upstream_tag
             )
         ]
     elif args.use_current_upstream_branch:
         submodules = [
-            _infer_submodule_update_from_current_branch(product_dir, args.upstream_tag)
+            git.infer_submodule_update_from_current_branch(
+                product_dir, args.upstream_tag
+            )
         ]
     elif not args.skip_upstream:
-        _require_upstream_branch_when_submodule_exists(product_dir)
+        git.require_upstream_branch_when_submodule_exists(product_dir)
 
     release_fn = validate_release if args.validate else prepare_release
     summary = release_fn(
@@ -646,7 +539,7 @@ def cli() -> None:
     try:
         raise SystemExit(main())
     except (ValueError, subprocess.CalledProcessError) as exc:
-        print(exc, file=sys.stderr)
+        print(exc, file=sys.stderr)  # noqa: T201
         raise SystemExit(1) from exc
 
 

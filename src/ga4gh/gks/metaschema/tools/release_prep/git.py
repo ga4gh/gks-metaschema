@@ -1,9 +1,8 @@
-"""Git and submodule helpers for GKS release preparation.
+"""Git submodule metadata and checkout helpers for release preparation.
 
-This module owns the git-specific mechanics used by ``gks-release-prep``:
-parsing ``.gitmodules``, resolving the single immediate upstream submodule,
-checking clean working trees, updating submodules from remote branches, and
-choosing the highest reachable semantic-version tag.
+This module parses and updates ``.gitmodules``, resolves the single immediate
+upstream submodule, updates it from its remote branch, and chooses the highest
+reachable semantic-version tag. Worktree-status checks live in ``worktree``.
 """
 
 import re
@@ -14,30 +13,21 @@ from pathlib import Path
 
 from packaging.version import InvalidVersion, Version
 
+from ga4gh.gks.metaschema.tools.release_prep.files import write_text_atomically
+from ga4gh.gks.metaschema.tools.release_prep.worktree import (
+    CommandOutputRunner,
+    Reporter,
+    require_clean_worktree,
+    warn_if_worktree_dirty,
+)
+
 CommandRunner = Callable[[list[str], Path], None]
-CommandOutputRunner = Callable[[list[str], Path], str]
-Reporter = Callable[[str], None]
 
 GITMODULES_FN = ".gitmodules"
 ORIGIN_REMOTE = "origin"
 SCHEMA_DIR_NAME = "schema"
 SUBMODULES_DIR_NAME = "submodules"
-GIT_STATUS_PORCELAIN_COMMAND = ("git", "status", "--porcelain")
 GIT_FETCH_ALL_TAGS_COMMAND = ("git", "fetch", "--all", "--tags")
-GIT_UPSTREAM_BRANCH_COMMAND = (
-    "git",
-    "rev-parse",
-    "--abbrev-ref",
-    "--symbolic-full-name",
-    "@{u}",
-)
-GIT_UPSTREAM_COUNTS_COMMAND = (
-    "git",
-    "rev-list",
-    "--left-right",
-    "--count",
-    "HEAD...@{u}",
-)
 
 SEMVER_TAG_RE = re.compile(
     r"^v?(?P<major>0|[1-9]\d*)\."
@@ -383,100 +373,7 @@ def update_gitmodules_branch(entry: GitmodulesEntry, branch: str) -> None:
     else:
         lines[entry.branch_line] = branch_line
 
-    entry.gitmodules_fp.write_text("\n".join(lines) + "\n", encoding="utf-8")
-
-
-def warn_if_worktree_dirty(
-    repo_dir: Path,
-    label: str,
-    output_runner: CommandOutputRunner,
-    reporter: Reporter | None,
-) -> None:
-    """Warn if a git working tree has uncommitted changes.
-
-    :param repo_dir: Git repository directory to inspect.
-    :param label: Human-readable repository label for error messages.
-    :param output_runner: Command runner used for git output.
-    :param reporter: Optional progress reporter.
-    :raises subprocess.CalledProcessError: If git status fails.
-    """
-    status = output_runner(list(GIT_STATUS_PORCELAIN_COMMAND), repo_dir)
-
-    if not status or reporter is None:
-        return
-
-    reporter(
-        f"Warning: {label} has uncommitted changes. Review the final diff carefully."
-    )
-
-
-def require_clean_worktree(
-    repo_dir: Path, label: str, output_runner: CommandOutputRunner
-) -> None:
-    """Require a git working tree to have no uncommitted changes.
-
-    :param repo_dir: Git repository directory to inspect.
-    :param label: Human-readable repository label for error messages.
-    :param output_runner: Command runner used for git output.
-    :raises ValueError: If the repository has uncommitted changes.
-    :raises subprocess.CalledProcessError: If git status fails.
-    """
-    status = output_runner(list(GIT_STATUS_PORCELAIN_COMMAND), repo_dir)
-
-    if not status:
-        return
-
-    msg = f"{label} has uncommitted changes. Commit, stash, or discard them before running release prep."
-    raise ValueError(msg)
-
-
-def warn_if_product_branch_not_current(
-    repo_dir: Path, output_runner: CommandOutputRunner, reporter: Reporter | None
-) -> None:
-    """Warn when the product branch may not be current with its upstream.
-
-    This is intentionally non-fatal because release prep should not fetch or
-    merge the product repository.
-
-    :param repo_dir: Product repository root directory.
-    :param output_runner: Command runner used for git output.
-    :param reporter: Optional progress reporter.
-    """
-    try:
-        output_runner(list(GIT_UPSTREAM_BRANCH_COMMAND), repo_dir)
-        counts = output_runner(list(GIT_UPSTREAM_COUNTS_COMMAND), repo_dir)
-    except subprocess.CalledProcessError:
-        if reporter is not None:
-            reporter(
-                "Warning: product branch has no upstream tracking branch; unable to check if it is current."
-            )
-        return
-
-    ahead_text, _separator, behind_text = counts.partition("\t")
-    if not behind_text:
-        ahead_text, _separator, behind_text = counts.partition(" ")
-
-    try:
-        ahead = int(ahead_text)
-        behind = int(behind_text)
-    except ValueError:
-        if reporter is not None:
-            reporter(
-                f"Warning: unable to parse product branch upstream status: {counts}"
-            )
-        return
-
-    if reporter is None:
-        return
-
-    if behind and ahead:
-        reporter(
-            f"Warning: product branch has diverged from upstream ({ahead} ahead, {behind} behind)."
-        )
-    elif behind:
-        reporter(f"Warning: product branch is {behind} commit(s) behind upstream.")
-    elif ahead:
-        reporter(f"Warning: product branch is {ahead} commit(s) ahead of upstream.")
+    write_text_atomically(entry.gitmodules_fp, "\n".join(lines) + "\n")
 
 
 def require_submodule_dir(entry: GitmodulesEntry) -> Path:
@@ -507,6 +404,19 @@ def update_submodule_from_remote(entry: GitmodulesEntry, runner: CommandRunner) 
     """
     runner(
         ["git", "submodule", "update", "--remote", "--init", "--", entry.path],
+        entry.gitmodules_fp.parent,
+    )
+
+
+def initialize_submodule(entry: GitmodulesEntry, runner: CommandRunner) -> None:
+    """Initialize a missing submodule without updating its configured branch.
+
+    :param entry: Matching ``.gitmodules`` entry.
+    :param runner: Command runner used for git commands.
+    :raises subprocess.CalledProcessError: If submodule initialization fails.
+    """
+    runner(
+        ["git", "submodule", "update", "--init", "--", entry.path],
         entry.gitmodules_fp.parent,
     )
 
@@ -687,7 +597,10 @@ def update_submodule(
     reporter: Reporter | None = None,
     fail_on_dirty: bool = False,
 ) -> SubmoduleUpdate:
-    """Update metadata and check out the immediate upstream submodule tag.
+    """Resolve an upstream ref before updating metadata and checking it out.
+
+    The branch and tag are fetched and resolved before ``.gitmodules`` changes.
+    A failed ref lookup therefore leaves tracked product files unchanged.
 
     :param submodule: Requested submodule update.
     :param product_dir: Product schema directory containing ``metaschema.yaml``.
@@ -700,9 +613,9 @@ def update_submodule(
     :raises ValueError: If the submodule directory, ``.gitmodules`` entry, or
         requested branch or tag cannot be found.
     """
-    entry, _submodule_dir = resolve_submodule_entry(product_dir, submodule)
-    update_gitmodules_branch(entry, submodule.branch)
-    update_submodule_from_remote(entry, runner)
+    entry, submodule_dir = resolve_submodule_entry(product_dir, submodule)
+    if not submodule_dir.is_dir():
+        initialize_submodule(entry, runner)
     submodule_dir = require_submodule_dir(entry)
     if fail_on_dirty:
         require_clean_worktree(
@@ -713,7 +626,7 @@ def update_submodule(
             submodule_dir, f"Submodule {submodule.identifier}", output_runner, reporter
         )
     runner(list(GIT_FETCH_ALL_TAGS_COMMAND), submodule_dir)
-    submodule_dir, entry, resolved_submodule = validate_submodule(
+    _submodule_dir, _entry, resolved_submodule = validate_submodule(
         submodule,
         product_dir,
         runner,
@@ -726,5 +639,7 @@ def update_submodule(
     if resolved_submodule.tag is None:
         msg = f"Could not resolve git tag for submodule {submodule.identifier}"
         raise ValueError(msg)
+    update_gitmodules_branch(entry, submodule.branch)
+    update_submodule_from_remote(entry, runner)
     runner(["git", "checkout", resolved_submodule.tag], submodule_dir)
     return resolved_submodule
