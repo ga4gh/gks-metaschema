@@ -1,12 +1,14 @@
 """Tests for loading and applying product-level metaschema configuration."""
 
 import json
+import warnings
 from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 
 from ga4gh.gks.metaschema.scripts.source2splitjs import split_defs_to_js
+from ga4gh.gks.metaschema.tools.config import SUPPRESS_UNSUPPORTED_KEY_WARNING_ENV, load_metaschema_config
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 
@@ -143,6 +145,42 @@ def test_metaschema_config_rejects_unknown_keys(schema_case_fixture: Callable[..
         match="Ignoring unsupported metaschema config keys: unexpected. Allowed keys are: imports, namespaces, versions",
     ):
         YamlSchemaProcessor(source)
+
+
+def test_metaschema_config_warns_once_for_unknown_keys(tmp_path: Path) -> None:
+    """Warn once per config path and unknown key set."""
+    config_fp = tmp_path / "metaschema.yaml"
+    config_fp.write_text("versions:\n  example: 1.0.0\nunexpected: true\n", encoding="utf-8")
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        load_metaschema_config(config_fp)
+        load_metaschema_config(config_fp)
+
+    matching_warnings = [
+        warning
+        for warning in caught
+        if "Ignoring unsupported metaschema config keys: unexpected" in str(warning.message)
+    ]
+    assert len(matching_warnings) == 1
+
+
+def test_metaschema_config_can_suppress_unknown_key_warning(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Suppress unsupported-key warnings for release-prep child commands."""
+    config_fp = tmp_path / "metaschema.yaml"
+    config_fp.write_text("versions:\n  example: 1.0.0\nunexpected: true\n", encoding="utf-8")
+    monkeypatch.setenv(SUPPRESS_UNSUPPORTED_KEY_WARNING_ENV, "1")
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        load_metaschema_config(config_fp)
+
+    matching_warnings = [
+        warning
+        for warning in caught
+        if "Ignoring unsupported metaschema config keys: unexpected" in str(warning.message)
+    ]
+    assert matching_warnings == []
 
 
 def test_metaschema_config_ignores_source_imports_and_namespaces(

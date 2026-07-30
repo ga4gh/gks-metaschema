@@ -92,8 +92,11 @@ The shared schema Makefile runs `source2updated --disallow-versioned-refs`
 before generating artifacts. This updates stale configured version references
 and fails when a configured spec still uses a hard-coded versioned `$ref`.
 
-For release validation or CI, use check mode to fail without editing files:
+For local release validation or CI, use check mode to fail without editing files:
 
 ```shell
 source2updated --check --disallow-versioned-refs schema
 ```
+
+For the full local release-prep workflow, including upstream submodule handling,
+see [Release Prep](release-prep.md).

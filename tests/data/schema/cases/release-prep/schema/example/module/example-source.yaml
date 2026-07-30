@@ -1,0 +1,10 @@
+$id: https://w3id.org/ga4gh/schema/example/1.0.0/module/example-source.yaml
+title: Example
+type: object
+$defs:
+  Example:
+    maturity: draft
+    type: object
+    properties:
+      variation:
+        $refCurie: vrs:Variation
