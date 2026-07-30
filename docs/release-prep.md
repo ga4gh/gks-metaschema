@@ -19,12 +19,16 @@ manually:
 * choose and check out the upstream release tag
 * update the local product version in `schema/<product>/metaschema.yaml`
 * update source YAML version references before build validation runs
-* run `make all`, which updates source YAML version references and regenerates artifacts
+* run `make clean`, then `make all` to regenerate artifacts
 * run `source2updated --check --disallow-versioned-refs`
 
 The command performs those steps locally. It does not stage files, commit, tag,
 or push changes. Review the working tree diff and create the release commit
 manually.
+
+If a later step fails, release prep does not roll back earlier changes to
+`.gitmodules`, the submodule checkout, source YAML, or generated artifacts.
+Review and resolve the resulting working tree changes manually.
 
 Release prep warns if the product repo or upstream submodule has uncommitted
 changes. Use `--fail-on-dirty` when those warnings should fail the command
@@ -53,12 +57,14 @@ If the existing `.gitmodules` branch is already correct, provide
 gks-release-prep --version 1.1.0 --use-current-upstream-branch
 ```
 
-In both cases, release prep initializes the submodule if needed, fetches remote
-branches and tags, verifies `origin/<branch>`, updates the submodule from that
-remote branch, checks out the highest semantic-version tag reachable from it,
-updates the local product version, updates source YAML version references, runs
-`make all`, and finishes by verifying source YAML references with
-`source2updated --check`.
+Release prep performs the following steps:
+
+1. Initialize the submodule if needed, then fetch remote branches and tags.
+2. Verify `origin/<branch>` and resolve the requested or latest reachable tag.
+3. Update `.gitmodules`, update the submodule from the remote branch, and check out the resolved tag.
+4. Update the local product version and source YAML version references.
+5. Run `make clean`, then `make all` to regenerate artifacts.
+6. Verify source YAML references with `source2updated --check`.
 
 To pin a specific upstream tag instead of using the latest reachable tag, pass
 `--upstream-tag`:
@@ -78,7 +84,8 @@ gks-release-prep --version 1.1.0 --skip-upstream
 ```
 
 This leaves `.gitmodules` and the submodule checkout unchanged, then updates the
-local product version, updates source YAML version references, runs `make all`,
+local product version, updates source YAML version references, runs `make clean`
+then `make all`,
 and verifies source YAML references.
 
 ## First Product

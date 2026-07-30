@@ -7,6 +7,7 @@ Package modules:
 - ``git``: immediate-upstream submodule metadata, validation, and checkout.
 - ``worktree``: non-mutating Git worktree and branch-status checks.
 - ``schema_versions``: source YAML version update and verification command.
+- ``files``: atomic text-file writes for release-prep mutations.
 """
 
 from ga4gh.gks.metaschema.tools.release_prep.cli import ReleasePrepSummary

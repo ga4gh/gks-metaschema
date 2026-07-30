@@ -13,6 +13,7 @@ from typing import Callable
 
 from packaging.version import InvalidVersion, Version
 
+from ga4gh.gks.metaschema.tools.release_prep.files import write_text_atomically
 from ga4gh.gks.metaschema.tools.release_prep.worktree import (
     CommandOutputRunner,
     Reporter,
@@ -351,7 +352,7 @@ def update_gitmodules_branch(entry: GitmodulesEntry, branch: str) -> None:
     else:
         lines[entry.branch_line] = branch_line
 
-    entry.gitmodules_fp.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    write_text_atomically(entry.gitmodules_fp, "\n".join(lines) + "\n")
 
 
 def require_submodule_dir(entry: GitmodulesEntry) -> Path:
@@ -381,6 +382,16 @@ def update_submodule_from_remote(entry: GitmodulesEntry, runner: CommandRunner) 
     :raises subprocess.CalledProcessError: If git submodule update fails.
     """
     runner(["git", "submodule", "update", "--remote", "--init", "--", entry.path], entry.gitmodules_fp.parent)
+
+
+def initialize_submodule(entry: GitmodulesEntry, runner: CommandRunner) -> None:
+    """Initialize a missing submodule without updating its configured branch.
+
+    :param entry: Matching ``.gitmodules`` entry.
+    :param runner: Command runner used for git commands.
+    :raises subprocess.CalledProcessError: If submodule initialization fails.
+    """
+    runner(["git", "submodule", "update", "--init", "--", entry.path], entry.gitmodules_fp.parent)
 
 
 def _normalize_semantic_tag_for_version(tag: str) -> Version | None:
@@ -534,7 +545,10 @@ def update_submodule(
     reporter: Reporter | None = None,
     fail_on_dirty: bool = False,
 ) -> SubmoduleUpdate:
-    """Update metadata and check out the immediate upstream submodule tag.
+    """Resolve an upstream ref before updating metadata and checking it out.
+
+    The branch and tag are fetched and resolved before ``.gitmodules`` changes.
+    A failed ref lookup therefore leaves tracked product files unchanged.
 
     :param submodule: Requested submodule update.
     :param product_dir: Product schema directory containing ``metaschema.yaml``.
@@ -547,16 +561,16 @@ def update_submodule(
     :raises ValueError: If the submodule directory, ``.gitmodules`` entry, or
         requested branch or tag cannot be found.
     """
-    entry, _submodule_dir = resolve_submodule_entry(product_dir, submodule)
-    update_gitmodules_branch(entry, submodule.branch)
-    update_submodule_from_remote(entry, runner)
+    entry, submodule_dir = resolve_submodule_entry(product_dir, submodule)
+    if not submodule_dir.is_dir():
+        initialize_submodule(entry, runner)
     submodule_dir = require_submodule_dir(entry)
     if fail_on_dirty:
         require_clean_worktree(submodule_dir, f"Submodule {submodule.identifier}", output_runner)
     else:
         warn_if_worktree_dirty(submodule_dir, f"Submodule {submodule.identifier}", output_runner, reporter)
     runner(list(GIT_FETCH_ALL_TAGS_COMMAND), submodule_dir)
-    submodule_dir, entry, resolved_submodule = validate_submodule(
+    _submodule_dir, _entry, resolved_submodule = validate_submodule(
         submodule,
         product_dir,
         runner,
@@ -569,5 +583,7 @@ def update_submodule(
     if resolved_submodule.tag is None:
         msg = f"Could not resolve git tag for submodule {submodule.identifier}"
         raise ValueError(msg)
+    update_gitmodules_branch(entry, submodule.branch)
+    update_submodule_from_remote(entry, runner)
     runner(["git", "checkout", resolved_submodule.tag], submodule_dir)
     return resolved_submodule

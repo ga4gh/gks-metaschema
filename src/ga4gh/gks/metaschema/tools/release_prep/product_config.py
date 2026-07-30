@@ -8,6 +8,7 @@ from typing import Any
 import yaml
 
 from ga4gh.gks.metaschema.tools.config import METASCHEMA_FN
+from ga4gh.gks.metaschema.tools.release_prep.files import write_text_atomically
 
 SCHEMA_DIR_NAME = "schema"
 VERSIONS_KEY = "versions"
@@ -65,7 +66,7 @@ def get_schema_build_dir(product_dir: Path) -> Path:
 def update_product_version(config_fp: Path, product: str, version: str) -> None:
     """Set the local product version in a ``metaschema.yaml`` mapping.
 
-    This writes ``config_fp`` in place while preserving top-level key order.
+    This atomically replaces ``config_fp`` while preserving top-level key order.
 
     :param config_fp: Path to ``metaschema.yaml``.
     :param product: Local product version key.
@@ -79,8 +80,7 @@ def update_product_version(config_fp: Path, product: str, version: str) -> None:
         raise ValueError(msg)
 
     versions[product] = version
-    with config_fp.open("w", encoding="utf-8") as stream:
-        yaml.dump(config, stream, sort_keys=False)
+    write_text_atomically(config_fp, yaml.dump(config, sort_keys=False))
 
 
 def _load_config_document(config_fp: Path) -> dict[str, Any]:
