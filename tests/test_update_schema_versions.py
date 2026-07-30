@@ -6,7 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from ga4gh.gks.metaschema.scripts.update_schema_versions import main as update_schema_versions
+from ga4gh.gks.metaschema.tools.release_prep.schema_versions import (
+    main as update_schema_versions,
+)
 
 
 def test_update_schema_versions_updates_configured_refs(schema_case_root: Path, tmp_path: Path) -> None:

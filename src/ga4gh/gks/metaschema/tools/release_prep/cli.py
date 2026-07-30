@@ -16,44 +16,46 @@ from typing import Any
 
 import yaml
 
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
+from ga4gh.gks.metaschema.tools.config import (
+    METASCHEMA_FN,
+    SUPPRESS_UNSUPPORTED_KEY_WARNING_ENV,
+    load_metaschema_config,
+)
+from ga4gh.gks.metaschema.tools.release_prep.git import (
     CommandOutputRunner,
     CommandRunner,
     Reporter,
     SubmoduleUpdate,
 )
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
+from ga4gh.gks.metaschema.tools.release_prep.git import (
     get_product_repo_dir as _get_product_repo_dir,
 )
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
+from ga4gh.gks.metaschema.tools.release_prep.git import (
     infer_submodule_update as _infer_submodule_update,
 )
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
+from ga4gh.gks.metaschema.tools.release_prep.git import (
     infer_submodule_update_from_current_branch as _infer_submodule_update_from_current_branch,
 )
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
+from ga4gh.gks.metaschema.tools.release_prep.git import (
     require_clean_worktree as _require_clean_worktree,
 )
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
+from ga4gh.gks.metaschema.tools.release_prep.git import (
     require_upstream_branch_when_submodule_exists as _require_upstream_branch_when_submodule_exists,
 )
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
+from ga4gh.gks.metaschema.tools.release_prep.git import (
     update_submodule as _update_submodule,
 )
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
+from ga4gh.gks.metaschema.tools.release_prep.git import (
     validate_submodule as _validate_submodule,
 )
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
+from ga4gh.gks.metaschema.tools.release_prep.git import (
     warn_if_product_branch_not_current as _warn_if_product_branch_not_current,
 )
-from ga4gh.gks.metaschema.scripts.release_prep_git import (
+from ga4gh.gks.metaschema.tools.release_prep.git import (
     warn_if_worktree_dirty as _warn_if_worktree_dirty,
 )
-from ga4gh.gks.metaschema.scripts.update_schema_versions import main as update_schema_versions
-from ga4gh.gks.metaschema.tools.config import (
-    METASCHEMA_FN,
-    SUPPRESS_UNSUPPORTED_KEY_WARNING_ENV,
-    load_metaschema_config,
+from ga4gh.gks.metaschema.tools.release_prep.schema_versions import (
+    main as update_schema_versions,
 )
 
 SCHEMA_DIR_NAME = "schema"

@@ -58,8 +58,8 @@ y2t = "ga4gh.gks.metaschema.scripts.y2t:cli"
 source2mergedjsy = "ga4gh.gks.metaschema.scripts.source2mergedjsy:cli"
 source2splitjs = "ga4gh.gks.metaschema.scripts.source2splitjs:cli"
 source2classes = "ga4gh.gks.metaschema.scripts.source2classes:cli"
-source2updated = "ga4gh.gks.metaschema.scripts.update_schema_versions:cli"
-gks-release-prep = "ga4gh.gks.metaschema.scripts.release_prep:cli"
+source2updated = "ga4gh.gks.metaschema.tools.release_prep.schema_versions:cli"
+gks-release-prep = "ga4gh.gks.metaschema.tools.release_prep.cli:cli"
 
 [build-system]
 requires = ["setuptools>=65.3", "setuptools_scm>=8"]

@@ -7,9 +7,16 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ga4gh.gks.metaschema.scripts import release_prep
-from ga4gh.gks.metaschema.scripts.release_prep import SubmoduleUpdate, main, prepare_release, validate_release
-from ga4gh.gks.metaschema.scripts.release_prep_git import select_highest_semantic_tag
+from ga4gh.gks.metaschema.tools.release_prep import cli as release_prep
+from ga4gh.gks.metaschema.tools.release_prep.cli import (
+    main,
+    prepare_release,
+    validate_release,
+)
+from ga4gh.gks.metaschema.tools.release_prep.git import (
+    SubmoduleUpdate,
+    select_highest_semantic_tag,
+)
 
 FIXTURE_ROOT = Path(__file__).parent / "data" / "schema" / "cases" / "release-prep"
 
