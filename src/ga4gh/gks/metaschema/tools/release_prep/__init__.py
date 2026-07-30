@@ -1,4 +1,13 @@
-"""Release preparation and source-version management helpers."""
+"""Release preparation and source-version management helpers.
+
+Package modules:
+
+- ``cli``: command parsing and release workflow orchestration.
+- ``product_config``: product schema locations and ``metaschema.yaml`` edits.
+- ``git``: immediate-upstream submodule metadata, validation, and checkout.
+- ``worktree``: non-mutating Git worktree and branch-status checks.
+- ``schema_versions``: source YAML version update and verification command.
+"""
 
 from ga4gh.gks.metaschema.tools.release_prep.cli import ReleasePrepSummary
 from ga4gh.gks.metaschema.tools.release_prep.cli import cli as release_prep_cli

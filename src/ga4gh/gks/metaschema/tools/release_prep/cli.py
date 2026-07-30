@@ -12,9 +12,6 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
-
-import yaml
 
 from ga4gh.gks.metaschema.tools.config import (
     METASCHEMA_FN,
@@ -22,9 +19,7 @@ from ga4gh.gks.metaschema.tools.config import (
     load_metaschema_config,
 )
 from ga4gh.gks.metaschema.tools.release_prep.git import (
-    CommandOutputRunner,
     CommandRunner,
-    Reporter,
     SubmoduleUpdate,
 )
 from ga4gh.gks.metaschema.tools.release_prep.git import (
@@ -37,9 +32,6 @@ from ga4gh.gks.metaschema.tools.release_prep.git import (
     infer_submodule_update_from_current_branch as _infer_submodule_update_from_current_branch,
 )
 from ga4gh.gks.metaschema.tools.release_prep.git import (
-    require_clean_worktree as _require_clean_worktree,
-)
-from ga4gh.gks.metaschema.tools.release_prep.git import (
     require_upstream_branch_when_submodule_exists as _require_upstream_branch_when_submodule_exists,
 )
 from ga4gh.gks.metaschema.tools.release_prep.git import (
@@ -48,18 +40,35 @@ from ga4gh.gks.metaschema.tools.release_prep.git import (
 from ga4gh.gks.metaschema.tools.release_prep.git import (
     validate_submodule as _validate_submodule,
 )
-from ga4gh.gks.metaschema.tools.release_prep.git import (
-    warn_if_product_branch_not_current as _warn_if_product_branch_not_current,
+from ga4gh.gks.metaschema.tools.release_prep.product_config import (
+    get_schema_build_dir as _get_schema_build_dir,
 )
-from ga4gh.gks.metaschema.tools.release_prep.git import (
-    warn_if_worktree_dirty as _warn_if_worktree_dirty,
+from ga4gh.gks.metaschema.tools.release_prep.product_config import (
+    infer_product_from_repo_dir as _infer_product_from_repo_dir,
+)
+from ga4gh.gks.metaschema.tools.release_prep.product_config import (
+    resolve_product_dir as _resolve_product_dir,
+)
+from ga4gh.gks.metaschema.tools.release_prep.product_config import (
+    update_product_version as _update_product_version,
 )
 from ga4gh.gks.metaschema.tools.release_prep.schema_versions import (
     main as update_schema_versions,
 )
+from ga4gh.gks.metaschema.tools.release_prep.worktree import (
+    CommandOutputRunner,
+    Reporter,
+)
+from ga4gh.gks.metaschema.tools.release_prep.worktree import (
+    require_clean_worktree as _require_clean_worktree,
+)
+from ga4gh.gks.metaschema.tools.release_prep.worktree import (
+    warn_if_product_branch_not_current as _warn_if_product_branch_not_current,
+)
+from ga4gh.gks.metaschema.tools.release_prep.worktree import (
+    warn_if_worktree_dirty as _warn_if_worktree_dirty,
+)
 
-SCHEMA_DIR_NAME = "schema"
-VERSIONS_KEY = "versions"
 SOURCE_UPDATE_CHECK_FLAG = "--check"
 SOURCE_UPDATE_DISALLOW_VERSIONED_REFS_FLAG = "--disallow-versioned-refs"
 SOURCE_UPDATE_COMMAND_NAME = "source2updated"
@@ -108,55 +117,42 @@ class ReleasePrepSummary:
     validated_only: bool = False
 
 
-def _resolve_product_dir(repo_dir: Path, product: str) -> Path:
-    """Resolve the product schema directory.
+def _start_release(
+    action: str,
+    product: str,
+    version: str,
+    repo_dir: Path,
+    submodules: list[SubmoduleUpdate],
+    output_runner: CommandOutputRunner,
+    reporter: Reporter | None,
+    fail_on_dirty: bool,
+) -> Path:
+    """Validate common release inputs and return the product schema directory.
 
-    Example:
-        ``.`` and ``va-spec`` resolves to ``schema/va-spec``.
-
+    :param action: Present-tense action shown in progress messages.
+    :param product: Local product name and version key.
+    :param version: Requested local product version.
     :param repo_dir: Product repository root directory.
-    :param product: Product directory/version key.
-    :return: Product schema directory.
-    :raises ValueError: If the product config cannot be found.
+    :param submodules: Requested immediate upstream submodule updates.
+    :param output_runner: Command runner for git commands that return output.
+    :param reporter: Optional progress reporter.
+    :param fail_on_dirty: Whether dirty worktrees should fail the operation.
+    :return: Resolved product schema directory.
+    :raises ValueError: If more than one submodule is requested or the product
+        directory cannot be resolved.
     """
-    candidate = repo_dir / SCHEMA_DIR_NAME / product
-
-    if (candidate / METASCHEMA_FN).exists():
-        return candidate.resolve()
-
-    msg = f"No {METASCHEMA_FN} found for product {product}. Checked: {candidate}"
-    raise ValueError(msg)
-
-
-def _infer_product_from_repo_dir(repo_dir: Path) -> str:
-    """Infer the product name from the product repository root directory.
-
-    Example:
-        A repository root path ending in ``va-spec`` returns ``va-spec``.
-
-    :param repo_dir: Product repository root directory.
-    :return: Product directory/version key inferred from the repository name.
-    :raises ValueError: If the repository root name is empty.
-    """
-    product = repo_dir.resolve().name
-
-    if product:
-        return product
-
-    msg = f"Could not infer product name from repository root: {repo_dir}"
-    raise ValueError(msg)
-
-
-def _get_schema_build_dir(product_dir: Path) -> Path:
-    """Get the directory where ``make all`` should run.
-
-    :param product_dir: Product schema directory.
-    :return: Parent schema directory when the product lives under ``schema``;
-        otherwise the product directory itself.
-    """
-    if product_dir.parent.name == SCHEMA_DIR_NAME:
-        return product_dir.parent
-
+    _validate_submodule_count(submodules)
+    _report(reporter, f"{action} release for product {product} version {version}")
+    product_dir = _resolve_product_dir(repo_dir, product)
+    _report(reporter, f"Using product schema: {product_dir}")
+    _handle_dirty_worktree(
+        _get_product_repo_dir(product_dir),
+        f"Product {product}",
+        output_runner,
+        reporter,
+        fail_on_dirty,
+    )
+    _warn_if_downstream_branch_not_current(product_dir, submodules, output_runner, reporter)
     return product_dir
 
 
@@ -168,58 +164,6 @@ def _report(reporter: Reporter | None, message: str) -> None:
     """
     if reporter is not None:
         reporter(message)
-
-
-def _load_config_document(config_fp: Path) -> dict[str, Any]:
-    """Load raw metaschema config YAML as a mutable mapping.
-
-    Release prep loads raw YAML instead of ``MetaschemaConfig`` because it needs
-    to write the original config document back after changing only ``versions``.
-
-    :param config_fp: Path to ``metaschema.yaml``.
-    :return: Mutable config mapping.
-    :raises ValueError: If the config is not a mapping.
-    """
-    with config_fp.open(encoding="utf-8") as stream:
-        config = yaml.safe_load(stream)
-
-    if config is None:
-        return {}
-
-    if not isinstance(config, dict):
-        msg = f"{config_fp} must contain a YAML mapping."
-        raise ValueError(msg)
-
-    return config
-
-
-def _write_config_document(config_fp: Path, config: dict[str, Any]) -> None:
-    """Write a metaschema config mapping.
-
-    :param config_fp: Path to ``metaschema.yaml``.
-    :param config: Config mapping to write.
-    """
-    with config_fp.open("w", encoding="utf-8") as stream:
-        yaml.dump(config, stream, sort_keys=False)
-
-
-def _update_product_version(config_fp: Path, product: str, version: str) -> None:
-    """Set the local product version in ``metaschema.yaml``.
-
-    :param config_fp: Path to ``metaschema.yaml``.
-    :param product: Product version key to update.
-    :param version: Version to write.
-    :raises ValueError: If the existing ``versions`` section is not a mapping.
-    """
-    config = _load_config_document(config_fp)
-    versions = config.setdefault(VERSIONS_KEY, {})
-
-    if not isinstance(versions, dict):
-        msg = f"{config_fp} versions must be a mapping."
-        raise ValueError(msg)
-
-    versions[product] = version
-    _write_config_document(config_fp, config)
 
 
 def _run_source_update(product_dir: Path, check: bool) -> int:
@@ -363,18 +307,16 @@ def validate_release(
         paths are invalid, or submodule validation fails.
     """
     requested_submodules = submodules or []
-    _validate_submodule_count(requested_submodules)
-    _report(reporter, f"Validating release for product {product} version {version}")
-    product_dir = _resolve_product_dir(repo_dir, product)
-    _report(reporter, f"Using product schema: {product_dir}")
-    _handle_dirty_worktree(
-        _get_product_repo_dir(product_dir),
-        f"Product {product}",
+    product_dir = _start_release(
+        "Validating",
+        product,
+        version,
+        repo_dir,
+        requested_submodules,
         output_runner,
         reporter,
         fail_on_dirty,
     )
-    _warn_if_downstream_branch_not_current(product_dir, requested_submodules, output_runner, reporter)
     load_metaschema_config(product_dir / METASCHEMA_FN)
     resolved_submodules: list[SubmoduleUpdate] = []
 
@@ -435,19 +377,16 @@ def prepare_release(
     :raises subprocess.CalledProcessError: If a git or make command fails.
     """
     requested_submodules = submodules or []
-    _validate_submodule_count(requested_submodules)
-
-    _report(reporter, f"Preparing release for product {product} version {version}")
-    product_dir = _resolve_product_dir(repo_dir, product)
-    _report(reporter, f"Using product schema: {product_dir}")
-    _handle_dirty_worktree(
-        _get_product_repo_dir(product_dir),
-        f"Product {product}",
+    product_dir = _start_release(
+        "Preparing",
+        product,
+        version,
+        repo_dir,
+        requested_submodules,
         output_runner,
         reporter,
         fail_on_dirty,
     )
-    _warn_if_downstream_branch_not_current(product_dir, requested_submodules, output_runner, reporter)
     config_fp = product_dir / METASCHEMA_FN
     resolved_submodules: list[SubmoduleUpdate] = []
 
