@@ -89,7 +89,9 @@ class YamlSchemaProcessor:
         self.json_fp = self.schema_fp.parent / self.json_key
         self.def_fp = self.schema_fp.parent / self.defs_key
         self.namespaces = self.raw_schema.get("namespaces", [])
-        self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[self.raw_schema["$schema"]]
+        self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[
+            self.raw_schema["$schema"]
+        ]
         self.raw_defs = self.raw_schema.get(self.schema_def_keyword, None)
         self.imports = {}
         self.import_dependencies()
@@ -128,9 +130,13 @@ class YamlSchemaProcessor:
                 self._register_container_children(schema_class, class_ref, class_def)
 
             if "inherits" in class_def:
-                self._register_inherited_child(schema_class, class_ref, class_def["inherits"])
+                self._register_inherited_child(
+                    schema_class, class_ref, class_def["inherits"]
+                )
 
-    def _register_container_children(self, schema_class: str, class_ref: str, class_def: dict[str, Any]) -> None:
+    def _register_container_children(
+        self, schema_class: str, class_ref: str, class_def: dict[str, Any]
+    ) -> None:
         """Register concrete children listed by an abstract container class.
 
         Updates ``self.child_ref_urls_by_parent_ref`` and
@@ -178,7 +184,9 @@ class YamlSchemaProcessor:
 
         return record["$ref"]
 
-    def _register_inherited_child(self, schema_class: str, class_ref: str, target: str) -> None:
+    def _register_inherited_child(
+        self, schema_class: str, class_ref: str, target: str
+    ) -> None:
         """Register a class as a child of its local inherited parent.
 
         Updates ``self.child_ref_urls_by_parent_ref`` and
@@ -224,6 +232,7 @@ class YamlSchemaProcessor:
 
         :raises ValueError: If merged imports define duplicate classes or contain
             non-local ``$ref`` values that cannot be merged safely.
+
         """
         self._initialize_merge_state()
         self._validate_unique_merge_classes()
@@ -288,7 +297,9 @@ class YamlSchemaProcessor:
             if curie_re.match(inherits_value):
                 self.raw_defs[schema_class]["inherits"] = inherits_value.split(":")[1]
 
-            self.raw_defs[schema_class] = self._normalize_local_ref_paths(self.raw_defs[schema_class])
+            self.raw_defs[schema_class] = self._normalize_local_ref_paths(
+                self.raw_defs[schema_class]
+            )
 
     def _finalize_import_merge(self) -> None:
         """Clear import metadata and rebuild processor state after a merge."""
@@ -312,6 +323,7 @@ class YamlSchemaProcessor:
             rebuilt list when a list is reached through a containing dict.
         :raises ValueError: If a ``$ref`` is not a local ``$defs`` or
             ``definitions`` reference.
+
         """
         if isinstance(obj, list):
             return [self._normalize_local_ref_paths(element) for element in obj]
@@ -354,6 +366,7 @@ class YamlSchemaProcessor:
 
         :param proc: Processor whose imports should be registered.
         :raises ValueError: If the same import alias resolves to different files.
+
         """
         for name, other in proc.imports.items():
             self._register_import_for_merge(other)
@@ -369,7 +382,6 @@ class YamlSchemaProcessor:
                 self.import_locations[name] = other.schema_fp
                 self.import_processors[name] = other
                 self.import_process_order.append(name)
-        return
 
     @staticmethod
     def load_schema(schema_fp: Path) -> dict[str, object]:
@@ -378,9 +390,8 @@ class YamlSchemaProcessor:
         :param schema_fp: Path to the source YAML schema.
         :return: Parsed schema mapping.
         """
-        with open(schema_fp, encoding="utf-8") as f:
-            schema = yaml.load(f, Loader=yaml.SafeLoader)
-        return schema
+        with schema_fp.open(encoding="utf-8") as f:
+            return yaml.load(f, Loader=yaml.SafeLoader)
 
     def apply_metaschema_config(self) -> None:
         """Apply project-level metaschema config to the root source schema.
@@ -394,26 +405,35 @@ class YamlSchemaProcessor:
             A source containing ``$refCurie: vrs:Allele`` receives the configured
             ``vrs`` import and rendered ``vrs`` namespace from
             ``schema/<product>/metaschema.yaml``.
+
         """
         config_fp = self.get_metaschema_config_fp()
         if config_fp is None:
             return
 
         config = load_metaschema_config(config_fp)
-        config_versions = load_imported_versions(config_fp, config.imports) | config.versions
+        config_versions = (
+            load_imported_versions(config_fp, config.imports) | config.versions
+        )
         if "$id" in self.raw_schema:
             self.validate_schema_id_versions(config_versions)
 
         self._remove_source_local_config(config_fp)
 
         used_namespaces = self._find_referenced_config_aliases(config.imports)
-        imports = self._resolve_used_config_imports(config_fp, config.imports, used_namespaces)
+        imports = self._resolve_used_config_imports(
+            config_fp, config.imports, used_namespaces
+        )
         if imports:
             self.raw_schema["imports"] = imports
 
         namespaces = render_namespaces(config.namespaces, config_versions)
         if namespaces:
-            self.raw_schema["namespaces"] = {key: value for key, value in namespaces.items() if key in used_namespaces}
+            self.raw_schema["namespaces"] = {
+                key: value
+                for key, value in namespaces.items()
+                if key in used_namespaces
+            }
 
     def _remove_source_local_config(self, config_fp: Path) -> None:
         """Remove config sections that must be managed by ``metaschema.yaml``.
@@ -464,7 +484,9 @@ class YamlSchemaProcessor:
 
         return imports
 
-    def _find_referenced_config_aliases(self, config_imports: dict[str, str] | None = None) -> set[str]:
+    def _find_referenced_config_aliases(
+        self, config_imports: dict[str, str] | None = None
+    ) -> set[str]:
         """Get namespace aliases referenced by the source schema.
 
         Example:
@@ -474,6 +496,7 @@ class YamlSchemaProcessor:
 
         :param config_imports: Mapping of import aliases to source schema paths.
         :return: Namespace aliases used by refs, inheritance, or external ``$ref`` paths.
+
         """
         used_namespaces: set[str] = set()
         import_stems = self._get_config_import_stems(config_imports or {})
@@ -485,10 +508,16 @@ class YamlSchemaProcessor:
             """
             if isinstance(node, dict):
                 for key, value in node.items():
-                    if key in {"$refCurie", "inherits"} and isinstance(value, str) and ":" in value:
+                    if (
+                        key in {"$refCurie", "inherits"}
+                        and isinstance(value, str)
+                        and ":" in value
+                    ):
                         used_namespaces.add(value.split(":", 1)[0])
                     elif key == "$ref" and isinstance(value, str):
-                        used_namespaces.update(self._get_ref_import_aliases(value, import_stems))
+                        used_namespaces.update(
+                            self._get_ref_import_aliases(value, import_stems)
+                        )
                     collect(value)
             elif isinstance(node, list):
                 for item in node:
@@ -507,6 +536,7 @@ class YamlSchemaProcessor:
 
         :param config_imports: Mapping of import aliases to source schema paths.
         :return: Candidate generated artifact stems keyed by alias.
+
         """
         import_stems: dict[str, set[str]] = {}
         for alias, import_value in config_imports.items():
@@ -516,7 +546,9 @@ class YamlSchemaProcessor:
         return import_stems
 
     @staticmethod
-    def _get_ref_import_aliases(ref: str, import_stems: dict[str, set[str]]) -> set[str]:
+    def _get_ref_import_aliases(
+        ref: str, import_stems: dict[str, set[str]]
+    ) -> set[str]:
         """Get configured import aliases referenced by an external ``$ref``.
 
         Example:
@@ -526,6 +558,7 @@ class YamlSchemaProcessor:
         :param ref: JSON Schema ``$ref`` value.
         :param import_stems: Candidate generated artifact stems keyed by alias.
         :return: Import aliases referenced by the ``$ref`` path.
+
         """
         ref_path = ref.split("#", 1)[0]
         if not ref_path:
@@ -544,8 +577,11 @@ class YamlSchemaProcessor:
 
         :param versions: Version strings keyed by spec name.
         :raises ValueError: If the source ``$id`` has a stale or templated version.
+
         """
-        stale_versions = find_stale_schema_url_versions(self.raw_schema["$id"], versions)
+        stale_versions = find_stale_schema_url_versions(
+            self.raw_schema["$id"], versions
+        )
         if not stale_versions:
             return
 
@@ -570,10 +606,9 @@ class YamlSchemaProcessor:
             if not fp.is_absolute():
                 base_path = self.schema_fp.parent
                 fp = base_path.joinpath(fp)
-            if self.imported:
-                root_fp = self.root_schema_fp
-            else:
-                root_fp = self.schema_fp
+
+            root_fp = self.root_schema_fp if self.imported else self.schema_fp
+
             self.imports[dependency] = YamlSchemaProcessor(fp, root_fp=root_fp)
 
     def process_schema(self) -> None:
@@ -593,14 +628,19 @@ class YamlSchemaProcessor:
 
         :raises ValueError: If inherited classes are missing maturity values or a
             child class has greater maturity than its parent.
+
         """
         for schema_class in self.processed_classes:
             class_def = self.defs[schema_class]
             if "inherits" in class_def:
                 inherited_class_name = class_def["inherits"]
                 if ":" in inherited_class_name:
-                    namespace, inherited_class_split_name = inherited_class_name.split(":")
-                    inherited_class_def = self.imports[namespace].defs[inherited_class_split_name]
+                    namespace, inherited_class_split_name = inherited_class_name.split(
+                        ":"
+                    )
+                    inherited_class_def = self.imports[namespace].defs[
+                        inherited_class_split_name
+                    ]
                 else:
                     inherited_class_def = self.defs[inherited_class_name]
 
@@ -615,7 +655,6 @@ class YamlSchemaProcessor:
                 if inherited_class_def["maturity"] < class_def["maturity"]:
                     msg = f"Maturity of {schema_class} is greater than parent class {inherited_class_name}."
                     raise ValueError(msg)
-            pass
 
     def class_is_abstract(self, schema_class: str) -> bool:
         """Check whether a schema class is abstract.
@@ -624,7 +663,9 @@ class YamlSchemaProcessor:
         :return: ``True`` when the class has no concrete properties and is not primitive.
         """
         schema_class_def, _ = self.get_class_definition(schema_class, raw=True)
-        return "properties" not in schema_class_def and not self.class_is_primitive(schema_class)
+        return "properties" not in schema_class_def and not self.class_is_primitive(
+            schema_class
+        )
 
     def class_is_container(self, schema_class: str) -> bool:
         """Check whether a schema class is an abstract container.
@@ -665,13 +706,11 @@ class YamlSchemaProcessor:
         if not self.class_is_abstract(schema_class):
             return False
         raw_class_definition, _ = self.get_class_definition(schema_class, raw=True)
-        if (
+        return (
             "heritableProperties" not in raw_class_definition
             and "properties" not in raw_class_definition
             and raw_class_definition.get("inherits", False)
-        ):
-            return True
-        return False
+        )
 
     def class_is_primitive(self, schema_class: str) -> bool:
         """Check whether a class represents a primitive JSON Schema value.
@@ -681,9 +720,7 @@ class YamlSchemaProcessor:
         """
         schema_class_def, _ = self.get_class_definition(schema_class, raw=True)
         schema_class_type = schema_class_def.get("type", "abstract")
-        if schema_class_type not in ["abstract", "object"]:
-            return True
-        return False
+        return schema_class_type not in ["abstract", "object"]
 
     def class_is_subclass(self, schema_class: str, parent_class: str) -> bool:
         """Check whether a class descends from another class.
@@ -723,12 +760,13 @@ class YamlSchemaProcessor:
 
         :param curie: CURIE value using a configured namespace alias.
         :return: Concrete reference URL.
+
         """
         namespace, identifier = curie.split(":")
         base_url = self.namespaces[namespace]
         return base_url + identifier
 
-    def resolve_property_tree_refs(self, raw_node: Any, processed_node: Any) -> None:
+    def resolve_property_tree_refs(self, raw_node: Any, processed_node: Any) -> None:  # noqa: ANN401
         """Resolve refs inside a raw/processed property tree pair.
 
         ``raw_node`` controls which keys were present in the source YAML. Matching
@@ -755,15 +793,16 @@ class YamlSchemaProcessor:
 
                     # Keep imported local refs relative to the root schema output
                     # tree so split artifacts can still resolve sibling outputs.
-                    rel_root = self.schema_fp.parent.relative_to(self.root_schema_fp.parent, walk_up=True)
+                    rel_root = self.schema_fp.parent.relative_to(
+                        self.root_schema_fp.parent, walk_up=True
+                    )
                     schema_stem = self.schema_fp.stem.split("-")[0]
                     processed_node[k] = str(rel_root / f"{schema_stem}.json{v}")
                 else:
-                    self.resolve_property_tree_refs(raw_node[k], processed_node[k])
+                    self.resolve_property_tree_refs(v, processed_node[k])
         elif isinstance(raw_node, list):
-            for raw_item, processed_item in zip(raw_node, processed_node):
+            for raw_item, processed_item in zip(raw_node, processed_node, strict=True):
                 self.resolve_property_tree_refs(raw_item, processed_item)
-        return
 
     def get_class_definition(
         self, schema_class: str, raw: bool = False
@@ -778,23 +817,32 @@ class YamlSchemaProcessor:
         :param raw: When ``True``, return the raw source definition.
         :return: Class definition and processor that owns it.
         :raises ValueError: If ``schema_class`` is not local or CURIE-qualified.
+
         """
         components = schema_class.split(":")
         if len(components) == 1:
             inherited_class_name = components[0]
             if raw:
-                inherited_class = self.raw_schema[self.schema_def_keyword][inherited_class_name]
+                inherited_class = self.raw_schema[self.schema_def_keyword][
+                    inherited_class_name
+                ]
             else:
                 self.process_schema_class(inherited_class_name)
-                inherited_class = self.processed_schema[self.schema_def_keyword][inherited_class_name]
+                inherited_class = self.processed_schema[self.schema_def_keyword][
+                    inherited_class_name
+                ]
             proc = self
-        elif len(components) == 2:
+        elif len(components) == 2:  # noqa: PLR2004
             inherited_class_name = components[1]
             proc = self.imports[components[0]]
             if raw:
-                inherited_class = proc.raw_schema[proc.schema_def_keyword][inherited_class_name]
+                inherited_class = proc.raw_schema[proc.schema_def_keyword][
+                    inherited_class_name
+                ]
             else:
-                inherited_class = proc.processed_schema[proc.schema_def_keyword][inherited_class_name]
+                inherited_class = proc.processed_schema[proc.schema_def_keyword][
+                    inherited_class_name
+                ]
         else:
             msg = f"Expected local or CURIE-qualified class name, got {schema_class}."
             raise ValueError(msg)
@@ -829,7 +877,9 @@ class YamlSchemaProcessor:
             raise ValueError(msg)
         if self.class_is_protected(schema_class):
             frag_containing_class = self.raw_defs[schema_class]["protectedClassOf"]
-            class_ref = f"{frag_containing_class}#/{self.schema_def_keyword}/{schema_class}"
+            class_ref = (
+                f"{frag_containing_class}#/{self.schema_def_keyword}/{schema_class}"
+            )
         else:
             class_ref = schema_class
         parsed_url = urlparse(self.id)
@@ -837,7 +887,9 @@ class YamlSchemaProcessor:
         revised_path = Path(parsed_id_path).parent.joinpath(export_key, class_ref)
         return str(revised_path)
 
-    def _validate_class_maturity(self, schema_class: str, class_def: dict[str, Any]) -> None:
+    def _validate_class_maturity(
+        self, schema_class: str, class_def: dict[str, Any]
+    ) -> None:
         """Validate that a class declares a supported GKS maturity level.
 
         :param schema_class: Class name being processed.
@@ -867,7 +919,9 @@ class YamlSchemaProcessor:
         for descendant in self.get_all_descendants(containing_class):
             self.protected_classes_by_container[descendant].add(schema_class)
 
-    def _inherit_class_details(self, schema_class: str, class_def: dict[str, Any]) -> tuple[dict[str, Any], set[str]]:
+    def _inherit_class_details(
+        self, schema_class: str, class_def: dict[str, Any]
+    ) -> tuple[dict[str, Any], set[str]]:
         """Collect inherited property and required-field definitions.
 
         :param schema_class: Class name being processed.
@@ -912,7 +966,9 @@ class YamlSchemaProcessor:
 
         return "properties", "required"
 
-    def _process_container_refs(self, raw_class_def: dict[str, Any], processed_class_def: dict[str, Any]) -> None:
+    def _process_container_refs(
+        self, raw_class_def: dict[str, Any], processed_class_def: dict[str, Any]
+    ) -> None:
         """Resolve refs in an abstract container's child list.
 
         :param raw_class_def: Raw source class definition.
@@ -921,11 +977,15 @@ class YamlSchemaProcessor:
         """
         for container_key in ("anyOf", "oneOf", "allOf"):
             if container_key in raw_class_def:
-                self.resolve_property_tree_refs(raw_class_def[container_key], processed_class_def[container_key])
+                self.resolve_property_tree_refs(
+                    raw_class_def[container_key], processed_class_def[container_key]
+                )
                 return
 
     @staticmethod
-    def _remove_conflicting_ref_shapes(inherited_property: dict[str, Any], prop_attribs: dict[str, Any]) -> None:
+    def _remove_conflicting_ref_shapes(
+        inherited_property: dict[str, Any], prop_attribs: dict[str, Any]
+    ) -> None:
         """Remove inherited ref shapes replaced by local property attributes.
 
         :param inherited_property: Inherited property definition to update.
@@ -940,7 +1000,11 @@ class YamlSchemaProcessor:
             inherited_property.pop("$ref", None)
 
     def _get_extended_property(
-        self, schema_class: str, prop: str, prop_attribs: dict[str, Any], state: ClassProcessingState
+        self,
+        schema_class: str,
+        prop: str,
+        prop_attribs: dict[str, Any],
+        state: ClassProcessingState,
     ) -> tuple[str, dict[str, Any]]:
         """Get the inherited property referenced by ``extends``.
 
@@ -975,7 +1039,9 @@ class YamlSchemaProcessor:
             ``state.class_required``.
         :raises ValueError: If ``extends`` references an unknown inherited property.
         """
-        extended_property, inherited_property = self._get_extended_property(schema_class, prop, prop_attribs, state)
+        extended_property, inherited_property = self._get_extended_property(
+            schema_class, prop, prop_attribs, state
+        )
         self._remove_conflicting_ref_shapes(inherited_property, prop_attribs)
 
         state.class_properties[prop] = inherited_property
@@ -987,7 +1053,9 @@ class YamlSchemaProcessor:
             state.inherited_required.remove(extended_property)
             state.class_required.add(prop)
 
-    def _validate_property(self, schema_class: str, prop: str, prop_attribs: dict[str, Any]) -> None:
+    def _validate_property(
+        self, schema_class: str, prop: str, prop_attribs: dict[str, Any]
+    ) -> None:
         """Validate one processed property definition.
 
         :param schema_class: Class name that owns the property.
@@ -1004,10 +1072,13 @@ class YamlSchemaProcessor:
                 msg = f"{schema_class}.{prop} ordered attribute must be a boolean."
                 raise ValueError(msg)
 
-        if self.strict and prop_attribs.get("type", "") == "object":
-            if prop_attribs.get("additionalProperties", None) is None:
-                msg = f'"additionalProperties" expected to be defined in {schema_class}.{prop}'
-                raise ValueError(msg)
+        if (
+            self.strict
+            and prop_attribs.get("type", "") == "object"
+            and prop_attribs.get("additionalProperties") is None
+        ):
+            msg = f'"additionalProperties" expected to be defined in {schema_class}.{prop}'
+            raise ValueError(msg)
 
     def _merge_and_validate_properties(
         self,
@@ -1032,23 +1103,26 @@ class YamlSchemaProcessor:
 
             self._validate_property(schema_class, prop, prop_attribs)
 
-    def _validate_ga4gh_identifier(self, schema_class: str, class_def: dict[str, Any]) -> None:
+    def _validate_ga4gh_identifier(
+        self, schema_class: str, class_def: dict[str, Any]
+    ) -> None:
         """Validate GA4GH identifier metadata for an identifiable class.
 
         :param schema_class: Class name being processed.
         :param class_def: Processed class definition.
+        :raises TypeError: If ``ga4gh.prefix`` is not a string
         :raises ValueError: If ``ga4gh.prefix`` or inherent fields are invalid.
         """
         if not isinstance(class_def["ga4gh"]["prefix"], str):
             msg = f"{schema_class} ga4gh.prefix must be a string."
-            raise ValueError(msg)
+            raise TypeError(msg)
 
         if class_def["ga4gh"]["prefix"] == "":
             msg = f"{schema_class} ga4gh.prefix cannot be empty."
             raise ValueError(msg)
 
         inherent_count = len(class_def["ga4gh"]["inherent"])
-        if inherent_count < 2:
+        if inherent_count < 2:  # noqa: PLR2004
             msg = (
                 "GA4GH identifiable objects are expected to be defined by "
                 f"at least 2 properties, {schema_class} has {inherent_count}."
@@ -1062,7 +1136,9 @@ class YamlSchemaProcessor:
             )
             raise ValueError(msg)
 
-    def _validate_class_structure(self, schema_class: str, class_def: dict[str, Any]) -> None:
+    def _validate_class_structure(
+        self, schema_class: str, class_def: dict[str, Any]
+    ) -> None:
         """Validate abstract/concrete class structure.
 
         :param schema_class: Class name being processed.
@@ -1087,7 +1163,11 @@ class YamlSchemaProcessor:
             self._validate_ga4gh_identifier(schema_class, class_def)
 
     def _get_class_processing_state(
-        self, schema_class: str, class_def: dict[str, Any], property_key: str, required_key: str
+        self,
+        schema_class: str,
+        class_def: dict[str, Any],
+        property_key: str,
+        required_key: str,
     ) -> ClassProcessingState:
         """Build mutable processing state for one class.
 
@@ -1098,7 +1178,9 @@ class YamlSchemaProcessor:
         :return: Class processing state.
         :raises ValueError: If inherited GA4GH metadata is invalid.
         """
-        inherited_properties, inherited_required = self._inherit_class_details(schema_class, class_def)
+        inherited_properties, inherited_required = self._inherit_class_details(
+            schema_class, class_def
+        )
         return ClassProcessingState(
             inherited_properties=inherited_properties,
             inherited_required=inherited_required,
@@ -1123,7 +1205,9 @@ class YamlSchemaProcessor:
         :param required_key: Required-list key for the class.
         """
         class_def[property_key] = state.inherited_properties | state.class_properties
-        class_def[required_key] = sorted(state.inherited_required | state.class_required)
+        class_def[required_key] = sorted(
+            state.inherited_required | state.class_required
+        )
         if self.strict and not self.class_is_abstract(schema_class):
             class_def["additionalProperties"] = False
         self.processed_classes.add(schema_class)
@@ -1162,11 +1246,14 @@ class YamlSchemaProcessor:
         :param schema_class: Class name under the schema ``$defs`` or
             ``definitions`` mapping.
         :raises ValueError: If the class violates required MSP schema structure.
+
         """
         raw_class_def = self.raw_schema[self.schema_def_keyword][schema_class]
         if schema_class in self.processed_classes:
             return
-        processed_class_def = self.processed_schema[self.schema_def_keyword][schema_class]
+        processed_class_def = self.processed_schema[self.schema_def_keyword][
+            schema_class
+        ]
 
         self._validate_class_maturity(schema_class, processed_class_def)
 
@@ -1178,12 +1265,18 @@ class YamlSchemaProcessor:
             return
 
         property_key, required_key = self._get_class_property_keys(schema_class)
-        state = self._get_class_processing_state(schema_class, processed_class_def, property_key, required_key)
+        state = self._get_class_processing_state(
+            schema_class, processed_class_def, property_key, required_key
+        )
 
-        self._resolve_class_refs(schema_class, raw_class_def, processed_class_def, state, property_key)
+        self._resolve_class_refs(
+            schema_class, raw_class_def, processed_class_def, state, property_key
+        )
         self._merge_and_validate_properties(schema_class, state)
         self._validate_class_structure(schema_class, processed_class_def)
-        self._finalize_processed_class(schema_class, processed_class_def, state, property_key, required_key)
+        self._finalize_processed_class(
+            schema_class, processed_class_def, state, property_key, required_key
+        )
 
     @staticmethod
     def _scrub_rst_markup(string: str) -> str:
@@ -1194,8 +1287,7 @@ class YamlSchemaProcessor:
         """
         string = ref_re.sub(r"\g<1>", string)
         string = link_re.sub(r"[\g<1>](\g<2>)", string)
-        string = string.replace("\n", " ")
-        return string
+        return string.replace("\n", " ")
 
     def clean_for_js(self) -> None:
         """Remove MSP-only metadata and expand abstract refs for JSON Schema output."""
@@ -1204,15 +1296,21 @@ class YamlSchemaProcessor:
         self.for_js.pop("enforce_ordered", None)
         self.for_js.pop("imports", None)
         abstract_class_removals = []
-        for schema_class, schema_definition in self.for_js.get(self.schema_def_keyword, {}).items():
-            should_remove = self._clean_schema_definition_for_js(schema_class, schema_definition)
+        for schema_class, schema_definition in self.for_js.get(
+            self.schema_def_keyword, {}
+        ).items():
+            should_remove = self._clean_schema_definition_for_js(
+                schema_class, schema_definition
+            )
             if should_remove:
                 abstract_class_removals.append(schema_class)
 
         for schema_class in abstract_class_removals:
             self.for_js[self.schema_def_keyword].pop(schema_class)
 
-    def _clean_schema_definition_for_js(self, schema_class: str, schema_definition: dict[str, Any]) -> bool:
+    def _clean_schema_definition_for_js(
+        self, schema_class: str, schema_definition: dict[str, Any]
+    ) -> bool:
         """Clean one class definition for JSON Schema output.
 
         :param schema_class: Class name being cleaned.
@@ -1231,7 +1329,9 @@ class YamlSchemaProcessor:
         self._scrub_schema_definition_descriptions(schema_definition)
         return False
 
-    def _clean_abstract_definition_for_js(self, schema_definition: dict[str, Any]) -> None:
+    def _clean_abstract_definition_for_js(
+        self, schema_definition: dict[str, Any]
+    ) -> None:
         """Remove abstract-only metadata and expand refs for one JS definition.
 
         :param schema_definition: Abstract JS output definition to update.
@@ -1242,19 +1342,25 @@ class YamlSchemaProcessor:
         schema_definition.pop("header_level", None)
         self.expand_abstract_refs(schema_definition)
 
-    def _scrub_schema_definition_descriptions(self, schema_definition: dict[str, Any]) -> None:
+    def _scrub_schema_definition_descriptions(
+        self, schema_definition: dict[str, Any]
+    ) -> None:
         """Remove RST markup from a JS definition and its properties.
 
         :param schema_definition: JS output definition to update.
         """
         if "description" in schema_definition:
-            schema_definition["description"] = self._scrub_rst_markup(schema_definition["description"])
+            schema_definition["description"] = self._scrub_rst_markup(
+                schema_definition["description"]
+            )
         if "properties" not in schema_definition:
             return
 
         for property_definition in schema_definition["properties"].values():
             if "description" in property_definition:
-                property_definition["description"] = self._scrub_rst_markup(property_definition["description"])
+                property_definition["description"] = self._scrub_rst_markup(
+                    property_definition["description"]
+                )
             self.expand_abstract_refs(property_definition)
 
     def expand_abstract_refs(self, js_obj: dict[str, Any]) -> None:

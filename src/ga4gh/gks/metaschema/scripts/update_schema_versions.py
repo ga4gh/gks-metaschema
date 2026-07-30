@@ -7,9 +7,10 @@ sections, and can fail on stale or hard-coded versioned references.
 import argparse
 import re
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import yaml
 
@@ -74,6 +75,7 @@ def _load_versions(config_fp: Path) -> dict[str, str]:
 
     :param config_fp: Path to the metaschema config file.
     :return: Mapping of spec names or import aliases to configured versions.
+
     """
     config = load_metaschema_config(config_fp)
     return load_imported_versions(config_fp, config.imports) | config.versions
@@ -88,6 +90,7 @@ def _load_managed_keys(config_fp: Path) -> set[str]:
 
     :param config_fp: Path to the metaschema config file.
     :return: Managed top-level source keys found in the config.
+
     """
     with config_fp.open(encoding="utf-8") as f:
         config = yaml.load(f, Loader=yaml.SafeLoader)
@@ -108,6 +111,7 @@ def _iter_source_files(paths: list[Path]) -> list[Path]:
 
     :param paths: Source files or directories to scan.
     :return: Sorted unique list of source YAML files.
+
     """
     files: list[Path] = []
     for path in paths:
@@ -128,6 +132,7 @@ def _find_config_for_file(file: Path) -> Path:
     :param file: Source YAML file.
     :return: Product metaschema config path.
     :raises ValueError: If no config exists for the source file.
+
     """
     config_fp = find_metaschema_config(file)
     if config_fp is not None:
@@ -139,7 +144,9 @@ def _find_config_for_file(file: Path) -> Path:
     raise ValueError(msg)
 
 
-def replace_schema_url_versions(text: str, versions: dict[str, str]) -> tuple[str, list[VersionReference]]:
+def replace_schema_url_versions(
+    text: str, versions: dict[str, str]
+) -> tuple[str, list[VersionReference]]:
     """Return text with configured GA4GH schema versions updated.
 
     Only URL/path segments matching ``/ga4gh/schema/{spec}/{version}/`` are
@@ -155,6 +162,7 @@ def replace_schema_url_versions(text: str, versions: dict[str, str]) -> tuple[st
     :return: Updated source text and references that were changed. The returned
         references have empty ``file`` and line ``0`` because this helper only
         receives text.
+
     """
     references: list[VersionReference] = []
 
@@ -222,7 +230,9 @@ def _skip_top_level_yaml_block(lines: list[str], start_index: int) -> int:
     return index
 
 
-def remove_source_local_config_keys(text: str, managed_keys: set[str]) -> tuple[str, list[str]]:
+def remove_source_local_config_keys(
+    text: str, managed_keys: set[str]
+) -> tuple[str, list[str]]:
     """Remove source-local top-level keys that are managed by metaschema config.
 
     Example:
@@ -232,6 +242,7 @@ def remove_source_local_config_keys(text: str, managed_keys: set[str]) -> tuple[
     :param text: Source YAML text to clean.
     :param managed_keys: Top-level config keys present in ``metaschema.yaml``.
     :return: Cleaned text and removed key names.
+
     """
     if not managed_keys:
         return text, []
@@ -258,7 +269,9 @@ def remove_source_local_config_keys(text: str, managed_keys: set[str]) -> tuple[
     return "".join(cleaned_lines), removed_keys
 
 
-def find_stale_version_references(file: Path, text: str, versions: dict[str, str]) -> list[VersionReference]:
+def find_stale_version_references(
+    file: Path, text: str, versions: dict[str, str]
+) -> list[VersionReference]:
     """Find configured schema URLs whose versions do not match config.
 
     Example:
@@ -269,6 +282,7 @@ def find_stale_version_references(file: Path, text: str, versions: dict[str, str
     :param text: Source YAML text to inspect.
     :param versions: Mapping of spec names to target versions.
     :return: Stale version references found in the text.
+
     """
     references: list[VersionReference] = []
     for line_no, line in enumerate(text.splitlines(), start=1):
@@ -278,11 +292,17 @@ def find_stale_version_references(file: Path, text: str, versions: dict[str, str
             expected_version = versions.get(spec)
 
             if expected_version is not None and actual_version != expected_version:
-                references.append(VersionReference(file, line_no, spec, actual_version, expected_version))
+                references.append(
+                    VersionReference(
+                        file, line_no, spec, actual_version, expected_version
+                    )
+                )
     return references
 
 
-def find_hardcoded_versioned_refs(file: Path, text: str, versions: dict[str, str]) -> list[HardcodedReference]:
+def find_hardcoded_versioned_refs(
+    file: Path, text: str, versions: dict[str, str]
+) -> list[HardcodedReference]:
     """Find hard-coded versioned ``$ref`` URLs for configured specs.
 
     Example:
@@ -293,6 +313,7 @@ def find_hardcoded_versioned_refs(file: Path, text: str, versions: dict[str, str
     :param text: Source YAML text to inspect.
     :param versions: Mapping of spec names to target versions.
     :return: Hard-coded versioned ``$ref`` references found in the text.
+
     """
     references: list[HardcodedReference] = []
     for line_no, line in enumerate(text.splitlines(), start=1):
@@ -304,7 +325,9 @@ def find_hardcoded_versioned_refs(file: Path, text: str, versions: dict[str, str
             spec = match.group("spec")
 
             if spec in versions:
-                references.append(HardcodedReference(file, line_no, spec, match.group(0)))
+                references.append(
+                    HardcodedReference(file, line_no, spec, match.group(0))
+                )
     return references
 
 
@@ -326,6 +349,7 @@ def update_source_file(
     :param managed_keys: Top-level config keys present in ``metaschema.yaml``.
     :param check: Whether to report without editing. ``True`` performs a dry run.
     :return: Stale references and source-local config keys found before any edit.
+
     """
     text = file.read_text(encoding="utf-8")
     stale_references = find_stale_version_references(file, text, versions)
@@ -346,7 +370,9 @@ def _format_reference(reference: VersionReference) -> str:
     :param reference: Stale schema version reference.
     :return: Human-readable reference message.
     """
-    location = f"{reference.file}:{reference.line}" if reference.line else str(reference.file)
+    location = (
+        f"{reference.file}:{reference.line}" if reference.line else str(reference.file)
+    )
     return f"{location}: {reference.spec} is {reference.actual_version}; expected {reference.expected_version}"
 
 
@@ -365,7 +391,9 @@ def _format_source_local_key(source_local_key: SourceLocalConfigKey) -> str:
     :param source_local_key: Source-local config key.
     :return: Human-readable cleanup message.
     """
-    return f"{source_local_key.file}: {source_local_key.key} is managed by {METASCHEMA_FN}"
+    return (
+        f"{source_local_key.file}: {source_local_key.key} is managed by {METASCHEMA_FN}"
+    )
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -377,8 +405,14 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Update or check GA4GH schema version URL segments in *-source.yaml files."
     )
-    parser.add_argument("paths", nargs="+", type=Path, help="Source YAML files or directories to scan.")
-    parser.add_argument("--check", action="store_true", help="Report stale references without editing files.")
+    parser.add_argument(
+        "paths", nargs="+", type=Path, help="Source YAML files or directories to scan."
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Report stale references without editing files.",
+    )
     parser.add_argument(
         "--disallow-versioned-refs",
         action="store_true",
@@ -387,7 +421,9 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _get_update_config(file: Path, config_cache: dict[Path, SourceUpdateConfig]) -> SourceUpdateConfig:
+def _get_update_config(
+    file: Path, config_cache: dict[Path, SourceUpdateConfig]
+) -> SourceUpdateConfig:
     """Get cached update config for a source file.
 
     :param file: Source YAML file being processed.
@@ -405,7 +441,9 @@ def _get_update_config(file: Path, config_cache: dict[Path, SourceUpdateConfig])
     return config_cache[config_fp]
 
 
-def _print_references(header: str, references: list[Any], formatter: Callable[[Any], str]) -> None:
+def _print_references(
+    header: str, references: list[Any], formatter: Callable[[Any], str]
+) -> None:
     """Print a CLI report section.
 
     :param header: Section header.
@@ -422,7 +460,9 @@ def _print_references(header: str, references: list[Any], formatter: Callable[[A
 
 def _process_source_files(
     files: list[Path], check: bool, disallow_versioned_refs: bool
-) -> tuple[list[VersionReference], list[HardcodedReference], list[SourceLocalConfigKey]]:
+) -> tuple[
+    list[VersionReference], list[HardcodedReference], list[SourceLocalConfigKey]
+]:
     """Process source files and collect version-management findings.
 
     :param files: Source YAML files to process.
@@ -449,7 +489,9 @@ def _process_source_files(
 
         if disallow_versioned_refs:
             hardcoded_references.extend(
-                find_hardcoded_versioned_refs(file, file.read_text(encoding="utf-8"), config.versions)
+                find_hardcoded_versioned_refs(
+                    file, file.read_text(encoding="utf-8"), config.versions
+                )
             )
 
     return stale_references, hardcoded_references, source_local_keys
@@ -488,7 +530,8 @@ def _print_check_reports(
 
 
 def _print_update_reports(
-    stale_references: list[VersionReference], source_local_keys: list[SourceLocalConfigKey]
+    stale_references: list[VersionReference],
+    source_local_keys: list[SourceLocalConfigKey],
 ) -> None:
     """Print update-mode summaries.
 
@@ -517,7 +560,9 @@ def _has_failures(
     :param source_local_keys: Source-local config keys found.
     :return: ``True`` when the CLI should exit with status ``1``.
     """
-    return (check and (bool(stale_references) or bool(source_local_keys))) or bool(hardcoded_references)
+    return (check and (bool(stale_references) or bool(source_local_keys))) or bool(
+        hardcoded_references
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -539,8 +584,12 @@ def main(argv: list[str] | None = None) -> int:
         disallow_versioned_refs=args.disallow_versioned_refs,
     )
 
-    _print_check_reports(args.check, stale_references, hardcoded_references, source_local_keys)
-    if _has_failures(args.check, stale_references, hardcoded_references, source_local_keys):
+    _print_check_reports(
+        args.check, stale_references, hardcoded_references, source_local_keys
+    )
+    if _has_failures(
+        args.check, stale_references, hardcoded_references, source_local_keys
+    ):
         return 1
 
     _print_update_reports(stale_references, source_local_keys)

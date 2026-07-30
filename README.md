@@ -28,9 +28,13 @@ environment.
     make devready
     source venv/3.12/bin/activate
 
-Set up `pre-commit` hooks:
+Install `prek`:
 
-    pre-commit install
+    prek install
+
+Check style with `ruff`:
+
+    python3 -m ruff format . && python3 -m ruff check --fix .
 
 ### Testing
 

@@ -49,7 +49,9 @@ from ga4gh.gks.metaschema.scripts.release_prep_git import (
 from ga4gh.gks.metaschema.scripts.release_prep_git import (
     warn_if_worktree_dirty as _warn_if_worktree_dirty,
 )
-from ga4gh.gks.metaschema.scripts.update_schema_versions import main as update_schema_versions
+from ga4gh.gks.metaschema.scripts.update_schema_versions import (
+    main as update_schema_versions,
+)
 from ga4gh.gks.metaschema.tools.config import (
     METASCHEMA_FN,
     SUPPRESS_UNSUPPORTED_KEY_WARNING_ENV,
@@ -72,7 +74,7 @@ def _run_command(command: list[str], cwd: Path) -> None:
     :raises subprocess.CalledProcessError: If the command exits with a
         non-zero status.
     """
-    subprocess.run(command, cwd=cwd, check=True)
+    subprocess.run(command, cwd=cwd, check=True)  # noqa: S603
 
 
 def _run_command_output(command: list[str], cwd: Path) -> str:
@@ -84,7 +86,13 @@ def _run_command_output(command: list[str], cwd: Path) -> str:
     :raises subprocess.CalledProcessError: If the command exits with a
         non-zero status.
     """
-    completed = subprocess.run(command, cwd=cwd, check=True, capture_output=True, text=True)
+    completed = subprocess.run(  # noqa: S603
+        command,
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
     return completed.stdout.strip()
 
 
@@ -116,6 +124,7 @@ def _resolve_product_dir(repo_dir: Path, product: str) -> Path:
     :param product: Product directory/version key.
     :return: Product schema directory.
     :raises ValueError: If the product config cannot be found.
+
     """
     candidate = repo_dir / SCHEMA_DIR_NAME / product
 
@@ -135,6 +144,7 @@ def _infer_product_from_repo_dir(repo_dir: Path) -> str:
     :param repo_dir: Product repository root directory.
     :return: Product directory/version key inferred from the repository name.
     :raises ValueError: If the repository root name is empty.
+
     """
     product = repo_dir.resolve().name
 
@@ -176,7 +186,7 @@ def _load_config_document(config_fp: Path) -> dict[str, Any]:
 
     :param config_fp: Path to ``metaschema.yaml``.
     :return: Mutable config mapping.
-    :raises ValueError: If the config is not a mapping.
+    :raises TypeError: If the config is not a mapping.
     """
     with config_fp.open(encoding="utf-8") as stream:
         config = yaml.safe_load(stream)
@@ -186,7 +196,7 @@ def _load_config_document(config_fp: Path) -> dict[str, Any]:
 
     if not isinstance(config, dict):
         msg = f"{config_fp} must contain a YAML mapping."
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     return config
 
@@ -207,14 +217,14 @@ def _update_product_version(config_fp: Path, product: str, version: str) -> None
     :param config_fp: Path to ``metaschema.yaml``.
     :param product: Product version key to update.
     :param version: Version to write.
-    :raises ValueError: If the existing ``versions`` section is not a mapping.
+    :raises TypeError: If the existing ``versions`` section is not a mapping.
     """
     config = _load_config_document(config_fp)
     versions = config.setdefault(VERSIONS_KEY, {})
 
     if not isinstance(versions, dict):
         msg = f"{config_fp} versions must be a mapping."
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     versions[product] = version
     _write_config_document(config_fp, config)
@@ -306,7 +316,9 @@ def _warn_if_downstream_branch_not_current(
     if not submodules:
         return
 
-    _warn_if_product_branch_not_current(_get_product_repo_dir(product_dir), output_runner, reporter)
+    _warn_if_product_branch_not_current(
+        _get_product_repo_dir(product_dir), output_runner, reporter
+    )
 
 
 def _handle_dirty_worktree(
@@ -336,7 +348,7 @@ def _handle_dirty_worktree(
 def validate_release(
     product: str,
     version: str,
-    repo_dir: Path = Path("."),
+    repo_dir: Path = Path(),
     submodules: list[SubmoduleUpdate] | None = None,
     runner: CommandRunner = _run_command,
     output_runner: CommandOutputRunner = _run_command_output,
@@ -372,12 +384,17 @@ def validate_release(
         reporter,
         fail_on_dirty,
     )
-    _warn_if_downstream_branch_not_current(product_dir, requested_submodules, output_runner, reporter)
+    _warn_if_downstream_branch_not_current(
+        product_dir, requested_submodules, output_runner, reporter
+    )
     load_metaschema_config(product_dir / METASCHEMA_FN)
     resolved_submodules: list[SubmoduleUpdate] = []
 
     for submodule in requested_submodules:
-        _report(reporter, f"Validating submodule {submodule.identifier} on branch {submodule.branch}")
+        _report(
+            reporter,
+            f"Validating submodule {submodule.identifier} on branch {submodule.branch}",
+        )
         _submodule_dir, _entry, resolved_submodule = _validate_submodule(
             submodule,
             product_dir,
@@ -386,7 +403,10 @@ def validate_release(
             reporter=reporter,
             fail_on_dirty=fail_on_dirty,
         )
-        _report(reporter, f"Resolved submodule {submodule.identifier} tag {resolved_submodule.tag}")
+        _report(
+            reporter,
+            f"Resolved submodule {submodule.identifier} tag {resolved_submodule.tag}",
+        )
         resolved_submodules.append(resolved_submodule)
 
     return ReleasePrepSummary(
@@ -401,7 +421,7 @@ def validate_release(
 def prepare_release(
     product: str,
     version: str,
-    repo_dir: Path = Path("."),
+    repo_dir: Path = Path(),
     submodules: list[SubmoduleUpdate] | None = None,
     runner: CommandRunner = _run_command,
     output_runner: CommandOutputRunner = _run_command_output,
@@ -445,12 +465,17 @@ def prepare_release(
         reporter,
         fail_on_dirty,
     )
-    _warn_if_downstream_branch_not_current(product_dir, requested_submodules, output_runner, reporter)
+    _warn_if_downstream_branch_not_current(
+        product_dir, requested_submodules, output_runner, reporter
+    )
     config_fp = product_dir / METASCHEMA_FN
     resolved_submodules: list[SubmoduleUpdate] = []
 
     for submodule in requested_submodules:
-        _report(reporter, f"Updating submodule {submodule.identifier} on branch {submodule.branch}")
+        _report(
+            reporter,
+            f"Updating submodule {submodule.identifier} on branch {submodule.branch}",
+        )
         resolved_submodules.append(
             _update_submodule(
                 submodule,
@@ -461,7 +486,10 @@ def prepare_release(
                 fail_on_dirty=fail_on_dirty,
             )
         )
-        _report(reporter, f"Checked out submodule {submodule.identifier} tag {resolved_submodules[-1].tag}")
+        _report(
+            reporter,
+            f"Checked out submodule {submodule.identifier} tag {resolved_submodules[-1].tag}",
+        )
 
     _report(reporter, f"Updating {config_fp} version {product}={version}")
     _update_product_version(config_fp, product, version)
@@ -498,8 +526,14 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     :param argv: Optional CLI arguments. Uses ``sys.argv`` when omitted.
     :return: Parsed CLI arguments.
     """
-    parser = argparse.ArgumentParser(description="Prepare a GKS product schema release.")
-    parser.add_argument("--version", required=True, help="Product release version to write to metaschema.yaml.")
+    parser = argparse.ArgumentParser(
+        description="Prepare a GKS product schema release."
+    )
+    parser.add_argument(
+        "--version",
+        required=True,
+        help="Product release version to write to metaschema.yaml.",
+    )
     parser.add_argument(
         "--upstream-branch",
         help="Immediate upstream product branch to write to the only submodule in .gitmodules.",
@@ -543,7 +577,9 @@ def _print_summary(summary: ReleasePrepSummary) -> None:
     print(f"{action} {summary.product} {summary.version}")
     for submodule in summary.submodules:
         checkout_label = "would check out" if summary.validated_only else "checked out"
-        print(f"submodule {submodule.identifier}: branch {submodule.branch}, {checkout_label} {submodule.tag}")
+        print(
+            f"submodule {submodule.identifier}: branch {submodule.branch}, {checkout_label} {submodule.tag}"
+        )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -558,23 +594,37 @@ def main(argv: list[str] | None = None) -> int:
         msg = "Use either --upstream-branch or --use-current-upstream-branch, not both."
         raise ValueError(msg)
 
-    if args.skip_upstream and (args.upstream_branch or args.use_current_upstream_branch or args.upstream_tag):
+    if args.skip_upstream and (
+        args.upstream_branch or args.use_current_upstream_branch or args.upstream_tag
+    ):
         msg = "Use --skip-upstream without --upstream-branch, --use-current-upstream-branch, or --upstream-tag."
         raise ValueError(msg)
 
-    if args.upstream_tag and not args.upstream_branch and not args.use_current_upstream_branch:
-        msg = "--upstream-tag requires --upstream-branch or --use-current-upstream-branch"
+    if (
+        args.upstream_tag
+        and not args.upstream_branch
+        and not args.use_current_upstream_branch
+    ):
+        msg = (
+            "--upstream-tag requires --upstream-branch or --use-current-upstream-branch"
+        )
         raise ValueError(msg)
 
-    repo_dir = Path(".").resolve()
+    repo_dir = Path().cwd()
     product = _infer_product_from_repo_dir(repo_dir)
     product_dir = _resolve_product_dir(repo_dir, product)
     submodules = None
 
     if args.upstream_branch:
-        submodules = [_infer_submodule_update(product_dir, args.upstream_branch, args.upstream_tag)]
+        submodules = [
+            _infer_submodule_update(
+                product_dir, args.upstream_branch, args.upstream_tag
+            )
+        ]
     elif args.use_current_upstream_branch:
-        submodules = [_infer_submodule_update_from_current_branch(product_dir, args.upstream_tag)]
+        submodules = [
+            _infer_submodule_update_from_current_branch(product_dir, args.upstream_tag)
+        ]
     elif not args.skip_upstream:
         _require_upstream_branch_when_submodule_exists(product_dir)
 

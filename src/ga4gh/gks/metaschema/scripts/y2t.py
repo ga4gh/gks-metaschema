@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 templates_dir = Path(__file__).resolve().parents[4] / "templates"
-env = Environment(loader=FileSystemLoader(templates_dir))
+env = Environment(loader=FileSystemLoader(templates_dir), autoescape=True)
 
 # Mapping to corresponding hex color code and code for maturity status
 MATURITY_MAPPING: dict[str, tuple[str, str]] = {
@@ -34,15 +34,15 @@ def resolve_type(class_property_definition: dict) -> str:
         if class_property_definition["type"] == "array":
             return resolve_type(class_property_definition["items"])
         return class_property_definition["type"]
-    elif "$ref" in class_property_definition:
+    if "$ref" in class_property_definition:
         ref = class_property_definition["$ref"]
         identifier = ref.split("/")[-1]
         return f":ref:`{identifier}`"
-    elif "$refCurie" in class_property_definition:
+    if "$refCurie" in class_property_definition:
         ref = class_property_definition["$refCurie"]
         identifier = ref.split("/")[-1]
         return f":ref:`{identifier}`"
-    elif "oneOf" in class_property_definition or "anyOf" in class_property_definition:
+    if "oneOf" in class_property_definition or "anyOf" in class_property_definition:
         kw = "oneOf"
         if "anyOf" in class_property_definition:
             kw = "anyOf"
@@ -56,11 +56,12 @@ def resolve_type(class_property_definition: dict) -> str:
             else:
                 resolved_active.append(resolved_type)
         return " | ".join(resolved_active + resolved_deprecated)
-    else:
-        return "_Not Specified_"
+    return "_Not Specified_"
 
 
-def resolve_cardinality(class_property_name: str, class_property_attributes: dict, class_definition: dict) -> str:
+def resolve_cardinality(
+    class_property_name: str, class_property_attributes: dict, class_definition: dict
+) -> str:
     """Resolve class property cardinality from a YAML definition.
 
     :param class_property_name: Class property name.
@@ -68,9 +69,9 @@ def resolve_cardinality(class_property_name: str, class_property_attributes: dic
     :param class_definition: Class definition.
     :return: Cardinality string.
     """
-    if class_property_name in class_definition.get("required", []):
-        min_count = "1"
-    elif class_property_name in class_definition.get("heritableRequired", []):
+    if class_property_name in class_definition.get(
+        "required", []
+    ) or class_property_name in class_definition.get("heritableRequired", []):
         min_count = "1"
     else:
         min_count = "0"
@@ -118,7 +119,7 @@ def add_ga4gh_digest(class_definition: dict, stream: TextIO) -> None:
        - Inherent
 
     *  - {ga4gh_digest.get("prefix", None)}
-       - {str(ga4gh_digest.get("inherent", []))}\n""",
+       - {ga4gh_digest.get("inherent", [])!s}\n""",
             file=stream,
         )
 
@@ -142,7 +143,7 @@ def resolve_flags(class_property_attributes: dict) -> str:
                             <span style="background-color: #{background_color}; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="{title}">{maturity_code}</span>"""
 
     ordered = class_property_attributes.get("ordered")
-    ordered_code = ORDERED_MAPPING.get(ordered, None)
+    ordered_code = ORDERED_MAPPING.get(ordered)
 
     if ordered_code is not None:
         title = "Ordered" if ordered else "Unordered"
@@ -165,7 +166,9 @@ def _write_maturity_notice(class_definition: dict, stream: TextIO) -> None:
     template = env.get_template("maturity")
     if maturity == "draft":
         print(
-            template.render(info="warning", maturity_level="draft", modifier="significantly"),
+            template.render(
+                info="warning", maturity_level="draft", modifier="significantly"
+            ),
             file=stream,
         )
         print(file=stream)
@@ -240,7 +243,9 @@ def _write_information_model_header(inheritance: str, stream: TextIO) -> None:
     )
 
 
-def _format_property_row(class_property_name: str, class_property_attributes: dict, class_definition: dict) -> str:
+def _format_property_row(
+    class_property_name: str, class_property_attributes: dict, class_definition: dict
+) -> str:
     """Format one information model property row.
 
     :param class_property_name: Property name.
@@ -258,7 +263,11 @@ def _format_property_row(class_property_name: str, class_property_attributes: di
 
 
 def _write_information_model(
-    class_name: str, class_definition: dict, property_key: str, proc_schema: YamlSchemaProcessor, stream: TextIO
+    class_name: str,
+    class_definition: dict,
+    property_key: str,
+    proc_schema: YamlSchemaProcessor,
+    stream: TextIO,
 ) -> None:
     """Write an information model table for one class.
 
@@ -272,11 +281,20 @@ def _write_information_model(
     add_ga4gh_digest(class_definition, stream)
     _write_information_model_header(inheritance, stream)
 
-    for class_property_name, class_property_attributes in class_definition[property_key].items():
-        print(_format_property_row(class_property_name, class_property_attributes, class_definition), file=stream)
+    for class_property_name, class_property_attributes in class_definition[
+        property_key
+    ].items():
+        print(
+            _format_property_row(
+                class_property_name, class_property_attributes, class_definition
+            ),
+            file=stream,
+        )
 
 
-def _write_class_rst(class_name: str, class_definition: dict, proc_schema: YamlSchemaProcessor) -> None:
+def _write_class_rst(
+    class_name: str, class_definition: dict, proc_schema: YamlSchemaProcessor
+) -> None:
     """Write the RST artifact for one class.
 
     :param class_name: Class name being rendered.
@@ -284,7 +302,9 @@ def _write_class_rst(class_name: str, class_definition: dict, proc_schema: YamlS
     :param proc_schema: Schema processor that owns the class.
     :raises ValueError: If a non-primitive class has no property map.
     """
-    with (proc_schema.def_fp / (class_name + ".rst")).open("w", encoding="utf-8") as stream:
+    with (proc_schema.def_fp / (class_name + ".rst")).open(
+        "w", encoding="utf-8"
+    ) as stream:
         _write_maturity_notice(class_definition, stream)
         print("**Computational Definition**\n", file=stream)
         print(class_definition["description"], file=stream)
@@ -292,11 +312,15 @@ def _write_class_rst(class_name: str, class_definition: dict, proc_schema: YamlS
         if proc_schema.class_is_passthrough(class_name):
             return
 
-        property_key = _get_information_model_property_key(class_name, class_definition, proc_schema)
+        property_key = _get_information_model_property_key(
+            class_name, class_definition, proc_schema
+        )
         if property_key is None:
             return
 
-        _write_information_model(class_name, class_definition, property_key, proc_schema, stream)
+        _write_information_model(
+            class_name, class_definition, property_key, proc_schema, stream
+        )
 
 
 def main(proc_schema: YamlSchemaProcessor) -> None:

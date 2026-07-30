@@ -1,53 +1,58 @@
-name: CI
-
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-
+name: checks
+on: [push, pull_request]
 jobs:
   test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-        architecture: 'x64'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install '.[dev]'
-
-    - name: Run lint + format
-      run: |
-        ruff check src
-        ruff format --check
-
-    - name: Run tests
-      run: pytest
-  precommit_hooks:
+    name: test py${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        cmd:
-          - "end-of-file-fixer"
-          - "trailing-whitespace"
-          - "mixed-line-ending"
+        python-version: ["3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          python-version: 3.12
+          python-version: ${{ matrix.python-version }}
 
-      - uses: pre-commit/action@v3.0.1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          extra_args: ${{ matrix.cmd }} --all-files
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --extra tests
+
+      - name: Run tests
+        run: uv run pytest
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Check style
+        run: uv run ruff check && uv run ruff format --check
+
+  precommit_hooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: j178/prek-action@v1
+        with:
+          extra_args: '--all-files --skip "ruff-format" --skip "ruff-check"'

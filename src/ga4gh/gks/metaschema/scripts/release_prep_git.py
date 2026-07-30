@@ -8,9 +8,9 @@ choosing the highest reachable semantic-version tag.
 
 import re
 import subprocess
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 
 from packaging.version import InvalidVersion, Version
 
@@ -24,8 +24,20 @@ SCHEMA_DIR_NAME = "schema"
 SUBMODULES_DIR_NAME = "submodules"
 GIT_STATUS_PORCELAIN_COMMAND = ("git", "status", "--porcelain")
 GIT_FETCH_ALL_TAGS_COMMAND = ("git", "fetch", "--all", "--tags")
-GIT_UPSTREAM_BRANCH_COMMAND = ("git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}")
-GIT_UPSTREAM_COUNTS_COMMAND = ("git", "rev-list", "--left-right", "--count", "HEAD...@{u}")
+GIT_UPSTREAM_BRANCH_COMMAND = (
+    "git",
+    "rev-parse",
+    "--abbrev-ref",
+    "--symbolic-full-name",
+    "@{u}",
+)
+GIT_UPSTREAM_COUNTS_COMMAND = (
+    "git",
+    "rev-list",
+    "--left-right",
+    "--count",
+    "HEAD...@{u}",
+)
 
 SEMVER_TAG_RE = re.compile(
     r"^v?(?P<major>0|[1-9]\d*)\."
@@ -152,7 +164,9 @@ def parse_gitmodules_section_name(section_header: str) -> str | None:
     return section_header[len(prefix) : -len(suffix)]
 
 
-def identifier_matches_gitmodules_entry(identifier: str, entry: GitmodulesEntry) -> bool:
+def identifier_matches_gitmodules_entry(
+    identifier: str, entry: GitmodulesEntry
+) -> bool:
     """Check whether a CLI submodule identifier matches a ``.gitmodules`` entry.
 
     :param identifier: Submodule name or path from the CLI.
@@ -162,10 +176,16 @@ def identifier_matches_gitmodules_entry(identifier: str, entry: GitmodulesEntry)
     """
     normalized_identifier = identifier.strip("/")
     normalized_path = entry.path.strip("/")
-    return normalized_identifier in {entry.name.strip("/"), normalized_path, Path(normalized_path).name}
+    return normalized_identifier in {
+        entry.name.strip("/"),
+        normalized_path,
+        Path(normalized_path).name,
+    }
 
 
-def find_gitmodules_entry_for_identifier(product_dir: Path, identifier: str) -> GitmodulesEntry:
+def find_gitmodules_entry_for_identifier(
+    product_dir: Path, identifier: str
+) -> GitmodulesEntry:
     """Find a ``.gitmodules`` entry by submodule name or path.
 
     :param product_dir: Product schema directory.
@@ -237,7 +257,9 @@ def get_gitmodules_entries(product_dir: Path) -> list[GitmodulesEntry]:
             repo_dir / SUBMODULES_DIR_NAME,
             repo_dir / SCHEMA_DIR_NAME / SUBMODULES_DIR_NAME,
         ]
-        existing_submodule_dirs = [submodule_dir for submodule_dir in submodule_dirs if submodule_dir.exists()]
+        existing_submodule_dirs = [
+            submodule_dir for submodule_dir in submodule_dirs if submodule_dir.exists()
+        ]
         if existing_submodule_dirs:
             paths = ", ".join(str(path) for path in existing_submodule_dirs)
             msg = f"Found submodules directory without .gitmodules at {gitmodules_fp}: {paths}"
@@ -280,7 +302,9 @@ def get_gitmodules_branch(entry: GitmodulesEntry) -> str:
         msg = f"Submodule {entry.name} in {entry.gitmodules_fp} does not have a branch key."
         raise ValueError(msg)
 
-    line = entry.gitmodules_fp.read_text(encoding="utf-8").splitlines()[entry.branch_line]
+    line = entry.gitmodules_fp.read_text(encoding="utf-8").splitlines()[
+        entry.branch_line
+    ]
     _key, _separator, branch = line.partition("=")
     branch = branch.strip()
 
@@ -291,7 +315,9 @@ def get_gitmodules_branch(entry: GitmodulesEntry) -> str:
     raise ValueError(msg)
 
 
-def infer_submodule_update(product_dir: Path, branch: str, tag: str | None = None) -> SubmoduleUpdate:
+def infer_submodule_update(
+    product_dir: Path, branch: str, tag: str | None = None
+) -> SubmoduleUpdate:
     """Infer the immediate upstream submodule update from ``.gitmodules``.
 
     Example:
@@ -303,12 +329,15 @@ def infer_submodule_update(product_dir: Path, branch: str, tag: str | None = Non
     :param tag: Optional upstream tag to check out.
     :return: Requested update for the inferred upstream submodule.
     :raises ValueError: If the upstream submodule cannot be inferred.
+
     """
     entry = find_single_gitmodules_entry(product_dir)
     return SubmoduleUpdate(identifier=Path(entry.path).name, branch=branch, tag=tag)
 
 
-def infer_submodule_update_from_current_branch(product_dir: Path, tag: str | None = None) -> SubmoduleUpdate:
+def infer_submodule_update_from_current_branch(
+    product_dir: Path, tag: str | None = None
+) -> SubmoduleUpdate:
     """Infer the upstream submodule update from the current ``.gitmodules`` branch.
 
     :param product_dir: Product schema directory.
@@ -318,10 +347,14 @@ def infer_submodule_update_from_current_branch(product_dir: Path, tag: str | Non
     :raises ValueError: If the upstream submodule or branch cannot be inferred.
     """
     entry = find_single_gitmodules_entry(product_dir)
-    return SubmoduleUpdate(identifier=Path(entry.path).name, branch=get_gitmodules_branch(entry), tag=tag)
+    return SubmoduleUpdate(
+        identifier=Path(entry.path).name, branch=get_gitmodules_branch(entry), tag=tag
+    )
 
 
-def resolve_submodule_entry(product_dir: Path, submodule: SubmoduleUpdate) -> tuple[GitmodulesEntry, Path]:
+def resolve_submodule_entry(
+    product_dir: Path, submodule: SubmoduleUpdate
+) -> tuple[GitmodulesEntry, Path]:
     """Resolve a submodule entry and directory from ``.gitmodules``.
 
     :param product_dir: Product schema directory.
@@ -372,10 +405,14 @@ def warn_if_worktree_dirty(
     if not status or reporter is None:
         return
 
-    reporter(f"Warning: {label} has uncommitted changes. Review the final diff carefully.")
+    reporter(
+        f"Warning: {label} has uncommitted changes. Review the final diff carefully."
+    )
 
 
-def require_clean_worktree(repo_dir: Path, label: str, output_runner: CommandOutputRunner) -> None:
+def require_clean_worktree(
+    repo_dir: Path, label: str, output_runner: CommandOutputRunner
+) -> None:
     """Require a git working tree to have no uncommitted changes.
 
     :param repo_dir: Git repository directory to inspect.
@@ -410,7 +447,9 @@ def warn_if_product_branch_not_current(
         counts = output_runner(list(GIT_UPSTREAM_COUNTS_COMMAND), repo_dir)
     except subprocess.CalledProcessError:
         if reporter is not None:
-            reporter("Warning: product branch has no upstream tracking branch; unable to check if it is current.")
+            reporter(
+                "Warning: product branch has no upstream tracking branch; unable to check if it is current."
+            )
         return
 
     ahead_text, _separator, behind_text = counts.partition("\t")
@@ -422,14 +461,18 @@ def warn_if_product_branch_not_current(
         behind = int(behind_text)
     except ValueError:
         if reporter is not None:
-            reporter(f"Warning: unable to parse product branch upstream status: {counts}")
+            reporter(
+                f"Warning: unable to parse product branch upstream status: {counts}"
+            )
         return
 
     if reporter is None:
         return
 
     if behind and ahead:
-        reporter(f"Warning: product branch has diverged from upstream ({ahead} ahead, {behind} behind).")
+        reporter(
+            f"Warning: product branch has diverged from upstream ({ahead} ahead, {behind} behind)."
+        )
     elif behind:
         reporter(f"Warning: product branch is {behind} commit(s) behind upstream.")
     elif ahead:
@@ -462,7 +505,10 @@ def update_submodule_from_remote(entry: GitmodulesEntry, runner: CommandRunner) 
     :param runner: Command runner used for git commands.
     :raises subprocess.CalledProcessError: If git submodule update fails.
     """
-    runner(["git", "submodule", "update", "--remote", "--init", "--", entry.path], entry.gitmodules_fp.parent)
+    runner(
+        ["git", "submodule", "update", "--remote", "--init", "--", entry.path],
+        entry.gitmodules_fp.parent,
+    )
 
 
 def _normalize_semantic_tag_for_version(tag: str) -> Version | None:
@@ -475,6 +521,7 @@ def _normalize_semantic_tag_for_version(tag: str) -> Version | None:
 
     :param tag: Git tag name.
     :return: Sortable version, or ``None`` for non-semver tags.
+
     """
     match = SEMVER_TAG_RE.match(tag)
 
@@ -494,7 +541,9 @@ def _normalize_semantic_tag_for_version(tag: str) -> Version | None:
         return None
 
 
-def select_highest_semantic_tag(tags: list[str], submodule: SubmoduleUpdate, branch_ref: str) -> str:
+def select_highest_semantic_tag(
+    tags: list[str], submodule: SubmoduleUpdate, branch_ref: str
+) -> str:
     """Select the highest semantic-version tag from reachable git tags.
 
     :param tags: Git tags reachable from the upstream branch.
@@ -504,7 +553,9 @@ def select_highest_semantic_tag(tags: list[str], submodule: SubmoduleUpdate, bra
     :raises ValueError: If no semantic-version tags are found.
     """
     semantic_tags = [
-        (version, tag) for tag in tags if (version := _normalize_semantic_tag_for_version(tag)) is not None
+        (version, tag)
+        for tag in tags
+        if (version := _normalize_semantic_tag_for_version(tag)) is not None
     ]
 
     if semantic_tags:
@@ -515,7 +566,10 @@ def select_highest_semantic_tag(tags: list[str], submodule: SubmoduleUpdate, bra
 
 
 def get_latest_reachable_tag(
-    submodule: SubmoduleUpdate, branch_ref: str, submodule_dir: Path, output_runner: CommandOutputRunner
+    submodule: SubmoduleUpdate,
+    branch_ref: str,
+    submodule_dir: Path,
+    output_runner: CommandOutputRunner,
 ) -> str:
     """Get the highest semantic-version tag reachable from a submodule branch.
 
@@ -529,6 +583,7 @@ def get_latest_reachable_tag(
     :param output_runner: Command runner used for git output.
     :return: Highest semantic-version reachable tag.
     :raises ValueError: If no reachable tag can be found.
+
     """
     try:
         output = output_runner(["git", "tag", "--merged", branch_ref], submodule_dir)
@@ -539,7 +594,9 @@ def get_latest_reachable_tag(
     return select_highest_semantic_tag(output.splitlines(), submodule, branch_ref)
 
 
-def resolve_branch_ref(submodule: SubmoduleUpdate, submodule_dir: Path, runner: CommandRunner) -> str:
+def resolve_branch_ref(
+    submodule: SubmoduleUpdate, submodule_dir: Path, runner: CommandRunner
+) -> str:
     """Resolve a submodule branch to its remote git ref.
 
     :param submodule: Requested submodule update.
@@ -550,7 +607,9 @@ def resolve_branch_ref(submodule: SubmoduleUpdate, submodule_dir: Path, runner: 
     """
     branch_ref = f"{ORIGIN_REMOTE}/{submodule.branch}"
     try:
-        runner(["git", "rev-parse", "--verify", f"{branch_ref}^{{commit}}"], submodule_dir)
+        runner(
+            ["git", "rev-parse", "--verify", f"{branch_ref}^{{commit}}"], submodule_dir
+        )
     except subprocess.CalledProcessError as exc:
         msg = f"Could not find git branch {branch_ref} for submodule {submodule.identifier} in {submodule_dir}"
         raise ValueError(msg) from exc
@@ -592,12 +651,18 @@ def validate_submodule(
         raise ValueError(msg)
 
     if check_clean and fail_on_dirty:
-        require_clean_worktree(submodule_dir, f"Submodule {submodule.identifier}", output_runner)
+        require_clean_worktree(
+            submodule_dir, f"Submodule {submodule.identifier}", output_runner
+        )
     elif check_clean:
-        warn_if_worktree_dirty(submodule_dir, f"Submodule {submodule.identifier}", output_runner, reporter)
+        warn_if_worktree_dirty(
+            submodule_dir, f"Submodule {submodule.identifier}", output_runner, reporter
+        )
 
     branch_ref = resolve_branch_ref(submodule, submodule_dir, runner)
-    tag = submodule.tag or get_latest_reachable_tag(submodule, branch_ref, submodule_dir, output_runner)
+    tag = submodule.tag or get_latest_reachable_tag(
+        submodule, branch_ref, submodule_dir, output_runner
+    )
 
     try:
         runner(["git", "rev-parse", "--verify", f"{tag}^{{commit}}"], submodule_dir)
@@ -605,7 +670,13 @@ def validate_submodule(
         msg = f"Could not find git tag {tag} for submodule {submodule.identifier} in {submodule_dir}"
         raise ValueError(msg) from exc
 
-    return submodule_dir, entry, SubmoduleUpdate(identifier=submodule.identifier, branch=submodule.branch, tag=tag)
+    return (
+        submodule_dir,
+        entry,
+        SubmoduleUpdate(
+            identifier=submodule.identifier, branch=submodule.branch, tag=tag
+        ),
+    )
 
 
 def update_submodule(
@@ -634,9 +705,13 @@ def update_submodule(
     update_submodule_from_remote(entry, runner)
     submodule_dir = require_submodule_dir(entry)
     if fail_on_dirty:
-        require_clean_worktree(submodule_dir, f"Submodule {submodule.identifier}", output_runner)
+        require_clean_worktree(
+            submodule_dir, f"Submodule {submodule.identifier}", output_runner
+        )
     else:
-        warn_if_worktree_dirty(submodule_dir, f"Submodule {submodule.identifier}", output_runner, reporter)
+        warn_if_worktree_dirty(
+            submodule_dir, f"Submodule {submodule.identifier}", output_runner, reporter
+        )
     runner(list(GIT_FETCH_ALL_TAGS_COMMAND), submodule_dir)
     submodule_dir, entry, resolved_submodule = validate_submodule(
         submodule,

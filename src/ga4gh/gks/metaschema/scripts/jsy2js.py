@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+"""Read YAML from stdin and write formatted JSON to stdout"""
 
 import json
 import sys

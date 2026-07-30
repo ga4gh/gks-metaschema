@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+"""Process a source YAML file with imports merged and write YAML to stdout."""
 
 import pathlib
 import sys
