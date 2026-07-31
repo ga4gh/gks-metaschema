@@ -15,7 +15,7 @@ venv/%:
 #=> develop: install package in develop mode
 .PHONY: develop setup
 develop setup:
-	pip install -e '.[dev,tests]'
+	pip install -e '.[dev,tests,docs]'
 
 #=> devready: create venv, install prerequisites, install pkg in develop mode
 .PHONY: devready

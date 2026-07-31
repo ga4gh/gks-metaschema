@@ -27,6 +27,7 @@ dynamic = ["version"]
 [project.optional-dependencies]
 tests = ["pytest"]
 dev = ["ruff==0.14.10", "prek>=0.2.23"]
+docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.6,<10"]
 
 [project.urls]
 Homepage = "https://github.com/ga4gh/gks-metaschema"

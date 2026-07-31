@@ -1,0 +1,10 @@
+/* Keep generated diagrams legible without exceeding the documentation column. */
+.mermaid {
+  display: flex;
+  justify-content: center;
+}
+
+.mermaid svg {
+  height: auto;
+  max-width: 100%;
+}

@@ -1,0 +1,64 @@
+site_name: GKS Metaschema Processor
+site_description: Documentation for the GA4GH Genomic Knowledge Standards Metaschema Processor.
+site_url: https://gks-metaschema.readthedocs.io/
+repo_url: https://github.com/ga4gh/gks-metaschema
+repo_name: ga4gh/gks-metaschema
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - search.suggest
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - pymdownx.snippets:
+      base_path:
+        - .
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Overview: index.md
+  - How It Works:
+      - Overview: schema-authoring/index.md
+      - Source YAML and Generated Output: schema-authoring/source-and-output.md
+      - Product Build Template: schema-authoring/product-build-template.md
+      - Configuration: schema-authoring/configuration.md
+      - References to Other Models: schema-authoring/references.md
+      - Build and Review: schema-authoring/build-and-review.md
+      - Frequently Asked Questions: schema-authoring/frequently-asked-questions.md
+  - Release Management:
+      - release-management/index.md
+      - Release Preparation: release-management/release-prep.md
+      - Troubleshooting: release-management/troubleshooting.md
+  - Example Workflow:
+      - Overview: example-workflow/index.md
+      - Foundation Product: example-workflow/foundation-product.md
+      - Dependent Product: example-workflow/dependent-product.md
+  - Development:
+      - development/index.md
+      - Processor Internals: development/how-msp-works.md
+      - Contributing: development/contributing.md
