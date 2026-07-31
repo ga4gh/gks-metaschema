@@ -5,9 +5,8 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from conftest import copy_release_prep_fixture
+from conftest import copy_release_prep_fixture, run_source_update, unexpected_command
 
-from ga4gh.gks.metaschema.tools.release_prep import cli as release_prep
 from ga4gh.gks.metaschema.tools.release_prep.cli import (
     prepare_release,
 )
@@ -26,7 +25,7 @@ def _clean_output(command: list[str], cwd: Path) -> str:
     if command == ["git", "rev-list", "--left-right", "--count", "HEAD...@{u}"]:
         return "0\t0"
 
-    raise AssertionError(f"unexpected output command: {command} in {cwd}")
+    return unexpected_command(command, cwd)
 
 
 def _run_fixture_make_all(command: list[str], cwd: Path, product_dir: Path) -> None:
@@ -40,14 +39,19 @@ def _run_fixture_make_all(command: list[str], cwd: Path, product_dir: Path) -> N
         return
 
     assert cwd == product_dir.parent.resolve()
-    exit_code = release_prep._run_source_update(product_dir.resolve(), check=False)
+    exit_code = run_source_update(product_dir.resolve())
     assert exit_code == 0
 
 
 def test_select_highest_semantic_tag_uses_packaging_version_order() -> None:
     """Select the highest semantic-version tag while preserving the git tag text."""
     tag = select_highest_semantic_tag(
-        ["not-a-version", "v2.2.0-ballot.2026-07.1", "v2.1.9", "v2.2.0-ballot.2026-07.2"],
+        [
+            "not-a-version",
+            "v2.2.0-ballot.2026-07.1",
+            "v2.1.9",
+            "v2.2.0-ballot.2026-07.2",
+        ],
         SubmoduleUpdate(identifier="vrs", branch="2.2.0-ballot"),
         "origin/2.2.0-ballot",
     )
@@ -76,7 +80,14 @@ def test_prepare_release_initializes_missing_submodule(tmp_path: Path) -> None:
     def runner(command: list[str], cwd: Path) -> None:
         """Record commands and create the submodule directory on init."""
         commands.append((command, cwd))
-        if command == ["git", "submodule", "update", "--init", "--", "schema/submodules/vrs"]:
+        if command == [
+            "git",
+            "submodule",
+            "update",
+            "--init",
+            "--",
+            "schema/submodules/vrs",
+        ]:
             submodule_dir.mkdir(parents=True)
         _run_fixture_make_all(command, cwd, workdir / "schema" / "example")
 
@@ -84,21 +95,42 @@ def test_prepare_release_initializes_missing_submodule(tmp_path: Path) -> None:
         product="example",
         version="1.1.0",
         repo_dir=workdir,
-        submodules=[SubmoduleUpdate(identifier="vrs", branch="2.2.0-ballot", tag="v2.2.0")],
+        submodules=[
+            SubmoduleUpdate(identifier="vrs", branch="2.2.0-ballot", tag="v2.2.0")
+        ],
         runner=runner,
         output_runner=_clean_output,
     )
 
     assert commands[:5] == [
-        (["git", "submodule", "update", "--init", "--", "schema/submodules/vrs"], workdir.resolve()),
+        (
+            ["git", "submodule", "update", "--init", "--", "schema/submodules/vrs"],
+            workdir.resolve(),
+        ),
         (["git", "fetch", "--all", "--tags"], submodule_dir),
-        (["git", "rev-parse", "--verify", "origin/2.2.0-ballot^{commit}"], submodule_dir),
+        (
+            ["git", "rev-parse", "--verify", "origin/2.2.0-ballot^{commit}"],
+            submodule_dir,
+        ),
         (["git", "rev-parse", "--verify", "v2.2.0^{commit}"], submodule_dir),
-        (["git", "submodule", "update", "--remote", "--init", "--", "schema/submodules/vrs"], workdir.resolve()),
+        (
+            [
+                "git",
+                "submodule",
+                "update",
+                "--remote",
+                "--init",
+                "--",
+                "schema/submodules/vrs",
+            ],
+            workdir.resolve(),
+        ),
     ]
 
 
-def test_prepare_release_matches_submodule_identifier_to_gitmodules_path_basename(tmp_path: Path) -> None:
+def test_prepare_release_matches_submodule_identifier_to_gitmodules_path_basename(
+    tmp_path: Path,
+) -> None:
     """Allow CLI identifiers like gks-core to match path submodules/gks-core."""
     workdir = copy_release_prep_fixture(tmp_path)
     gitmodules_fp = workdir / ".gitmodules"
@@ -119,15 +151,29 @@ def test_prepare_release_matches_submodule_identifier_to_gitmodules_path_basenam
         product="example",
         version="1.1.0",
         repo_dir=workdir,
-        submodules=[SubmoduleUpdate(identifier="gks-core", branch="1.2.0-ballot.2026-07", tag="v1.2.0")],
+        submodules=[
+            SubmoduleUpdate(
+                identifier="gks-core", branch="1.2.0-ballot.2026-07", tag="v1.2.0"
+            )
+        ],
         runner=runner,
         output_runner=_clean_output,
     )
 
-    assert "\tbranch = 1.2.0-ballot.2026-07" in gitmodules_fp.read_text(encoding="utf-8")
+    assert "\tbranch = 1.2.0-ballot.2026-07" in gitmodules_fp.read_text(
+        encoding="utf-8"
+    )
     assert commands[0] == (["git", "fetch", "--all", "--tags"], gks_core_dir.resolve())
     assert commands[3] == (
-        ["git", "submodule", "update", "--remote", "--init", "--", "schema/submodules/gks-core"],
+        [
+            "git",
+            "submodule",
+            "update",
+            "--remote",
+            "--init",
+            "--",
+            "schema/submodules/gks-core",
+        ],
         workdir.resolve(),
     )
 
@@ -136,7 +182,9 @@ def test_prepare_release_rejects_unknown_submodule_identifier(tmp_path: Path) ->
     """Reject submodule identifiers that are not configured in .gitmodules."""
     workdir = copy_release_prep_fixture(tmp_path)
 
-    with pytest.raises(ValueError, match="Could not find a .gitmodules entry for submodule missing"):
+    with pytest.raises(
+        ValueError, match=r"Could not find a \.gitmodules entry for submodule missing"
+    ):
         prepare_release(
             product="example",
             version="1.1.0",
@@ -186,12 +234,14 @@ def test_prepare_release_rejects_missing_submodule_branch(tmp_path: Path) -> Non
     """Reject release prep when the requested submodule branch is not available."""
     workdir = copy_release_prep_fixture(tmp_path)
 
-    def runner(command: list[str], cwd: Path) -> None:
+    def runner(command: list[str], _cwd: Path) -> None:
         """Fail the git branch validation command."""
         if command == ["git", "rev-parse", "--verify", "origin/9.9.9-ballot^{commit}"]:
             raise subprocess.CalledProcessError(returncode=1, cmd=command)
 
-    with pytest.raises(ValueError, match="Could not find git branch origin/9.9.9-ballot"):
+    with pytest.raises(
+        ValueError, match=r"Could not find git branch origin/9\.9\.9-ballot"
+    ):
         prepare_release(
             product="example",
             version="1.1.0",
@@ -206,17 +256,19 @@ def test_prepare_release_rejects_missing_submodule_tag(tmp_path: Path) -> None:
     """Reject release prep when the requested submodule tag is not available."""
     workdir = copy_release_prep_fixture(tmp_path)
 
-    def runner(command: list[str], cwd: Path) -> None:
+    def runner(command: list[str], _cwd: Path) -> None:
         """Fail the git tag validation command."""
         if command == ["git", "rev-parse", "--verify", "v9.9.9^{commit}"]:
             raise subprocess.CalledProcessError(returncode=1, cmd=command)
 
-    with pytest.raises(ValueError, match="Could not find git tag v9.9.9"):
+    with pytest.raises(ValueError, match=r"Could not find git tag v9\.9\.9"):
         prepare_release(
             product="example",
             version="1.1.0",
             repo_dir=workdir,
-            submodules=[SubmoduleUpdate(identifier="vrs", branch="2.2.0-ballot", tag="v9.9.9")],
+            submodules=[
+                SubmoduleUpdate(identifier="vrs", branch="2.2.0-ballot", tag="v9.9.9")
+            ],
             runner=runner,
             output_runner=_clean_output,
         )
@@ -229,7 +281,7 @@ def test_prepare_release_rejects_missing_latest_submodule_tag(tmp_path: Path) ->
     def runner(command: list[str], cwd: Path) -> None:
         """Do not run git or make commands for this test."""
 
-    def output_runner(command: list[str], cwd: Path) -> str:
+    def output_runner(command: list[str], _cwd: Path) -> str:
         """Fail latest tag discovery."""
         if command == ["git", "status", "--porcelain"]:
             return ""
@@ -254,7 +306,7 @@ def test_prepare_release_rejects_missing_gitmodules_entry(tmp_path: Path) -> Non
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="Could not find a .gitmodules entry"):
+    with pytest.raises(ValueError, match=r"Could not find a \.gitmodules entry"):
         prepare_release(
             product="example",
             version="1.1.0",
@@ -281,7 +333,9 @@ def test_prepare_release_adds_missing_gitmodules_branch(tmp_path: Path) -> None:
         product="example",
         version="1.1.0",
         repo_dir=workdir,
-        submodules=[SubmoduleUpdate(identifier="vrs", branch="2.2.0-ballot", tag="v2.2.0")],
+        submodules=[
+            SubmoduleUpdate(identifier="vrs", branch="2.2.0-ballot", tag="v2.2.0")
+        ],
         runner=runner,
         output_runner=_clean_output,
     )

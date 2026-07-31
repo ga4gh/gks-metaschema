@@ -48,7 +48,9 @@ def merge_imported_definitions(processor: YamlSchemaProcessor) -> None:
     processor.refresh_processed_state()
 
 
-def _register_import_for_merge(processor: YamlSchemaProcessor, current: YamlSchemaProcessor) -> None:
+def _register_import_for_merge(
+    processor: YamlSchemaProcessor, current: YamlSchemaProcessor
+) -> None:
     """Register imports in dependency order for merging.
 
     :param processor: Root processor receiving merged imports.
@@ -112,4 +114,6 @@ def _normalize_merged_definition_refs(processor: YamlSchemaProcessor) -> None:
         if ":" in inherits_value:
             processor.raw_defs[schema_class]["inherits"] = inherits_value.split(":")[1]
 
-        processor.raw_defs[schema_class] = normalize_local_ref_paths(processor, processor.raw_defs[schema_class])
+        processor.raw_defs[schema_class] = normalize_local_ref_paths(
+            processor, processor.raw_defs[schema_class]
+        )

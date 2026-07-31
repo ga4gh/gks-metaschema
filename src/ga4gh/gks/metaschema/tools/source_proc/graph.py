@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any
 
 from ga4gh.gks.metaschema.tools.source_proc.paths import resolve_curie
 
+CURIE_COMPONENT_COUNT = 2
+
 if TYPE_CHECKING:
     from ga4gh.gks.metaschema.tools.source_proc.processor import YamlSchemaProcessor
 
@@ -33,11 +35,17 @@ def get_class_definition(
         schema = processor.raw_schema if raw else processor.processed_schema
         return schema[processor.schema_def_keyword][class_name], processor
 
-    if len(components) == 2:
+    if len(components) == CURIE_COMPONENT_COUNT:
         alias, class_name = components
         imported_processor = processor.imports[alias]
-        schema = imported_processor.raw_schema if raw else imported_processor.processed_schema
-        return schema[imported_processor.schema_def_keyword][class_name], imported_processor
+        schema = (
+            imported_processor.raw_schema
+            if raw
+            else imported_processor.processed_schema
+        )
+        return schema[imported_processor.schema_def_keyword][
+            class_name
+        ], imported_processor
 
     msg = f"Expected local or CURIE-qualified class name, got {schema_class}."
     raise ValueError(msg)
@@ -53,7 +61,9 @@ def build_class_relationship_maps(processor: YamlSchemaProcessor) -> None:
         if class_is_container(processor, schema_class):
             _register_container_children(processor, schema_class, class_ref, class_def)
         if "inherits" in class_def:
-            _register_inherited_child(processor, schema_class, class_ref, class_def["inherits"])
+            _register_inherited_child(
+                processor, schema_class, class_ref, class_def["inherits"]
+            )
 
 
 def get_all_descendants(processor: YamlSchemaProcessor, cls: str) -> set[str]:
@@ -95,7 +105,9 @@ def class_is_abstract(processor: YamlSchemaProcessor, schema_class: str) -> bool
     :return: ``True`` when the class has no concrete properties and is not primitive.
     """
     class_def, _ = get_class_definition(processor, schema_class, raw=True)
-    return "properties" not in class_def and not class_is_primitive(processor, schema_class)
+    return "properties" not in class_def and not class_is_primitive(
+        processor, schema_class
+    )
 
 
 def class_is_container(processor: YamlSchemaProcessor, schema_class: str) -> bool:
@@ -107,10 +119,14 @@ def class_is_container(processor: YamlSchemaProcessor, schema_class: str) -> boo
         or ``allOf``.
     """
     class_def, _ = get_class_definition(processor, schema_class, raw=True)
-    return class_is_abstract(processor, schema_class) and any(key in class_def for key in ("oneOf", "anyOf", "allOf"))
+    return class_is_abstract(processor, schema_class) and any(
+        key in class_def for key in ("oneOf", "anyOf", "allOf")
+    )
 
 
-def class_is_ga4gh_identifiable(processor: YamlSchemaProcessor, schema_class: str) -> bool:
+def class_is_ga4gh_identifiable(
+    processor: YamlSchemaProcessor, schema_class: str
+) -> bool:
     """Return whether a class declares GA4GH identifier metadata.
 
     :param processor: Owning schema processor.
@@ -161,7 +177,9 @@ def class_is_primitive(processor: YamlSchemaProcessor, schema_class: str) -> boo
     return class_def.get("type", "abstract") not in ["abstract", "object"]
 
 
-def class_is_subclass(processor: YamlSchemaProcessor, schema_class: str, parent_class: str) -> bool:
+def class_is_subclass(
+    processor: YamlSchemaProcessor, schema_class: str, parent_class: str
+) -> bool:
     """Return whether a class descends from another class.
 
     :param processor: Owning schema processor.
@@ -241,7 +259,9 @@ def _get_child_ref(processor: YamlSchemaProcessor, record: dict[str, str]) -> st
     return record["$ref"]
 
 
-def _register_inherited_child(processor: YamlSchemaProcessor, schema_class: str, class_ref: str, target: str) -> None:
+def _register_inherited_child(
+    processor: YamlSchemaProcessor, schema_class: str, class_ref: str, target: str
+) -> None:
     """Register a class as a child of its local inherited parent.
 
     :param processor: Owning schema processor.
@@ -261,7 +281,9 @@ def _register_inherited_child(processor: YamlSchemaProcessor, schema_class: str,
     processor.child_classes_by_parent[target] = child_classes
 
 
-def _get_inherited_class_def(processor: YamlSchemaProcessor, inherits: str) -> dict[str, Any]:
+def _get_inherited_class_def(
+    processor: YamlSchemaProcessor, inherits: str
+) -> dict[str, Any]:
     """Return the processed inherited class definition.
 
     :param processor: Owning schema processor.

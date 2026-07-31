@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Write one split JSON Schema artifact per processed class.
 
 Split output rewrites local and imported class refs to the concrete paths
@@ -8,7 +7,6 @@ generated from each processor's configured namespace.
 import argparse
 import copy
 import json
-import os
 import re
 from pathlib import Path
 
@@ -16,6 +14,7 @@ from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 JsonValue = str | int | float | bool | None | dict | list
 REF_FRAGMENT_RE = re.compile(r"(/\$defs|definitions)/(\w+)")
+REF_PATH_AND_FRAGMENT_PART_COUNT = 2
 
 
 def _get_import_artifact_stems(proc: YamlSchemaProcessor) -> set[str]:
@@ -28,6 +27,7 @@ def _get_import_artifact_stems(proc: YamlSchemaProcessor) -> set[str]:
 
     :param proc: Imported schema processor to match against external refs.
     :return: Candidate artifact stems for generated schema paths.
+
     """
     source_stem = proc.schema_fp.stem
     return {source_stem, source_stem.removesuffix("-source")}
@@ -43,6 +43,7 @@ def _get_primary_exported_class(proc: YamlSchemaProcessor) -> str:
     :param proc: Imported schema processor to inspect.
     :return: Primary exported class name.
     :raises ValueError: If the processor does not have exactly one exported class.
+
     """
     exported_classes = [cls for cls in proc.defs if not proc.class_is_protected(cls)]
 
@@ -74,24 +75,27 @@ def _find_import_processor_for_ref(
     :param root_proc: Root schema processor whose imports are searched.
     :return: Imported processor and resolved reference class, or ``None`` and
         the original class if no processor matches.
+
     """
     # Refs with fragments name the target class directly, e.g.
     # model.json#/$defs/CategoricalVariant.
-    for _, other in root_proc.imports.items():
+    for other in root_proc.imports.values():
         if ref_class in other.defs:
             return other, ref_class
 
     # Fragmentless refs name the generated artifact, e.g. model.json. Match that
     # artifact stem to an import and use the import's single exported class.
     ref_stem = Path(ref).stem
-    for _, other in root_proc.imports.items():
+    for other in root_proc.imports.values():
         if ref_stem in _get_import_artifact_stems(other):
             return other, _get_primary_exported_class(other)
 
     return None, ref_class
 
 
-def _resolve_ref_curie(ref_curie: str, root_proc: YamlSchemaProcessor, mode: str) -> str:
+def _resolve_ref_curie(
+    ref_curie: str, root_proc: YamlSchemaProcessor, mode: str
+) -> str:
     """Resolve a ``$refCurie`` for split output.
 
     Split output should never contain ``$refCurie``. Most CURIEs are resolved
@@ -122,7 +126,7 @@ def _parse_ref(ref_value: str) -> tuple[str, str, str]:
         unsupported fragment shape.
     """
     parts = ref_value.split("#")
-    if len(parts) == 2:
+    if len(parts) == REF_PATH_AND_FRAGMENT_PART_COUNT:
         ref_path, fragment = parts
     elif len(parts) == 1:
         ref_path = parts[0]
@@ -159,7 +163,9 @@ def _resolve_ref_processor(
     return _find_import_processor_for_ref(ref_path, ref_class, root_proc)
 
 
-def _is_protected_ref_for_current_class(proc: YamlSchemaProcessor, ref_class: str, dest_path: Path) -> bool:
+def _is_protected_ref_for_current_class(
+    proc: YamlSchemaProcessor, ref_class: str, dest_path: Path
+) -> bool:
     """Check whether a protected ref should stay as a local fragment.
 
     :param proc: Processor that owns the referenced class.
@@ -192,7 +198,9 @@ def _rewrite_ref_for_split_output(
     if proc is None:
         return None
 
-    if ref_path == "" and _is_protected_ref_for_current_class(proc, ref_class, dest_path):
+    if ref_path == "" and _is_protected_ref_for_current_class(
+        proc, ref_class, dest_path
+    ):
         return f"#{fragment}"
 
     return proc.get_class_abs_path(ref_class, mode)
@@ -219,7 +227,9 @@ def _rewrite_ref_mapping_for_split_output(
             obj["$ref"] = _resolve_ref_curie(value, root_proc, mode)
             del obj[key]
         elif key == "$ref":
-            rewritten_ref = _rewrite_ref_for_split_output(value, dest_path, root_proc, mode)
+            rewritten_ref = _rewrite_ref_for_split_output(
+                value, dest_path, root_proc, mode
+            )
             if rewritten_ref is None:
                 # External refs that are not class exports stay unchanged.
                 return obj
@@ -251,9 +261,13 @@ def _rewrite_refs_for_split_output(
         when ``obj`` is a ``list``.
     :raises ValueError: If a ``$ref`` contains multiple fragment operators or
         an unsupported fragment shape.
+
     """
     if isinstance(obj, list):
-        return [_rewrite_refs_for_split_output(item, dest_path, root_proc, mode) for item in obj]
+        return [
+            _rewrite_refs_for_split_output(item, dest_path, root_proc, mode)
+            for item in obj
+        ]
     if isinstance(obj, dict):
         return _rewrite_ref_mapping_for_split_output(obj, dest_path, root_proc, mode)
 
@@ -277,7 +291,9 @@ def _get_output_dir(root_proc: YamlSchemaProcessor, mode: str) -> Path:
     raise ValueError(msg)
 
 
-def _get_protected_defs_for_class(root_proc: YamlSchemaProcessor, schema_class: str) -> dict[str, dict]:
+def _get_protected_defs_for_class(
+    root_proc: YamlSchemaProcessor, schema_class: str
+) -> dict[str, dict]:
     """Get protected definitions that should be embedded in a split artifact.
 
     :param root_proc: Root schema processor to split.
@@ -285,14 +301,20 @@ def _get_protected_defs_for_class(root_proc: YamlSchemaProcessor, schema_class: 
     :return: Protected definitions owned directly by ``schema_class``.
     """
     protected_defs: dict[str, dict] = {}
-    for protected_class in sorted(root_proc.protected_classes_by_container.get(schema_class, [])):
+    for protected_class in sorted(
+        root_proc.protected_classes_by_container.get(schema_class, [])
+    ):
         if root_proc.raw_defs[protected_class]["protectedClassOf"] == schema_class:
-            protected_defs[protected_class] = copy.deepcopy(root_proc.defs[protected_class])
+            protected_defs[protected_class] = copy.deepcopy(
+                root_proc.defs[protected_class]
+            )
 
     return protected_defs
 
 
-def _build_split_schema_doc(root_proc: YamlSchemaProcessor, schema_class: str, target_path: Path, mode: str) -> dict:
+def _build_split_schema_doc(
+    root_proc: YamlSchemaProcessor, schema_class: str, target_path: Path, mode: str
+) -> dict:
     """Build the output document for one split schema artifact.
 
     :param root_proc: Root schema processor to split. This processor is read only;
@@ -309,7 +331,9 @@ def _build_split_schema_doc(root_proc: YamlSchemaProcessor, schema_class: str, t
     out_doc = copy.deepcopy(root_proc.for_js)
     protected_defs = _get_protected_defs_for_class(root_proc, schema_class)
     if protected_defs:
-        out_doc[schema_def_key] = _rewrite_refs_for_split_output(protected_defs, target_path, root_proc, mode)
+        out_doc[schema_def_key] = _rewrite_refs_for_split_output(
+            protected_defs, target_path, root_proc, mode
+        )
     else:
         out_doc.pop(schema_def_key, None)
 
@@ -338,7 +362,7 @@ def split_defs_to_js(root_proc: YamlSchemaProcessor, mode: str = "json") -> None
     :raises ValueError: If ``mode`` is not ``json`` or ``yaml``.
     """
     output_dir = _get_output_dir(root_proc, mode)
-    os.makedirs(output_dir, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
     schema_def_key = root_proc.schema_def_keyword
 
     for schema_class in root_proc.for_js[schema_def_key]:
@@ -362,7 +386,6 @@ def _parse_args() -> argparse.Namespace:
 
 def cli() -> None:
     """Run the split JSON Schema CLI."""
-
     args = _parse_args()
     p = YamlSchemaProcessor(Path(args.infile))
     split_defs_to_js(p)

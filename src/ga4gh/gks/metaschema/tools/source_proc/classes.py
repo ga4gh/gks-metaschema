@@ -63,7 +63,9 @@ def process_schema_class(processor: YamlSchemaProcessor, schema_class: str) -> N
         return
 
     raw_class_def = processor.raw_schema[processor.schema_def_keyword][schema_class]
-    processed_class_def = processor.processed_schema[processor.schema_def_keyword][schema_class]
+    processed_class_def = processor.processed_schema[processor.schema_def_keyword][
+        schema_class
+    ]
     _validate_class_maturity(schema_class, processed_class_def)
 
     if class_is_protected(processor, schema_class):
@@ -74,7 +76,9 @@ def process_schema_class(processor: YamlSchemaProcessor, schema_class: str) -> N
         return
 
     property_key, required_key = _get_class_property_keys(processor, schema_class)
-    state = _build_class_processing_state(processor, schema_class, processed_class_def, property_key, required_key)
+    state = _build_class_processing_state(
+        processor, schema_class, processed_class_def, property_key, required_key
+    )
     _resolve_class_refs(
         processor,
         schema_class,
@@ -85,7 +89,9 @@ def process_schema_class(processor: YamlSchemaProcessor, schema_class: str) -> N
     )
     merge_and_validate_properties(processor, schema_class, state)
     _validate_class_structure(processor, schema_class, processed_class_def)
-    _finalize_processed_class(processor, schema_class, processed_class_def, state, property_key, required_key)
+    _finalize_processed_class(
+        processor, schema_class, processed_class_def, state, property_key, required_key
+    )
 
 
 def _validate_class_maturity(schema_class: str, class_def: dict[str, Any]) -> None:
@@ -119,7 +125,9 @@ def _track_protected_class(processor: YamlSchemaProcessor, schema_class: str) ->
         processor.protected_classes_by_container[descendant].add(schema_class)
 
 
-def _get_class_property_keys(processor: YamlSchemaProcessor, schema_class: str) -> tuple[str, str]:
+def _get_class_property_keys(
+    processor: YamlSchemaProcessor, schema_class: str
+) -> tuple[str, str]:
     """Return property and required keys for a class.
 
     :param processor: Owning schema processor.
@@ -147,7 +155,9 @@ def _build_class_processing_state(
     :param required_key: Required-list key for the class.
     :return: Class processing state.
     """
-    inherited_properties, inherited_required = _inherit_class_details(processor, schema_class, class_def)
+    inherited_properties, inherited_required = _inherit_class_details(
+        processor, schema_class, class_def
+    )
     return ClassProcessingState(
         inherited_properties=inherited_properties,
         inherited_required=inherited_required,
@@ -223,7 +233,9 @@ def _resolve_class_refs(
             return
 
 
-def _validate_class_structure(processor: YamlSchemaProcessor, schema_class: str, class_def: dict[str, Any]) -> None:
+def _validate_class_structure(
+    processor: YamlSchemaProcessor, schema_class: str, class_def: dict[str, Any]
+) -> None:
     """Validate abstract/concrete class structure.
 
     :param processor: Owning schema processor.
@@ -247,6 +259,9 @@ def _validate_class_structure(processor: YamlSchemaProcessor, schema_class: str,
         _validate_ga4gh_identifier(schema_class, class_def)
 
 
+MINIMUM_INHERENT_PROPERTIES = 2
+
+
 def _validate_ga4gh_identifier(schema_class: str, class_def: dict[str, Any]) -> None:
     """Validate GA4GH identifier metadata for an identifiable class.
 
@@ -263,10 +278,10 @@ def _validate_ga4gh_identifier(schema_class: str, class_def: dict[str, Any]) -> 
         raise ValueError(msg)
 
     inherent_count = len(class_def["ga4gh"]["inherent"])
-    if inherent_count < 2:
+    if inherent_count < MINIMUM_INHERENT_PROPERTIES:
         msg = (
             "GA4GH identifiable objects are expected to be defined by at least "
-            f"2 properties, {schema_class} has {inherent_count}."
+            f"{MINIMUM_INHERENT_PROPERTIES} properties, {schema_class} has {inherent_count}."
         )
         raise ValueError(msg)
     if "type" not in class_def["ga4gh"]["inherent"]:

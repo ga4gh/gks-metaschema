@@ -65,7 +65,9 @@ def apply_property_extends(
         state.class_required.add(prop)
 
 
-def remove_conflicting_ref_shapes(inherited_property: dict[str, Any], prop_attribs: dict[str, Any]) -> None:
+def remove_conflicting_ref_shapes(
+    inherited_property: dict[str, Any], prop_attribs: dict[str, Any]
+) -> None:
     """Remove inherited ref shapes replaced by local property attributes.
 
     :param inherited_property: Inherited property definition to update.

@@ -39,7 +39,9 @@ def clean_for_js(processor: YamlSchemaProcessor) -> None:
     processor.for_js.pop("enforce_ordered", None)
     processor.for_js.pop("imports", None)
     abstract_class_removals: list[str] = []
-    for schema_class, schema_definition in processor.for_js.get(processor.schema_def_keyword, {}).items():
+    for schema_class, schema_definition in processor.for_js.get(
+        processor.schema_def_keyword, {}
+    ).items():
         if _clean_schema_definition_for_js(processor, schema_class, schema_definition):
             abstract_class_removals.append(schema_class)
 
@@ -70,7 +72,9 @@ def _clean_schema_definition_for_js(
     return False
 
 
-def _clean_abstract_definition_for_js(processor: YamlSchemaProcessor, schema_definition: dict[str, Any]) -> None:
+def _clean_abstract_definition_for_js(
+    processor: YamlSchemaProcessor, schema_definition: dict[str, Any]
+) -> None:
     """Remove abstract-only metadata and expand refs for one JS definition.
 
     :param processor: Owning schema processor.
@@ -83,24 +87,32 @@ def _clean_abstract_definition_for_js(processor: YamlSchemaProcessor, schema_def
     expand_abstract_refs(processor, schema_definition)
 
 
-def _scrub_schema_definition_descriptions(processor: YamlSchemaProcessor, schema_definition: dict[str, Any]) -> None:
+def _scrub_schema_definition_descriptions(
+    processor: YamlSchemaProcessor, schema_definition: dict[str, Any]
+) -> None:
     """Remove RST markup from a JS definition and its properties.
 
     :param processor: Owning schema processor.
     :param schema_definition: JS output definition updated in place.
     """
     if "description" in schema_definition:
-        schema_definition["description"] = scrub_rst_markup(schema_definition["description"])
+        schema_definition["description"] = scrub_rst_markup(
+            schema_definition["description"]
+        )
     if "properties" not in schema_definition:
         return
 
     for property_definition in schema_definition["properties"].values():
         if "description" in property_definition:
-            property_definition["description"] = scrub_rst_markup(property_definition["description"])
+            property_definition["description"] = scrub_rst_markup(
+                property_definition["description"]
+            )
         expand_abstract_refs(processor, property_definition)
 
 
-def expand_abstract_refs(processor: YamlSchemaProcessor, js_obj: dict[str, Any]) -> None:
+def expand_abstract_refs(
+    processor: YamlSchemaProcessor, js_obj: dict[str, Any]
+) -> None:
     """Replace abstract class refs with concrete descendant refs.
 
     :param processor: Owning schema processor.

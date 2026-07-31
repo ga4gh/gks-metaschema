@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from ga4gh.gks.metaschema.tools.config import METASCHEMA_FN
 from ga4gh.gks.metaschema.tools.release_prep.files import write_text_atomically
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 SCHEMA_DIR_NAME = "schema"
 VERSIONS_KEY = "versions"
@@ -23,6 +25,7 @@ def infer_product_from_repo_dir(repo_dir: Path) -> str:
     :param repo_dir: Product repository root directory.
     :return: Product directory and version key.
     :raises ValueError: If the resolved directory has no name.
+
     """
     product = repo_dir.resolve().name
     if product:
@@ -42,6 +45,7 @@ def resolve_product_dir(repo_dir: Path, product: str) -> Path:
     :param product: Product directory and version key.
     :return: Resolved product schema directory.
     :raises ValueError: If the product config cannot be found.
+
     """
     candidate = repo_dir / SCHEMA_DIR_NAME / product
     if (candidate / METASCHEMA_FN).exists():
@@ -71,13 +75,14 @@ def update_product_version(config_fp: Path, product: str, version: str) -> None:
     :param config_fp: Path to ``metaschema.yaml``.
     :param product: Local product version key.
     :param version: Version to write.
-    :raises ValueError: If the config or its ``versions`` key is not a mapping.
+    :raises TypeError: If the config's ``versions`` key is not a mapping.
+    :raises ValueError: If the config is not a mapping.
     """
     config = _load_config_document(config_fp)
     versions = config.setdefault(VERSIONS_KEY, {})
     if not isinstance(versions, dict):
         msg = f"{config_fp} versions must be a mapping."
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     versions[product] = version
     write_text_atomically(config_fp, yaml.dump(config, sort_keys=False))

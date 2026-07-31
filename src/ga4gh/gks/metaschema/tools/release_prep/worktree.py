@@ -3,15 +3,27 @@
 from __future__ import annotations
 
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 CommandOutputRunner = Callable[[list[str], Path], str]
 Reporter = Callable[[str], None]
 
 GIT_STATUS_PORCELAIN_COMMAND = ("git", "status", "--porcelain")
-GIT_UPSTREAM_BRANCH_COMMAND = ("git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}")
-GIT_UPSTREAM_COUNTS_COMMAND = ("git", "rev-list", "--left-right", "--count", "HEAD...@{u}")
+GIT_UPSTREAM_BRANCH_COMMAND = (
+    "git",
+    "rev-parse",
+    "--abbrev-ref",
+    "--symbolic-full-name",
+    "@{u}",
+)
+GIT_UPSTREAM_COUNTS_COMMAND = (
+    "git",
+    "rev-list",
+    "--left-right",
+    "--count",
+    "HEAD...@{u}",
+)
 
 
 def warn_if_worktree_dirty(
@@ -30,10 +42,14 @@ def warn_if_worktree_dirty(
     """
     status = output_runner(list(GIT_STATUS_PORCELAIN_COMMAND), repo_dir)
     if status and reporter is not None:
-        reporter(f"Warning: {label} has uncommitted changes. Review the final diff carefully.")
+        reporter(
+            f"Warning: {label} has uncommitted changes. Review the final diff carefully."
+        )
 
 
-def require_clean_worktree(repo_dir: Path, label: str, output_runner: CommandOutputRunner) -> None:
+def require_clean_worktree(
+    repo_dir: Path, label: str, output_runner: CommandOutputRunner
+) -> None:
     """Require a Git repository to have no uncommitted changes.
 
     :param repo_dir: Git repository directory to inspect.
@@ -66,7 +82,9 @@ def warn_if_product_branch_not_current(
         counts = output_runner(list(GIT_UPSTREAM_COUNTS_COMMAND), repo_dir)
     except subprocess.CalledProcessError:
         if reporter is not None:
-            reporter("Warning: product branch has no upstream tracking branch; unable to check if it is current.")
+            reporter(
+                "Warning: product branch has no upstream tracking branch; unable to check if it is current."
+            )
         return
 
     ahead_text, _separator, behind_text = counts.partition("\t")
@@ -78,13 +96,17 @@ def warn_if_product_branch_not_current(
         behind = int(behind_text)
     except ValueError:
         if reporter is not None:
-            reporter(f"Warning: unable to parse product branch upstream status: {counts}")
+            reporter(
+                f"Warning: unable to parse product branch upstream status: {counts}"
+            )
         return
 
     if reporter is None:
         return
     if behind and ahead:
-        reporter(f"Warning: product branch has diverged from upstream ({ahead} ahead, {behind} behind).")
+        reporter(
+            f"Warning: product branch has diverged from upstream ({ahead} ahead, {behind} behind)."
+        )
     elif behind:
         reporter(f"Warning: product branch is {behind} commit(s) behind upstream.")
     elif ahead:

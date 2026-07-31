@@ -3,9 +3,8 @@
 from pathlib import Path
 
 import yaml
-from conftest import copy_release_prep_fixture
+from conftest import copy_release_prep_fixture, run_source_update, unexpected_command
 
-from ga4gh.gks.metaschema.tools.release_prep import cli as release_prep
 from ga4gh.gks.metaschema.tools.release_prep.cli import (
     prepare_release,
     validate_release,
@@ -24,7 +23,7 @@ def _clean_output(command: list[str], cwd: Path) -> str:
     if command == ["git", "rev-list", "--left-right", "--count", "HEAD...@{u}"]:
         return "0\t0"
 
-    raise AssertionError(f"unexpected output command: {command} in {cwd}")
+    return unexpected_command(command, cwd)
 
 
 def _run_fixture_make_all(command: list[str], cwd: Path, product_dir: Path) -> None:
@@ -38,11 +37,13 @@ def _run_fixture_make_all(command: list[str], cwd: Path, product_dir: Path) -> N
         return
 
     assert cwd == product_dir.parent.resolve()
-    exit_code = release_prep._run_source_update(product_dir.resolve(), check=False)
+    exit_code = run_source_update(product_dir.resolve())
     assert exit_code == 0
 
 
-def test_prepare_release_updates_versions_and_runs_release_commands(tmp_path: Path) -> None:
+def test_prepare_release_updates_versions_and_runs_release_commands(
+    tmp_path: Path,
+) -> None:
     """Prepare a release and verify the expected workspace mutations and commands."""
     workdir = copy_release_prep_fixture(tmp_path)
     commands: list[tuple[list[str], Path]] = []
@@ -52,8 +53,13 @@ def test_prepare_release_updates_versions_and_runs_release_commands(tmp_path: Pa
         """Record release commands instead of running git or make."""
         commands.append((command, cwd))
         if command == ["make", "all"]:
-            source = (workdir / "schema" / "example" / "module" / "example-source.yaml").read_text(encoding="utf-8")
-            assert "https://w3id.org/ga4gh/schema/example/1.1.0/module/example-source.yaml" in source
+            source = (
+                workdir / "schema" / "example" / "module" / "example-source.yaml"
+            ).read_text(encoding="utf-8")
+            assert (
+                "https://w3id.org/ga4gh/schema/example/1.1.0/module/example-source.yaml"
+                in source
+            )
         _run_fixture_make_all(command, cwd, workdir / "schema" / "example")
 
     def output_runner(command: list[str], cwd: Path) -> str:
@@ -61,13 +67,19 @@ def test_prepare_release_updates_versions_and_runs_release_commands(tmp_path: Pa
         commands.append((command, cwd))
         if command == ["git", "status", "--porcelain"]:
             return ""
-        if command == ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"]:
+        if command == [
+            "git",
+            "rev-parse",
+            "--abbrev-ref",
+            "--symbolic-full-name",
+            "@{u}",
+        ]:
             return "origin/main"
         if command == ["git", "rev-list", "--left-right", "--count", "HEAD...@{u}"]:
             return "0\t0"
         if command == ["git", "tag", "--merged", "origin/2.2.0-ballot"]:
             return "v2.1.0\nv2.2.0-ballot.2026-07.1\nv2.2.0\nnot-a-version"
-        raise AssertionError(f"unexpected output command: {command} in {cwd}")
+        return unexpected_command(command, cwd)
 
     summary = prepare_release(
         product="example",
@@ -79,17 +91,26 @@ def test_prepare_release_updates_versions_and_runs_release_commands(tmp_path: Pa
         reporter=messages.append,
     )
 
-    config = yaml.safe_load((workdir / "schema" / "example" / "metaschema.yaml").read_text(encoding="utf-8"))
-    source = (workdir / "schema" / "example" / "module" / "example-source.yaml").read_text(encoding="utf-8")
+    config = yaml.safe_load(
+        (workdir / "schema" / "example" / "metaschema.yaml").read_text(encoding="utf-8")
+    )
+    source = (
+        workdir / "schema" / "example" / "module" / "example-source.yaml"
+    ).read_text(encoding="utf-8")
     gitmodules = (workdir / ".gitmodules").read_text(encoding="utf-8")
     submodule_dir = (workdir / "schema" / "submodules" / "vrs").resolve()
 
     assert config["versions"]["example"] == "1.1.0"
-    assert "https://w3id.org/ga4gh/schema/example/1.1.0/module/example-source.yaml" in source
+    assert (
+        "https://w3id.org/ga4gh/schema/example/1.1.0/module/example-source.yaml"
+        in source
+    )
     assert "\tbranch = 2.2.0-ballot" in gitmodules
     assert summary.product == "example"
     assert summary.version == "1.1.0"
-    assert summary.submodules == [SubmoduleUpdate(identifier="vrs", branch="2.2.0-ballot", tag="v2.2.0")]
+    assert summary.submodules == [
+        SubmoduleUpdate(identifier="vrs", branch="2.2.0-ballot", tag="v2.2.0")
+    ]
     assert messages == [
         "Preparing release for product example version 1.1.0",
         f"Using product schema: {(workdir / 'schema' / 'example').resolve()}",
@@ -103,15 +124,35 @@ def test_prepare_release_updates_versions_and_runs_release_commands(tmp_path: Pa
     ]
     assert commands == [
         (["git", "status", "--porcelain"], workdir.resolve()),
-        (["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], workdir.resolve()),
-        (["git", "rev-list", "--left-right", "--count", "HEAD...@{u}"], workdir.resolve()),
+        (
+            ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
+            workdir.resolve(),
+        ),
+        (
+            ["git", "rev-list", "--left-right", "--count", "HEAD...@{u}"],
+            workdir.resolve(),
+        ),
         (["git", "status", "--porcelain"], submodule_dir),
         (["git", "fetch", "--all", "--tags"], submodule_dir),
-        (["git", "rev-parse", "--verify", "origin/2.2.0-ballot^{commit}"], submodule_dir),
+        (
+            ["git", "rev-parse", "--verify", "origin/2.2.0-ballot^{commit}"],
+            submodule_dir,
+        ),
         (["git", "tag", "--merged", "origin/2.2.0-ballot"], submodule_dir),
         (["git", "rev-parse", "--verify", "v2.2.0^{commit}"], submodule_dir),
-        (["git", "submodule", "update", "--remote", "--init", "--", "schema/submodules/vrs"], workdir.resolve()),
-        (["git", "checkout", "v2.2.0"], submodule_dir),
+        (
+            [
+                "git",
+                "submodule",
+                "update",
+                "--remote",
+                "--init",
+                "--",
+                "schema/submodules/vrs",
+            ],
+            workdir.resolve(),
+        ),
+        (["git", "checkout", "--", "v2.2.0"], submodule_dir),
         (["make", "clean"], (workdir / "schema").resolve()),
         (["make", "all"], (workdir / "schema").resolve()),
     ]
@@ -131,17 +172,27 @@ def test_prepare_release_uses_explicit_submodule_tag(tmp_path: Path) -> None:
         """Fail if release prep tries to discover a tag."""
         if command == ["git", "status", "--porcelain"]:
             return ""
-        if command == ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"]:
+        if command == [
+            "git",
+            "rev-parse",
+            "--abbrev-ref",
+            "--symbolic-full-name",
+            "@{u}",
+        ]:
             return "origin/main"
         if command == ["git", "rev-list", "--left-right", "--count", "HEAD...@{u}"]:
             return "0\t0"
-        raise AssertionError(f"unexpected output command: {command} in {cwd}")
+        return unexpected_command(command, cwd)
 
     prepare_release(
         product="example",
         version="1.1.0",
         repo_dir=workdir,
-        submodules=[SubmoduleUpdate(identifier="vrs", branch="2.2.0-ballot", tag="v2.2.0-ballot.2026-07.1")],
+        submodules=[
+            SubmoduleUpdate(
+                identifier="vrs", branch="2.2.0-ballot", tag="v2.2.0-ballot.2026-07.1"
+            )
+        ],
         runner=runner,
         output_runner=output_runner,
     )
@@ -150,10 +201,27 @@ def test_prepare_release_uses_explicit_submodule_tag(tmp_path: Path) -> None:
 
     assert commands[:5] == [
         (["git", "fetch", "--all", "--tags"], submodule_dir),
-        (["git", "rev-parse", "--verify", "origin/2.2.0-ballot^{commit}"], submodule_dir),
-        (["git", "rev-parse", "--verify", "v2.2.0-ballot.2026-07.1^{commit}"], submodule_dir),
-        (["git", "submodule", "update", "--remote", "--init", "--", "schema/submodules/vrs"], workdir.resolve()),
-        (["git", "checkout", "v2.2.0-ballot.2026-07.1"], submodule_dir),
+        (
+            ["git", "rev-parse", "--verify", "origin/2.2.0-ballot^{commit}"],
+            submodule_dir,
+        ),
+        (
+            ["git", "rev-parse", "--verify", "v2.2.0-ballot.2026-07.1^{commit}"],
+            submodule_dir,
+        ),
+        (
+            [
+                "git",
+                "submodule",
+                "update",
+                "--remote",
+                "--init",
+                "--",
+                "schema/submodules/vrs",
+            ],
+            workdir.resolve(),
+        ),
+        (["git", "checkout", "--", "v2.2.0-ballot.2026-07.1"], submodule_dir),
     ]
 
 
@@ -171,15 +239,23 @@ def test_validate_release_reports_values_without_mutating_files(tmp_path: Path) 
         commands.append((command, cwd))
         if command == ["git", "status", "--porcelain"]:
             return ""
-        if command == ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"]:
+        if command == [
+            "git",
+            "rev-parse",
+            "--abbrev-ref",
+            "--symbolic-full-name",
+            "@{u}",
+        ]:
             return "origin/main"
         if command == ["git", "rev-list", "--left-right", "--count", "HEAD...@{u}"]:
             return "0\t0"
         if command == ["git", "tag", "--merged", "origin/2.2.0-ballot"]:
             return "v2.1.0\nv2.2.0"
-        raise AssertionError(f"unexpected output command: {command} in {cwd}")
+        return unexpected_command(command, cwd)
 
-    original_config = (workdir / "schema" / "example" / "metaschema.yaml").read_text(encoding="utf-8")
+    original_config = (workdir / "schema" / "example" / "metaschema.yaml").read_text(
+        encoding="utf-8"
+    )
     original_gitmodules = (workdir / ".gitmodules").read_text(encoding="utf-8")
 
     summary = validate_release(
@@ -194,15 +270,28 @@ def test_validate_release_reports_values_without_mutating_files(tmp_path: Path) 
     submodule_dir = (workdir / "schema" / "submodules" / "vrs").resolve()
 
     assert summary.validated_only is True
-    assert summary.submodules == [SubmoduleUpdate(identifier="vrs", branch="2.2.0-ballot", tag="v2.2.0")]
-    assert (workdir / "schema" / "example" / "metaschema.yaml").read_text(encoding="utf-8") == original_config
+    assert summary.submodules == [
+        SubmoduleUpdate(identifier="vrs", branch="2.2.0-ballot", tag="v2.2.0")
+    ]
+    assert (workdir / "schema" / "example" / "metaschema.yaml").read_text(
+        encoding="utf-8"
+    ) == original_config
     assert (workdir / ".gitmodules").read_text(encoding="utf-8") == original_gitmodules
     assert commands == [
         (["git", "status", "--porcelain"], workdir.resolve()),
-        (["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], workdir.resolve()),
-        (["git", "rev-list", "--left-right", "--count", "HEAD...@{u}"], workdir.resolve()),
+        (
+            ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
+            workdir.resolve(),
+        ),
+        (
+            ["git", "rev-list", "--left-right", "--count", "HEAD...@{u}"],
+            workdir.resolve(),
+        ),
         (["git", "status", "--porcelain"], submodule_dir),
-        (["git", "rev-parse", "--verify", "origin/2.2.0-ballot^{commit}"], submodule_dir),
+        (
+            ["git", "rev-parse", "--verify", "origin/2.2.0-ballot^{commit}"],
+            submodule_dir,
+        ),
         (["git", "tag", "--merged", "origin/2.2.0-ballot"], submodule_dir),
         (["git", "rev-parse", "--verify", "v2.2.0^{commit}"], submodule_dir),
     ]

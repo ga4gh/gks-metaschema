@@ -17,7 +17,9 @@ def write_text_atomically(file_path: Path, text: str) -> None:
     :param text: Complete replacement text.
     """
     file_mode = file_path.stat().st_mode
-    temp_fd, temp_name = tempfile.mkstemp(prefix=f".{file_path.name}.", dir=file_path.parent, text=True)
+    temp_fd, temp_name = tempfile.mkstemp(
+        prefix=f".{file_path.name}.", dir=file_path.parent, text=True
+    )
     temp_path = Path(temp_name)
     try:
         os.fchmod(temp_fd, file_mode)
