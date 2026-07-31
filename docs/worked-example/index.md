@@ -250,10 +250,10 @@ foundation branch that the dependent product should follow:
 #### Use the Latest Tag on a Branch
 
 ```shell
-gks-release-prep --version 2.1.0 --upstream-branch 1.1.0
+gks-release-prep --version 2.1.0 --upstream-branch 1.1
 ```
 
-This resolves the latest release tag reachable from the `1.1.0` foundation
+This resolves the latest release tag reachable from the `1.1` foundation
 branch.
 
 #### Pin a Specific Tag
@@ -262,7 +262,7 @@ To use a particular foundation release tag instead, provide both the branch and
 the tag:
 
 ```shell
-gks-release-prep --version 2.1.0 --upstream-branch 1.1.0 --upstream-tag v1.1.0
+gks-release-prep --version 2.1.0 --upstream-branch 1.1 --upstream-tag v1.1.0
 ```
 
 `--upstream-tag` expects the exact Git tag name, including `v` when present.
@@ -281,7 +281,7 @@ Schema reference:
 
 ```ini
 # .gitmodules
-branch = 1.1.0
+branch = 1.1
 ```
 
 ```yaml
