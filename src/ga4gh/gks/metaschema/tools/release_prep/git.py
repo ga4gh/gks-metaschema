@@ -641,4 +641,6 @@ def update_submodule(
         raise ValueError(msg)
     update_gitmodules_branch(entry, submodule.branch)
     update_submodule_from_remote(entry, runner)
+    # Record the selected tag commit while .gitmodules keeps the update branch.
+    runner(["git", "checkout", resolved_submodule.tag], submodule_dir)
     return resolved_submodule

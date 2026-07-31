@@ -220,6 +220,7 @@ def test_prepare_release_uses_explicit_submodule_tag(tmp_path: Path) -> None:
             ],
             workdir.resolve(),
         ),
+        (["git", "checkout", "v2.2.0-ballot.2026-07.1"], submodule_dir),
     ]
 
 
