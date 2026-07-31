@@ -152,6 +152,7 @@ def test_prepare_release_updates_versions_and_runs_release_commands(
             ],
             workdir.resolve(),
         ),
+        (["git", "checkout", "v2.2.0"], submodule_dir),
         (["make", "clean"], (workdir / "schema").resolve()),
         (["make", "all"], (workdir / "schema").resolve()),
     ]
