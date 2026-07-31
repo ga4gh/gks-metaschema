@@ -1,8 +1,8 @@
 # gks-metaschema
 
-Tools and scripts for parsing the GA4GH Genomic Knowledge Standards (GKS) metaschemas.
-The metaschema processor (MSP) converts
-[JSON Schema Version 2020-12](json-schema.org/draft/2020-12/schema) in YAML to
+Tools and scripts for parsing GA4GH Genomic Knowledge Standards (GKS) metaschemas.
+The GKS Metaschema Processor (MSP) converts
+[JSON Schema Version 2020-12](https://json-schema.org/draft/2020-12/schema) in YAML to
 reStructuredText (RST) and JSON files.
 
 Currently used in:

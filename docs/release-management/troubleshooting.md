@@ -21,11 +21,11 @@ when MSP also needs the upstream definition.
 
 ## Unresolved `$refCurie` or `{version}` in Generated Output
 
-Generated JSON Schema and RST must contain concrete `$ref` URLs and versions.
-Check that the current product declares the aliases it uses and that each
-namespace resolves to a configured version. If the source configuration is
-valid and generated output still has a CURIE or template, report it as an MSP
-bug with a minimal source fixture.
+Generated JSON Schema must contain concrete `$ref` URLs and versions. Generated
+JSON Schema and RST must not contain `{version}`. Check that the current product
+declares the aliases it uses and that each namespace resolves to a configured
+version. If the source configuration is valid and generated output still has a
+CURIE or template, report it as an MSP bug with a minimal source fixture.
 
 ## Release Prep Cannot Find a Submodule, Branch, or Tag
 
@@ -38,3 +38,17 @@ or `--use-current-upstream-branch` to confirm the branch already configured in
 Use `--validate` to check the product, submodule, branch, and tag without
 changing files. See [Release Preparation](release-prep.md) for the full local
 workflow.
+
+## Build Fails After a Schema Change
+
+Read the first error reported by `make all`; later errors can be consequences of
+the first one. Confirm that source YAML indentation and references are valid,
+then check whether the source `$id`, configured version, imports, and namespaces
+agree. See [How It Works](../schema-authoring/index.md) for the build and review
+workflow.
+
+## Still Stuck
+
+Record the command you ran, the first complete error message, the product and
+source file involved, and the relevant `metaschema.yaml` entries. This gives a
+schema maintainer or MSP developer enough context to reproduce the problem.

@@ -1,40 +1,33 @@
-# Release Prep
+# Release Preparation
 
-`gks-release-prep` automates the local steps used to prepare a GKS product
-release from `metaschema.yaml`.
+Releasing a GKS product changes more than its displayed version. The product
+version must agree with source `$id` values and generated references. A
+downstream product can also need to point at the released version of its
+immediate upstream product.
+
+`gks-release-prep` coordinates those changes from a requested product version.
+Run it after deciding the release version and, for a downstream product, the
+upstream branch or tag to use. Run it before reviewing and committing the
+release changes.
 
 Run this command from the root of the product repository being released. The
 repository root must contain `schema/`. The product name is inferred from the
 repository directory name; for example, a checkout directory named `va-spec`
 uses `schema/va-spec/metaschema.yaml`.
 
-## What It Automates
+## What It Changes
 
-Before release prep was automated, release users had to do the following
-manually:
-
-* update the immediate upstream submodule branch in `.gitmodules`
-* initialize the upstream submodule if needed
-* update the upstream submodule from the configured remote branch
-* choose and check out the upstream release tag
-* update the local product version in `schema/<product>/metaschema.yaml`
-* update source YAML version references before build validation runs
-* run `make clean`, then `make all` to regenerate artifacts
-* run `source2updated --check --disallow-versioned-refs`
-
-The command performs those steps locally. It does not stage files, commit, tag,
-or push changes. Review the working tree diff and create the release commit
-manually.
+The command updates the immediate upstream submodule when needed, updates the
+local product version, regenerates artifacts, and verifies source references.
+It does not stage files, commit, tag, or push changes. Review the working tree
+diff and create the release commit manually.
 
 If a later step fails, release prep does not roll back earlier changes to
 `.gitmodules`, the submodule checkout, source YAML, or generated artifacts.
 Review and resolve the resulting working tree changes manually.
 
 Release prep warns if the product repo or upstream submodule has uncommitted
-changes. Use `--fail-on-dirty` when those warnings should fail the command
-instead. For downstream products, it also prints a warning if the product branch
-has no upstream tracking branch, is behind upstream, is ahead of upstream, or
-has diverged.
+changes. Use `--fail-on-dirty` when those warnings should fail the command.
 
 ## Downstream Products
 
@@ -43,12 +36,16 @@ single submodule entry in `.gitmodules`. Release prep intentionally accepts only
 one immediate upstream submodule. Transitive upstream products should be updated
 in their own release branches first.
 
+### Change the Upstream Branch
+
 Provide `--upstream-branch` when the upstream branch should be changed or
 explicitly rewritten:
 
 ```shell
 gks-release-prep --version 1.1.0 --upstream-branch 1.2.0-ballot.2026-07
 ```
+
+### Keep the Current Upstream Branch
 
 If the existing `.gitmodules` branch is already correct, provide
 `--use-current-upstream-branch` instead:
@@ -57,24 +54,29 @@ If the existing `.gitmodules` branch is already correct, provide
 gks-release-prep --version 1.1.0 --use-current-upstream-branch
 ```
 
-Release prep performs the following steps:
+### Release Workflow
+
+For a downstream product, release prep performs the following steps:
 
 ```mermaid
-flowchart LR
+flowchart TD
   Branch[Confirm upstream branch] --> Tag[Resolve upstream tag]
-  Tag --> Submodule[Update submodule and checkout tag]
+  Tag --> Submodule[Update submodule]
   Submodule --> Config[Update metaschema.yaml]
-  Config --> Sources[Update source YAML versions]
-  Sources --> Build[make clean and make all]
-  Build --> Verify[Verify source references]
+  Config --> Sources[Update source versions]
+  Sources --> Build[Regenerate artifacts]
+  Build --> Verify[Verify references]
 ```
 
 1. Initialize the submodule if needed, then fetch remote branches and tags.
 2. Verify `origin/<branch>` and resolve the requested or latest reachable tag.
-3. Update `.gitmodules`, update the submodule from the remote branch, and check out the resolved tag.
+3. Update `.gitmodules`, update the submodule from the remote branch, and check
+   out the resolved tag.
 4. Update the local product version and source YAML version references.
 5. Run `make clean`, then `make all` to regenerate artifacts.
 6. Verify source YAML references with `source2updated --check`.
+
+### Pin an Upstream Tag
 
 To pin a specific upstream tag instead of using the latest reachable tag, pass
 `--upstream-tag`:
@@ -83,8 +85,13 @@ To pin a specific upstream tag instead of using the latest reachable tag, pass
 gks-release-prep --version 1.1.0 --upstream-branch 1.2.0-ballot.2026-07 --upstream-tag v1.2.0-ballot.2026-07.1
 ```
 
+`--upstream-tag` expects the exact Git tag name, including `v` when present.
+The tag selects the Git checkout; `metaschema.yaml` versions never include `v`.
+
 If the current `.gitmodules` branch is correct and only the tag should be
 pinned, combine the tag with `--use-current-upstream-branch`.
+
+### Keep the Existing Submodule Checkout
 
 If the imported product is already at the correct checkout and should not be
 updated, use `--skip-upstream`:
@@ -93,10 +100,9 @@ updated, use `--skip-upstream`:
 gks-release-prep --version 1.1.0 --skip-upstream
 ```
 
-This leaves `.gitmodules` and the submodule checkout unchanged, then updates the
-local product version, updates source YAML version references, runs `make clean`
-then `make all`,
-and verifies source YAML references.
+This leaves `.gitmodules` and the submodule checkout unchanged. The command
+still updates the local product version, regenerates artifacts, and verifies
+source YAML references.
 
 ## First Product
 
