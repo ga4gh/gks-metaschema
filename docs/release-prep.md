@@ -59,6 +59,16 @@ gks-release-prep --version 1.1.0 --use-current-upstream-branch
 
 Release prep performs the following steps:
 
+```mermaid
+flowchart LR
+  Branch[Confirm upstream branch] --> Tag[Resolve upstream tag]
+  Tag --> Submodule[Update submodule and checkout tag]
+  Submodule --> Config[Update metaschema.yaml]
+  Config --> Sources[Update source YAML versions]
+  Sources --> Build[make clean and make all]
+  Build --> Verify[Verify source references]
+```
+
 1. Initialize the submodule if needed, then fetch remote branches and tags.
 2. Verify `origin/<branch>` and resolve the requested or latest reachable tag.
 3. Update `.gitmodules`, update the submodule from the remote branch, and check out the resolved tag.

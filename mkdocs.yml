@@ -1,0 +1,44 @@
+site_name: GKS Metaschema
+site_description: Documentation for the GA4GH Genomic Knowledge Standards metaschema processor.
+site_url: https://gks-metaschema.readthedocs.io/
+repo_url: https://github.com/ga4gh/gks-metaschema
+repo_name: ga4gh/gks-metaschema
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - search.suggest
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Getting Started:
+      - Overview: index.md
+      - Architecture: architecture.md
+  - Product Configuration:
+      - Metaschema Configuration: metaschema-config.md
+  - Release Management:
+      - Release Preparation: release-prep.md
+      - Troubleshooting: troubleshooting.md
+  - Development:
+      - Contributing: contributing.md
