@@ -259,6 +259,9 @@ def _validate_class_structure(
         _validate_ga4gh_identifier(schema_class, class_def)
 
 
+MINIMUM_INHERENT_PROPERTIES = 2
+
+
 def _validate_ga4gh_identifier(schema_class: str, class_def: dict[str, Any]) -> None:
     """Validate GA4GH identifier metadata for an identifiable class.
 
@@ -275,10 +278,10 @@ def _validate_ga4gh_identifier(schema_class: str, class_def: dict[str, Any]) -> 
         raise ValueError(msg)
 
     inherent_count = len(class_def["ga4gh"]["inherent"])
-    if inherent_count < 2:  # noqa: PLR2004
+    if inherent_count < MINIMUM_INHERENT_PROPERTIES:
         msg = (
             "GA4GH identifiable objects are expected to be defined by at least "
-            f"2 properties, {schema_class} has {inherent_count}."
+            f"{MINIMUM_INHERENT_PROPERTIES} properties, {schema_class} has {inherent_count}."
         )
         raise ValueError(msg)
     if "type" not in class_def["ga4gh"]["inherent"]:

@@ -75,7 +75,8 @@ def update_product_version(config_fp: Path, product: str, version: str) -> None:
     :param config_fp: Path to ``metaschema.yaml``.
     :param product: Local product version key.
     :param version: Version to write.
-    :raises TypeError: If the config or its ``versions`` key is not a mapping.
+    :raises TypeError: If the config's ``versions`` key is not a mapping.
+    :raises ValueError: If the config is not a mapping.
     """
     config = _load_config_document(config_fp)
     versions = config.setdefault(VERSIONS_KEY, {})

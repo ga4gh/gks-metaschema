@@ -40,6 +40,7 @@ def _run_command(command: list[str], cwd: Path) -> None:
     :raises subprocess.CalledProcessError: If the command exits with a
         non-zero status.
     """
+    # Commands are constructed by release-prep helpers and run without a shell.
     subprocess.run(command, cwd=cwd, check=True)  # noqa: S603
 
 
@@ -52,6 +53,7 @@ def _run_command_output(command: list[str], cwd: Path) -> str:
     :raises subprocess.CalledProcessError: If the command exits with a
         non-zero status.
     """
+    # Commands are constructed by release-prep helpers and run without a shell.
     completed = subprocess.run(  # noqa: S603
         command,
         cwd=cwd,
@@ -96,9 +98,13 @@ def _start_release(
     :param product: Local product name and version key.
     :param version: Requested local product version.
     :param repo_dir: Product repository root directory.
-    :param product: Product directory/version key.
-    :return: Product schema directory.
-    :raises ValueError: If the product config cannot be found.
+    :param submodules: Requested immediate upstream submodule updates.
+    :param output_runner: Command runner for git commands that return output.
+    :param reporter: Optional progress reporter.
+    :param fail_on_dirty: Whether dirty worktrees should fail the operation.
+    :return: Resolved product schema directory.
+    :raises ValueError: If more than one submodule is requested or the product
+        directory cannot be resolved.
     """
     _validate_submodule_count(submodules)
     _report(reporter, f"{action} release for product {product} version {version}")
@@ -501,7 +507,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         raise ValueError(msg)
 
-    repo_dir = Path().cwd()
+    repo_dir = Path.cwd()
     product = product_config.infer_product_from_repo_dir(repo_dir)
     product_dir = product_config.resolve_product_dir(repo_dir, product)
     submodules = None

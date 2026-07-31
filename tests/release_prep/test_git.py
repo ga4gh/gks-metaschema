@@ -216,7 +216,7 @@ def test_prepare_release_rejects_missing_submodule_directory(tmp_path: Path) -> 
     workdir = copy_release_prep_fixture(tmp_path)
     shutil.rmtree(workdir / "schema" / "submodules" / "vrs")
 
-    def runner(command: list[str], _cwd: Path) -> None:
+    def runner(command: list[str], cwd: Path) -> None:
         """Do not create the missing submodule directory."""
 
     with pytest.raises(ValueError, match="does not exist after update"):
@@ -278,7 +278,7 @@ def test_prepare_release_rejects_missing_latest_submodule_tag(tmp_path: Path) ->
     """Reject release prep when no latest reachable tag can be discovered."""
     workdir = copy_release_prep_fixture(tmp_path)
 
-    def runner(command: list[str], _cwd: Path) -> None:
+    def runner(command: list[str], cwd: Path) -> None:
         """Do not run git or make commands for this test."""
 
     def output_runner(command: list[str], _cwd: Path) -> str:

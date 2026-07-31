@@ -641,5 +641,6 @@ def update_submodule(
         raise ValueError(msg)
     update_gitmodules_branch(entry, submodule.branch)
     update_submodule_from_remote(entry, runner)
-    runner(["git", "checkout", resolved_submodule.tag], submodule_dir)
+    # A tag may be supplied on the CLI. ``--`` prevents Git from parsing it as an option.
+    runner(["git", "checkout", "--", resolved_submodule.tag], submodule_dir)
     return resolved_submodule

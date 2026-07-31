@@ -14,6 +14,7 @@ from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 JsonValue = str | int | float | bool | None | dict | list
 REF_FRAGMENT_RE = re.compile(r"(/\$defs|definitions)/(\w+)")
+REF_PATH_AND_FRAGMENT_PART_COUNT = 2
 
 
 def _get_import_artifact_stems(proc: YamlSchemaProcessor) -> set[str]:
@@ -125,7 +126,7 @@ def _parse_ref(ref_value: str) -> tuple[str, str, str]:
         unsupported fragment shape.
     """
     parts = ref_value.split("#")
-    if len(parts) == 2:  # noqa: PLR2004
+    if len(parts) == REF_PATH_AND_FRAGMENT_PART_COUNT:
         ref_path, fragment = parts
     elif len(parts) == 1:
         ref_path = parts[0]

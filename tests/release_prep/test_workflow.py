@@ -152,7 +152,7 @@ def test_prepare_release_updates_versions_and_runs_release_commands(
             ],
             workdir.resolve(),
         ),
-        (["git", "checkout", "v2.2.0"], submodule_dir),
+        (["git", "checkout", "--", "v2.2.0"], submodule_dir),
         (["make", "clean"], (workdir / "schema").resolve()),
         (["make", "all"], (workdir / "schema").resolve()),
     ]
@@ -221,7 +221,7 @@ def test_prepare_release_uses_explicit_submodule_tag(tmp_path: Path) -> None:
             ],
             workdir.resolve(),
         ),
-        (["git", "checkout", "v2.2.0-ballot.2026-07.1"], submodule_dir),
+        (["git", "checkout", "--", "v2.2.0-ballot.2026-07.1"], submodule_dir),
     ]
 
 

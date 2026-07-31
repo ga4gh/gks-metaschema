@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import yaml
@@ -92,9 +92,7 @@ def resolve_curie(processor: YamlSchemaProcessor, curie: str) -> str:
 
 
 def resolve_property_tree_refs(
-    processor: YamlSchemaProcessor,
-    raw_node: Any,  # noqa: ANN401
-    processed_node: Any,  # noqa: ANN401
+    processor: YamlSchemaProcessor, raw_node: object, processed_node: object
 ) -> None:
     """Resolve refs inside a raw/processed property tree pair.
 

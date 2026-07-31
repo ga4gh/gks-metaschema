@@ -9,7 +9,6 @@ import re
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import yaml
 
@@ -208,7 +207,7 @@ def load_imported_versions(config_fp: Path, imports: dict[str, str]) -> dict[str
     return versions
 
 
-def _normalize_string_mapping(value: Any, key: str) -> dict[str, str]:  # noqa: ANN401
+def _normalize_string_mapping(value: object, key: str) -> dict[str, str]:
     """Normalize a config section as a string-to-string mapping.
 
     :param value: Raw YAML value for the config section.

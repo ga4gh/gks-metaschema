@@ -250,6 +250,7 @@ def test_prepare_release_skips_branch_warning_for_product_without_submodule(
         commands.append((command, cwd))
         if command == ["git", "status", "--porcelain"]:
             return ""
+
         return unexpected_command(command, cwd)
 
     prepare_release(

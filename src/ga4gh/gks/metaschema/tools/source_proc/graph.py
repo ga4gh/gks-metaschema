@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any
 
 from ga4gh.gks.metaschema.tools.source_proc.paths import resolve_curie
 
+CURIE_COMPONENT_COUNT = 2
+
 if TYPE_CHECKING:
     from ga4gh.gks.metaschema.tools.source_proc.processor import YamlSchemaProcessor
 
@@ -33,7 +35,7 @@ def get_class_definition(
         schema = processor.raw_schema if raw else processor.processed_schema
         return schema[processor.schema_def_keyword][class_name], processor
 
-    if len(components) == 2:  # noqa: PLR2004
+    if len(components) == CURIE_COMPONENT_COUNT:
         alias, class_name = components
         imported_processor = processor.imports[alias]
         schema = (
