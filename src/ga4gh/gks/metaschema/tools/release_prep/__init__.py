@@ -4,7 +4,7 @@ Package modules:
 
 - ``cli``: command parsing and release workflow orchestration.
 - ``product_config``: product schema locations and ``metaschema.yaml`` edits.
-- ``git``: immediate-upstream submodule metadata, validation, and checkout.
+- ``git``: immediate-upstream submodule metadata, validation, and updates.
 - ``worktree``: non-mutating Git worktree and branch-status checks.
 - ``schema_versions``: source YAML version update and verification command.
 - ``files``: atomic text-file writes for release-prep mutations.

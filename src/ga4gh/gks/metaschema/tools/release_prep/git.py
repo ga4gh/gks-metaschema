@@ -1,4 +1,4 @@
-"""Git submodule metadata and checkout helpers for release preparation.
+"""Git submodule metadata and update helpers for release preparation.
 
 This module parses and updates ``.gitmodules``, resolves the single immediate
 upstream submodule, updates it from its remote branch, and chooses the highest
@@ -62,7 +62,7 @@ class SubmoduleUpdate:
 
     :param identifier: Submodule name or path from ``.gitmodules``.
     :param branch: Git branch to write to ``.gitmodules``.
-    :param tag: Optional git tag to check out. When omitted, release prep uses
+    :param tag: Optional git tag to validate. When omitted, release prep uses
         the highest semantic-version tag reachable from ``origin/<branch>``.
     """
 
@@ -597,7 +597,7 @@ def update_submodule(
     reporter: Reporter | None = None,
     fail_on_dirty: bool = False,
 ) -> SubmoduleUpdate:
-    """Resolve an upstream ref before updating metadata and checking it out.
+    """Resolve an upstream ref before updating submodule metadata.
 
     The branch and tag are fetched and resolved before ``.gitmodules`` changes.
     A failed ref lookup therefore leaves tracked product files unchanged.
@@ -609,7 +609,7 @@ def update_submodule(
     :param reporter: Optional progress reporter for dirty worktree warnings.
     :param fail_on_dirty: Whether dirty submodule worktrees should fail release
         prep instead of printing warnings.
-    :return: Submodule update with the resolved checkout tag.
+    :return: Submodule update with the resolved tag.
     :raises ValueError: If the submodule directory, ``.gitmodules`` entry, or
         requested branch or tag cannot be found.
     """
@@ -641,6 +641,4 @@ def update_submodule(
         raise ValueError(msg)
     update_gitmodules_branch(entry, submodule.branch)
     update_submodule_from_remote(entry, runner)
-    # A tag may be supplied on the CLI. ``--`` prevents Git from parsing it as an option.
-    runner(["git", "checkout", "--", resolved_submodule.tag], submodule_dir)
     return resolved_submodule

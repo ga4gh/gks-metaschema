@@ -115,7 +115,7 @@ def test_prepare_release_updates_versions_and_runs_release_commands(
         "Preparing release for product example version 1.1.0",
         f"Using product schema: {(workdir / 'schema' / 'example').resolve()}",
         "Updating submodule vrs on branch 2.2.0-ballot",
-        "Checked out submodule vrs tag v2.2.0",
+        "Resolved submodule vrs tag v2.2.0",
         f"Updating {(workdir / 'schema' / 'example' / 'metaschema.yaml').resolve()} version example=1.1.0",
         "Updating source YAML version references",
         f"Running make clean in {(workdir / 'schema').resolve()}",
@@ -152,14 +152,13 @@ def test_prepare_release_updates_versions_and_runs_release_commands(
             ],
             workdir.resolve(),
         ),
-        (["git", "checkout", "--", "v2.2.0"], submodule_dir),
         (["make", "clean"], (workdir / "schema").resolve()),
         (["make", "all"], (workdir / "schema").resolve()),
     ]
 
 
 def test_prepare_release_uses_explicit_submodule_tag(tmp_path: Path) -> None:
-    """Use an explicit checkout tag instead of discovering the latest tag."""
+    """Use an explicit tag instead of discovering the latest tag."""
     workdir = copy_release_prep_fixture(tmp_path)
     commands: list[tuple[list[str], Path]] = []
 
@@ -221,7 +220,6 @@ def test_prepare_release_uses_explicit_submodule_tag(tmp_path: Path) -> None:
             ],
             workdir.resolve(),
         ),
-        (["git", "checkout", "--", "v2.2.0-ballot.2026-07.1"], submodule_dir),
     ]
 
 

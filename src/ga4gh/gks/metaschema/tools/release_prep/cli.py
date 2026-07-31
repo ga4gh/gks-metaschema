@@ -2,7 +2,7 @@
 
 The release-prep command orchestrates the repeatable release steps that product
 maintainers otherwise run manually: update the immediate upstream submodule
-branch, check out the selected upstream tag, set the local product version,
+branch, validate the selected upstream tag, set the local product version,
 regenerate artifacts, and verify source YAML version references.
 """
 
@@ -382,7 +382,7 @@ def prepare_release(
         )
         _report(
             reporter,
-            f"Checked out submodule {submodule.identifier} tag {resolved_submodules[-1].tag}",
+            f"Resolved submodule {submodule.identifier} tag {resolved_submodules[-1].tag}",
         )
 
     _report(reporter, f"Updating {config_fp} version {product}={version}")
@@ -443,7 +443,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--upstream-tag",
         help=(
-            "Optional immediate upstream submodule tag to check out. Requires "
+            "Optional immediate upstream submodule tag to validate. Requires "
             "--upstream-branch or --use-current-upstream-branch."
         ),
     )
@@ -473,9 +473,9 @@ def _print_summary(summary: ReleasePrepSummary) -> None:
     action = "validated" if summary.validated_only else "prepared"
     print(f"{action} {summary.product} {summary.version}")  # noqa: T201
     for submodule in summary.submodules:
-        checkout_label = "would check out" if summary.validated_only else "checked out"
+        tag_label = "would resolve" if summary.validated_only else "resolved"
         print(  # noqa: T201
-            f"submodule {submodule.identifier}: branch {submodule.branch}, {checkout_label} {submodule.tag}"
+            f"submodule {submodule.identifier}: branch {submodule.branch}, {tag_label} {submodule.tag}"
         )
 
 
