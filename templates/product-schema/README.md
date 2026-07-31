@@ -5,4 +5,6 @@ Copy `Makefile` and `prune.mk` together into a directory containing one or more
 generates JSON Schema and RST artifacts, and removes output for models no longer
 exported by the source files.
 
-Run `make all` from that directory after installing MSP.
+Copy `schema/Makefile` to a product's `schema/` directory. It finds source
+areas and runs their Makefiles, allowing product-level `make all` and
+`make clean` commands.

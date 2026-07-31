@@ -54,8 +54,10 @@ nav:
       - release-management/index.md
       - Release Preparation: release-management/release-prep.md
       - Troubleshooting: release-management/troubleshooting.md
-  - Worked Example:
-      - Overview: worked-example/index.md
+  - Example Workflow:
+      - Overview: example-workflow/index.md
+      - Foundation Product: example-workflow/foundation-product.md
+      - Dependent Product: example-workflow/dependent-product.md
   - Development:
       - development/index.md
       - Processor Internals: development/how-msp-works.md

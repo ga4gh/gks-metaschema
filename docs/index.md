@@ -13,7 +13,7 @@ and VA-Spec.
 * [Release Management](release-management/index.md): tools and processes that
   keep product versions and immediate upstream dependencies aligned for a
   release.
-* [Worked Example](worked-example/index.md): develops and releases an upstream and
-  downstream product together.
+* [Example Workflow](example-workflow/index.md): develops and releases a
+  foundation product and a dependent product together.
 * [Development](development/index.md): MSP's internal processing model and
   contributor workflow.

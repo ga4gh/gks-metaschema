@@ -1,9 +1,22 @@
 # Product Build Template
 
-Each directory that builds `*-source.yaml` files needs both a `Makefile` and a
+Each source area that builds `*-source.yaml` files needs both a `Makefile` and a
 `prune.mk`. The `Makefile` runs MSP commands to update source references and
 generate artifacts. `prune.mk` removes generated JSON Schema and RST files for
-models that are no longer exported.
+models that are no longer exported. A product's `schema/` directory also needs
+a Makefile that runs each source-area build.
+
+## Schema Makefile
+
+Copy this [schema Makefile](../assets/product-schema/schema-Makefile) to the
+product's `schema/` directory. It makes `make all` and `make clean` run the
+corresponding command in every source area.
+
+```makefile
+--8<-- "templates/product-schema/schema/Makefile"
+```
+
+## Source-Area Files
 
 Copy both the [Makefile](../assets/product-schema/Makefile) and
 [prune.mk](../assets/product-schema/prune.mk) into the source area. The previews
