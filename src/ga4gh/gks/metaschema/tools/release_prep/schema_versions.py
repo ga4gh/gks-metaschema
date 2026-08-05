@@ -22,6 +22,7 @@ from ga4gh.gks.metaschema.tools.config import (
     load_imported_versions,
     load_metaschema_config,
 )
+from ga4gh.gks.metaschema.tools.release_prep.files import write_text_atomically
 
 
 @dataclass(frozen=True)
@@ -336,7 +337,7 @@ def update_source_file(
         return stale_references, source_local_keys
 
     updated_text, _ = replace_schema_url_versions(cleaned_text, versions)
-    file.write_text(updated_text, encoding="utf-8")
+    write_text_atomically(file, updated_text)
     return stale_references, source_local_keys
 
 

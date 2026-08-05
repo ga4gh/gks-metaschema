@@ -104,11 +104,33 @@ standard schema build:
 
     make all
 
+To prepare a release, run `gks-release-prep` from the root of the product
+repository being released. The product
+name is inferred from the repository directory name; for example, a checkout
+directory named `va-spec` uses `schema/va-spec/metaschema.yaml`. The immediate
+upstream product is inferred from the single submodule entry in `.gitmodules`.
+Products without an upstream submodule, such as `gks-core`, omit
+`--upstream-branch`. If the existing `.gitmodules` branch is already correct,
+use `--use-current-upstream-branch` to confirm that choice. If the upstream
+submodule should not be changed, use `--skip-upstream`.
+
+    gks-release-prep --version 1.1.0 --upstream-branch 1.2.0-ballot.2026-07
+
+This command is intended for local release prep because it mutates the working
+tree, updates `.gitmodules`, updates the submodule from the confirmed remote
+branch, and checks out the selected submodule tag. It prints the product,
+schema path, submodule branch/tag, and build steps as it runs. It does not
+stage or commit changes. Dirty product or submodule worktrees produce warnings;
+use `--fail-on-dirty` for strict behavior.
+
+To validate the same inputs without changing files, add `--validate`.
+
 MSP applies those values while processing source YAML and writes concrete
 versions into generated `json` and `def` artifacts.
 
-See [Metaschema Configuration](docs/metaschema-config.md) for detailed rules,
-terminology, intended generated output behavior, and release validation commands.
+See [Metaschema Configuration](docs/metaschema-config.md) for config rules and
+generated output behavior. See [Release Prep](docs/release-prep.md) for the
+local release workflow.
 
 The file structure will now look like:
 

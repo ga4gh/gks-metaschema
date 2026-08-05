@@ -4,6 +4,7 @@ This module centralizes handling for ``metaschema.yaml`` files, including
 version mappings, import paths, namespace templates, and stale schema URL checks.
 """
 
+import os
 import re
 import warnings
 from dataclasses import dataclass
@@ -14,11 +15,13 @@ import yaml
 
 METASCHEMA_FN = "metaschema.yaml"
 ALLOWED_CONFIG_KEYS = {"versions", "imports", "namespaces"}
+SUPPRESS_UNSUPPORTED_KEY_WARNING_ENV = "GKS_METASCHEMA_SUPPRESS_UNSUPPORTED_KEY_WARNING"
 SCHEMA_URL_RE = re.compile(
     r"(?P<prefix>(?:https://w3id\.org/?)?/?ga4gh/schema/(?P<spec>[A-Za-z0-9_.-]+)/)"
     r"(?P<version>[^/\s\"']+)"
     r"(?P<suffix>/)"
 )
+_WARNED_UNSUPPORTED_CONFIG_KEYS: set[tuple[Path, tuple[str, ...]]] = set()
 
 
 @dataclass(frozen=True)
@@ -94,12 +97,18 @@ def load_metaschema_config(config_fp: Path) -> MetaschemaConfig:
 
     unknown_keys = set(config) - ALLOWED_CONFIG_KEYS
     if unknown_keys:
-        keys = ", ".join(sorted(unknown_keys))
-        allowed = ", ".join(sorted(ALLOWED_CONFIG_KEYS))
-        warnings.warn(
-            f"Ignoring unsupported metaschema config keys: {keys}. Allowed keys are: {allowed}",
-            stacklevel=2,
-        )
+        warning_key = (config_fp.resolve(), tuple(sorted(unknown_keys)))
+        if (
+            not os.environ.get(SUPPRESS_UNSUPPORTED_KEY_WARNING_ENV)
+            and warning_key not in _WARNED_UNSUPPORTED_CONFIG_KEYS
+        ):
+            _WARNED_UNSUPPORTED_CONFIG_KEYS.add(warning_key)
+            keys = ", ".join(warning_key[1])
+            allowed = ", ".join(sorted(ALLOWED_CONFIG_KEYS))
+            warnings.warn(
+                f"Ignoring unsupported metaschema config keys: {keys}. Allowed keys are: {allowed}",
+                stacklevel=2,
+            )
 
     normalized: dict[str, dict[str, str]] = {}
     for key in ALLOWED_CONFIG_KEYS:
