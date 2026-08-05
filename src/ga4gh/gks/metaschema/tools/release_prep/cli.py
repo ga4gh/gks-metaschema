@@ -2,7 +2,7 @@
 
 The release-prep command orchestrates the repeatable release steps that product
 maintainers otherwise run manually: update the immediate upstream submodule
-branch, check out the selected upstream tag, set the local product version,
+branch, validate the selected upstream tag, set the local product version,
 regenerate artifacts, and verify source YAML version references.
 """
 
@@ -18,7 +18,12 @@ from ga4gh.gks.metaschema.tools.config import (
     SUPPRESS_UNSUPPORTED_KEY_WARNING_ENV,
     load_metaschema_config,
 )
-from ga4gh.gks.metaschema.tools.release_prep import git, product_config, schema_versions, worktree
+from ga4gh.gks.metaschema.tools.release_prep import (
+    git,
+    product_config,
+    schema_versions,
+    worktree,
+)
 
 SOURCE_UPDATE_CHECK_FLAG = "--check"
 SOURCE_UPDATE_DISALLOW_VERSIONED_REFS_FLAG = "--disallow-versioned-refs"
@@ -35,7 +40,8 @@ def _run_command(command: list[str], cwd: Path) -> None:
     :raises subprocess.CalledProcessError: If the command exits with a
         non-zero status.
     """
-    subprocess.run(command, cwd=cwd, check=True)
+    # Commands are constructed by release-prep helpers and run without a shell.
+    subprocess.run(command, cwd=cwd, check=True)  # noqa: S603
 
 
 def _run_command_output(command: list[str], cwd: Path) -> str:
@@ -47,7 +53,14 @@ def _run_command_output(command: list[str], cwd: Path) -> str:
     :raises subprocess.CalledProcessError: If the command exits with a
         non-zero status.
     """
-    completed = subprocess.run(command, cwd=cwd, check=True, capture_output=True, text=True)
+    # Commands are constructed by release-prep helpers and run without a shell.
+    completed = subprocess.run(  # noqa: S603
+        command,
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
     return completed.stdout.strip()
 
 
@@ -104,7 +117,9 @@ def _start_release(
         reporter,
         fail_on_dirty,
     )
-    _warn_if_downstream_branch_not_current(product_dir, submodules, output_runner, reporter)
+    _warn_if_downstream_branch_not_current(
+        product_dir, submodules, output_runner, reporter
+    )
     return product_dir
 
 
@@ -204,7 +219,9 @@ def _warn_if_downstream_branch_not_current(
     if not submodules:
         return
 
-    worktree.warn_if_product_branch_not_current(git.get_product_repo_dir(product_dir), output_runner, reporter)
+    worktree.warn_if_product_branch_not_current(
+        git.get_product_repo_dir(product_dir), output_runner, reporter
+    )
 
 
 def _handle_dirty_worktree(
@@ -234,7 +251,7 @@ def _handle_dirty_worktree(
 def validate_release(
     product: str,
     version: str,
-    repo_dir: Path = Path("."),
+    repo_dir: Path = Path(),
     submodules: list[git.SubmoduleUpdate] | None = None,
     runner: git.CommandRunner = _run_command,
     output_runner: worktree.CommandOutputRunner = _run_command_output,
@@ -273,7 +290,10 @@ def validate_release(
     resolved_submodules: list[git.SubmoduleUpdate] = []
 
     for submodule in requested_submodules:
-        _report(reporter, f"Validating submodule {submodule.identifier} on branch {submodule.branch}")
+        _report(
+            reporter,
+            f"Validating submodule {submodule.identifier} on branch {submodule.branch}",
+        )
         _submodule_dir, _entry, resolved_submodule = git.validate_submodule(
             submodule,
             product_dir,
@@ -282,7 +302,10 @@ def validate_release(
             reporter=reporter,
             fail_on_dirty=fail_on_dirty,
         )
-        _report(reporter, f"Resolved submodule {submodule.identifier} tag {resolved_submodule.tag}")
+        _report(
+            reporter,
+            f"Resolved submodule {submodule.identifier} tag {resolved_submodule.tag}",
+        )
         resolved_submodules.append(resolved_submodule)
 
     return ReleasePrepSummary(
@@ -297,7 +320,7 @@ def validate_release(
 def prepare_release(
     product: str,
     version: str,
-    repo_dir: Path = Path("."),
+    repo_dir: Path = Path(),
     submodules: list[git.SubmoduleUpdate] | None = None,
     runner: git.CommandRunner = _run_command,
     output_runner: worktree.CommandOutputRunner = _run_command_output,
@@ -343,7 +366,10 @@ def prepare_release(
     resolved_submodules: list[git.SubmoduleUpdate] = []
 
     for submodule in requested_submodules:
-        _report(reporter, f"Updating submodule {submodule.identifier} on branch {submodule.branch}")
+        _report(
+            reporter,
+            f"Updating submodule {submodule.identifier} on branch {submodule.branch}",
+        )
         resolved_submodules.append(
             git.update_submodule(
                 submodule,
@@ -354,7 +380,10 @@ def prepare_release(
                 fail_on_dirty=fail_on_dirty,
             )
         )
-        _report(reporter, f"Checked out submodule {submodule.identifier} tag {resolved_submodules[-1].tag}")
+        _report(
+            reporter,
+            f"Resolved submodule {submodule.identifier} tag {resolved_submodules[-1].tag}",
+        )
 
     _report(reporter, f"Updating {config_fp} version {product}={version}")
     product_config.update_product_version(config_fp, product, version)
@@ -394,8 +423,14 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     :param argv: Optional CLI arguments. Uses ``sys.argv`` when omitted.
     :return: Parsed CLI arguments.
     """
-    parser = argparse.ArgumentParser(description="Prepare a GKS product schema release.")
-    parser.add_argument("--version", required=True, help="Product release version to write to metaschema.yaml.")
+    parser = argparse.ArgumentParser(
+        description="Prepare a GKS product schema release."
+    )
+    parser.add_argument(
+        "--version",
+        required=True,
+        help="Product release version to write to metaschema.yaml.",
+    )
     parser.add_argument(
         "--upstream-branch",
         help="Immediate upstream product branch to write to the only submodule in .gitmodules.",
@@ -408,7 +443,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--upstream-tag",
         help=(
-            "Optional immediate upstream submodule tag to check out. Requires "
+            "Optional immediate upstream submodule tag to validate. Requires "
             "--upstream-branch or --use-current-upstream-branch."
         ),
     )
@@ -436,10 +471,12 @@ def _print_summary(summary: ReleasePrepSummary) -> None:
     :param summary: Completed release-prep summary.
     """
     action = "validated" if summary.validated_only else "prepared"
-    print(f"{action} {summary.product} {summary.version}")
+    print(f"{action} {summary.product} {summary.version}")  # noqa: T201
     for submodule in summary.submodules:
-        checkout_label = "would check out" if summary.validated_only else "checked out"
-        print(f"submodule {submodule.identifier}: branch {submodule.branch}, {checkout_label} {submodule.tag}")
+        tag_label = "would resolve" if summary.validated_only else "resolved"
+        print(  # noqa: T201
+            f"submodule {submodule.identifier}: branch {submodule.branch}, {tag_label} {submodule.tag}"
+        )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -454,23 +491,39 @@ def main(argv: list[str] | None = None) -> int:
         msg = "Use either --upstream-branch or --use-current-upstream-branch, not both."
         raise ValueError(msg)
 
-    if args.skip_upstream and (args.upstream_branch or args.use_current_upstream_branch or args.upstream_tag):
+    if args.skip_upstream and (
+        args.upstream_branch or args.use_current_upstream_branch or args.upstream_tag
+    ):
         msg = "Use --skip-upstream without --upstream-branch, --use-current-upstream-branch, or --upstream-tag."
         raise ValueError(msg)
 
-    if args.upstream_tag and not args.upstream_branch and not args.use_current_upstream_branch:
-        msg = "--upstream-tag requires --upstream-branch or --use-current-upstream-branch"
+    if (
+        args.upstream_tag
+        and not args.upstream_branch
+        and not args.use_current_upstream_branch
+    ):
+        msg = (
+            "--upstream-tag requires --upstream-branch or --use-current-upstream-branch"
+        )
         raise ValueError(msg)
 
-    repo_dir = Path(".").resolve()
+    repo_dir = Path.cwd()
     product = product_config.infer_product_from_repo_dir(repo_dir)
     product_dir = product_config.resolve_product_dir(repo_dir, product)
     submodules = None
 
     if args.upstream_branch:
-        submodules = [git.infer_submodule_update(product_dir, args.upstream_branch, args.upstream_tag)]
+        submodules = [
+            git.infer_submodule_update(
+                product_dir, args.upstream_branch, args.upstream_tag
+            )
+        ]
     elif args.use_current_upstream_branch:
-        submodules = [git.infer_submodule_update_from_current_branch(product_dir, args.upstream_tag)]
+        submodules = [
+            git.infer_submodule_update_from_current_branch(
+                product_dir, args.upstream_tag
+            )
+        ]
     elif not args.skip_upstream:
         git.require_upstream_branch_when_submodule_exists(product_dir)
 
@@ -492,7 +545,7 @@ def cli() -> None:
     try:
         raise SystemExit(main())
     except (ValueError, subprocess.CalledProcessError) as exc:
-        print(exc, file=sys.stderr)
+        print(exc, file=sys.stderr)  # noqa: T201
         raise SystemExit(1) from exc
 
 

@@ -5,7 +5,11 @@ from pathlib import Path
 from ga4gh.gks.metaschema.scripts.source2classes import main as s2c
 from ga4gh.gks.metaschema.scripts.source2splitjs import split_defs_to_js
 from ga4gh.gks.metaschema.scripts.y2t import main as y2t
-from ga4gh.gks.metaschema.scripts.y2t import resolve_cardinality, resolve_flags, resolve_type
+from ga4gh.gks.metaschema.scripts.y2t import (
+    resolve_cardinality,
+    resolve_flags,
+    resolve_type,
+)
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 
@@ -30,7 +34,9 @@ def test_split_create_writes_non_protected_json_artifacts(
     assert {artifact.name for artifact in p.json_fp.iterdir()} == {"GnomadCAF"}
 
 
-def test_split_protected_defs_match_expected_output(schema_root: Path, expected_root: Path, tmp_path: Path) -> None:
+def test_split_protected_defs_match_expected_output(
+    schema_root: Path, expected_root: Path, tmp_path: Path
+) -> None:
     p = YamlSchemaProcessor(schema_root / "gnomAD/gnomad-caf-source.yaml")
     p.json_fp = tmp_path
 
@@ -45,7 +51,9 @@ def test_class_create(vrs_processor: YamlSchemaProcessor) -> None:
     s2c(vrs_processor)
 
 
-def test_docs_create_matches_expected_rst(schema_root: Path, expected_root: Path, tmp_path: Path) -> None:
+def test_docs_create_matches_expected_rst(
+    schema_root: Path, expected_root: Path, tmp_path: Path
+) -> None:
     p = YamlSchemaProcessor(schema_root / "vrs/vrs-source.yaml")
     p.def_fp = tmp_path
 
@@ -63,7 +71,10 @@ def test_docs_create_matches_expected_rst(schema_root: Path, expected_root: Path
 
 def test_y2t_resolves_property_type_variants() -> None:
     assert resolve_type({"$ref": "#/$defs/Variation"}) == ":ref:`Variation`"
-    assert resolve_type({"type": "array", "items": {"$ref": "#/$defs/Allele"}}) == ":ref:`Allele`"
+    assert (
+        resolve_type({"type": "array", "items": {"$ref": "#/$defs/Allele"}})
+        == ":ref:`Allele`"
+    )
     assert (
         resolve_type(
             {
@@ -82,7 +93,12 @@ def test_y2t_resolves_cardinality_and_flags() -> None:
     assert resolve_cardinality("id", {"type": "string"}, class_definition) == "1..1"
     assert resolve_cardinality("label", {"type": "string"}, class_definition) == "1..1"
     assert resolve_cardinality("name", {"type": "string"}, class_definition) == "0..1"
-    assert resolve_cardinality("members", {"type": "array", "minItems": 2, "maxItems": 4}, class_definition) == "2..4"
+    assert (
+        resolve_cardinality(
+            "members", {"type": "array", "minItems": 2, "maxItems": 4}, class_definition
+        )
+        == "2..4"
+    )
 
     flags = resolve_flags({"maturity": "draft", "ordered": False})
     assert "Draft Maturity Level" in flags

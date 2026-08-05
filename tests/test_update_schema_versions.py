@@ -1,5 +1,6 @@
 """Tests for updating source YAML files from metaschema configuration."""
 
+import re
 import shutil
 from collections.abc import Callable
 from pathlib import Path
@@ -11,35 +12,53 @@ from ga4gh.gks.metaschema.tools.release_prep.schema_versions import (
 )
 
 
-def test_update_schema_versions_updates_configured_refs(schema_case_root: Path, tmp_path: Path) -> None:
+def test_update_schema_versions_updates_configured_refs(
+    schema_case_root: Path, tmp_path: Path
+) -> None:
     shutil.copytree(schema_case_root / "update", tmp_path, dirs_exist_ok=True)
     source = tmp_path / "schema/example/profile-source.yaml"
 
     assert update_schema_versions([str(source)]) == 0
 
     updated = source.read_text()
-    assert "https://w3id.org/ga4gh/schema/va-spec/1.1.0/base/va-spec-source.yaml" in updated
-    assert '"/ga4gh/schema/va-spec/1.1.0/base/json/VariantPrognosticProposition"' in updated
+    assert (
+        "https://w3id.org/ga4gh/schema/va-spec/1.1.0/base/va-spec-source.yaml"
+        in updated
+    )
+    assert (
+        '"/ga4gh/schema/va-spec/1.1.0/base/json/VariantPrognosticProposition"'
+        in updated
+    )
     assert '"/ga4gh/schema/unmanaged/9.9.9/json/Thing"' in updated
     assert "namespaces:" not in updated
 
 
-def test_update_schema_versions_discovers_config_from_path(schema_case_root: Path, tmp_path: Path) -> None:
+def test_update_schema_versions_discovers_config_from_path(
+    schema_case_root: Path, tmp_path: Path
+) -> None:
     shutil.copytree(schema_case_root / "update", tmp_path, dirs_exist_ok=True)
     source = tmp_path / "schema/example/profile-source.yaml"
 
     assert update_schema_versions([str(tmp_path / "schema")]) == 0
 
-    assert "https://w3id.org/ga4gh/schema/va-spec/1.1.0/base/va-spec-source.yaml" in source.read_text()
+    assert (
+        "https://w3id.org/ga4gh/schema/va-spec/1.1.0/base/va-spec-source.yaml"
+        in source.read_text()
+    )
 
 
-def test_update_schema_versions_uses_product_config_under_schema_root(schema_case_root: Path, tmp_path: Path) -> None:
+def test_update_schema_versions_uses_product_config_under_schema_root(
+    schema_case_root: Path, tmp_path: Path
+) -> None:
     shutil.copytree(schema_case_root / "schema-root", tmp_path, dirs_exist_ok=True)
     source = tmp_path / "schema/va-spec/base/domain-entities-source.yaml"
 
     assert update_schema_versions([str(tmp_path / "schema")]) == 0
 
-    assert "https://w3id.org/ga4gh/schema/va-spec/1.1.0/base/domain-entities-source.yaml" in source.read_text()
+    assert (
+        "https://w3id.org/ga4gh/schema/va-spec/1.1.0/base/domain-entities-source.yaml"
+        in source.read_text()
+    )
 
 
 def test_update_schema_versions_check_reports_source_local_config_keys(
@@ -55,11 +74,15 @@ def test_update_schema_versions_check_reports_source_local_config_keys(
     assert "namespaces is managed by metaschema.yaml" in stderr
 
 
-def test_update_schema_versions_noops_without_default_config(schema_case_root: Path, tmp_path: Path) -> None:
+def test_update_schema_versions_noops_without_default_config(
+    schema_case_root: Path, tmp_path: Path
+) -> None:
     shutil.copytree(schema_case_root / "no-config", tmp_path, dirs_exist_ok=True)
     source = tmp_path / "schema/example/example-source.yaml"
 
-    with pytest.raises(ValueError, match="No metaschema.yaml config found for"):
+    with pytest.raises(
+        ValueError, match=re.escape("No metaschema.yaml config found for")
+    ):
         update_schema_versions([str(source)])
 
 

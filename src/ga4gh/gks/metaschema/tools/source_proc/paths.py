@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import yaml
@@ -16,7 +16,9 @@ if TYPE_CHECKING:
 DEFS_REF_RE = re.compile(r"#/(\$defs|definitions)/.*")
 
 
-def _is_local_protected_class(processor: YamlSchemaProcessor, schema_class: str) -> bool:
+def _is_local_protected_class(
+    processor: YamlSchemaProcessor, schema_class: str
+) -> bool:
     """Return whether a local class declares ``protectedClassOf``.
 
     :param processor: Owning schema processor.
@@ -89,7 +91,9 @@ def resolve_curie(processor: YamlSchemaProcessor, curie: str) -> str:
     return processor.namespaces[namespace] + identifier
 
 
-def resolve_property_tree_refs(processor: YamlSchemaProcessor, raw_node: Any, processed_node: Any) -> None:
+def resolve_property_tree_refs(
+    processor: YamlSchemaProcessor, raw_node: object, processed_node: object
+) -> None:
     """Resolve refs inside a raw/processed property tree pair.
 
     Example:
@@ -115,7 +119,9 @@ def resolve_property_tree_refs(processor: YamlSchemaProcessor, raw_node: Any, pr
                     msg = "Imported schema processor is missing a root schema path."
                     raise ValueError(msg)
 
-                rel_root = processor.schema_fp.parent.relative_to(processor.root_schema_fp.parent, walk_up=True)
+                rel_root = processor.schema_fp.parent.relative_to(
+                    processor.root_schema_fp.parent, walk_up=True
+                )
                 schema_stem = processor.schema_fp.stem.split("-")[0]
                 processed_node[key] = str(rel_root / f"{schema_stem}.json{value}")
             else:
@@ -146,7 +152,9 @@ def get_class_uri(processor: YamlSchemaProcessor, schema_class: str, mode: str) 
     return f"{parsed_url.scheme}://{parsed_url.netloc}{abs_path}"
 
 
-def get_class_abs_path(processor: YamlSchemaProcessor, schema_class: str, mode: str) -> str:
+def get_class_abs_path(
+    processor: YamlSchemaProcessor, schema_class: str, mode: str
+) -> str:
     """Return the absolute URL path for a generated class artifact.
 
     Example:

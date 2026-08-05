@@ -37,29 +37,40 @@ def apply_metaschema_config(processor: YamlSchemaProcessor) -> None:
         return
 
     metaschema_config = load_metaschema_config(config_fp)
-    config_versions = load_imported_versions(config_fp, metaschema_config.imports) | metaschema_config.versions
+    config_versions = (
+        load_imported_versions(config_fp, metaschema_config.imports)
+        | metaschema_config.versions
+    )
     if "$id" in processor.raw_schema:
         validate_schema_id_versions(processor, config_versions)
 
     _remove_source_local_config(processor, config_fp)
     used_aliases = _find_referenced_config_aliases(processor, metaschema_config.imports)
-    imports = _resolve_used_config_imports(processor, config_fp, metaschema_config.imports, used_aliases)
+    imports = _resolve_used_config_imports(
+        processor, config_fp, metaschema_config.imports, used_aliases
+    )
     if imports:
         processor.raw_schema["imports"] = imports
 
     namespaces = render_namespaces(metaschema_config.namespaces, config_versions)
     if namespaces:
-        processor.raw_schema["namespaces"] = {key: value for key, value in namespaces.items() if key in used_aliases}
+        processor.raw_schema["namespaces"] = {
+            key: value for key, value in namespaces.items() if key in used_aliases
+        }
 
 
-def validate_schema_id_versions(processor: YamlSchemaProcessor, versions: dict[str, str]) -> None:
+def validate_schema_id_versions(
+    processor: YamlSchemaProcessor, versions: dict[str, str]
+) -> None:
     """Validate that the source ``$id`` uses configured concrete versions.
 
     :param processor: Owning schema processor.
     :param versions: Version strings keyed by spec name.
     :raises ValueError: If the source ``$id`` has a stale or templated version.
     """
-    stale_versions = find_stale_schema_url_versions(processor.raw_schema["$id"], versions)
+    stale_versions = find_stale_schema_url_versions(
+        processor.raw_schema["$id"], versions
+    )
     if not stale_versions:
         return
 
@@ -79,7 +90,9 @@ def get_metaschema_config_fp(processor: YamlSchemaProcessor) -> Path | None:
     return find_metaschema_config(processor.schema_fp)
 
 
-def _remove_source_local_config(processor: YamlSchemaProcessor, config_fp: Path) -> None:
+def _remove_source_local_config(
+    processor: YamlSchemaProcessor, config_fp: Path
+) -> None:
     """Remove config keys that must be defined only in ``metaschema.yaml``.
 
     :param processor: Owning schema processor.
@@ -130,7 +143,9 @@ def _resolve_used_config_imports(
     return resolved_imports
 
 
-def _find_referenced_config_aliases(processor: YamlSchemaProcessor, config_imports: dict[str, str]) -> set[str]:
+def _find_referenced_config_aliases(
+    processor: YamlSchemaProcessor, config_imports: dict[str, str]
+) -> set[str]:
     """Return namespace aliases referenced by the source schema.
 
     :param processor: Owning schema processor.
@@ -147,7 +162,11 @@ def _find_referenced_config_aliases(processor: YamlSchemaProcessor, config_impor
         """
         if isinstance(node, dict):
             for key, value in node.items():
-                if key in {"$refCurie", "inherits"} and isinstance(value, str) and ":" in value:
+                if (
+                    key in {"$refCurie", "inherits"}
+                    and isinstance(value, str)
+                    and ":" in value
+                ):
                     used_aliases.add(value.split(":", 1)[0])
                 elif key == "$ref" and isinstance(value, str):
                     used_aliases.update(_get_ref_import_aliases(value, import_stems))

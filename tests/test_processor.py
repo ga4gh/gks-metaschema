@@ -18,7 +18,9 @@ def test_class_is_subclass(vrs_processor: YamlSchemaProcessor) -> None:
     assert not vrs_processor.class_is_subclass("Haplotype", "Location")
 
 
-def test_yaml_create_matches_expected_output(schema_root: Path, expected_root: Path, tmp_path: Path) -> None:
+def test_yaml_create_matches_expected_output(
+    schema_root: Path, expected_root: Path, tmp_path: Path
+) -> None:
     p = YamlSchemaProcessor(schema_root / "gks-common/core-source.yaml")
     generated_path = tmp_path / "core.yaml"
 
@@ -30,7 +32,9 @@ def test_yaml_create_matches_expected_output(schema_root: Path, expected_root: P
     assert generated == expected
 
 
-def test_yaml_target_match(vrs_processor: YamlSchemaProcessor, vrs_target: dict) -> None:
+def test_yaml_target_match(
+    vrs_processor: YamlSchemaProcessor, vrs_target: dict
+) -> None:
     assert vrs_processor.for_js == vrs_target
 
 

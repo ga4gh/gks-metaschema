@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+"""Print public class names from a processed schema"""
+
 import argparse
 from pathlib import Path
 

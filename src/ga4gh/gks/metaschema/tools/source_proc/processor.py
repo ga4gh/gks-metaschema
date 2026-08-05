@@ -50,7 +50,9 @@ class YamlSchemaProcessor:
         self.root_schema_fp = Path(root_fp).resolve() if root_fp is not None else None
         self.raw_schema = load_schema(self.schema_fp)
         config.apply_metaschema_config(self)
-        self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[cast("str", self.raw_schema["$schema"])]
+        self.schema_def_keyword = SCHEMA_DEF_KEYWORD_BY_VERSION[
+            cast("str", self.raw_schema["$schema"])
+        ]
         self.raw_defs = self.raw_schema.get(self.schema_def_keyword, None)
         self._namespaces = dict(self.raw_schema.get("namespaces", {}))
         self._yaml_fp_override: Path | None = None
@@ -158,7 +160,9 @@ class YamlSchemaProcessor:
         """Return the owning ``metaschema.yaml`` path, if present."""
         return config.get_metaschema_config_fp(self)
 
-    def get_class_definition(self, schema_class: str, raw: bool = False) -> tuple[dict[str, Any], YamlSchemaProcessor]:
+    def get_class_definition(
+        self, schema_class: str, raw: bool = False
+    ) -> tuple[dict[str, Any], YamlSchemaProcessor]:
         """Return a local or imported class definition.
 
         :param schema_class: Local class name or CURIE-qualified class name.

@@ -9,7 +9,6 @@ import re
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import yaml
 
@@ -61,9 +60,12 @@ def get_expected_metaschema_config_fp(start_fp: Path) -> Path:
 
     :param start_fp: Source file or directory path to inspect.
     :return: Expected product-level ``metaschema.yaml`` path.
+
     """
     resolved_start_fp = start_fp.resolve()
-    start_dir = resolved_start_fp if resolved_start_fp.is_dir() else resolved_start_fp.parent
+    start_dir = (
+        resolved_start_fp if resolved_start_fp.is_dir() else resolved_start_fp.parent
+    )
 
     # Product configs live one directory below a directory named "schema".
     # For nested source files, walk upward to that product directory.
@@ -83,7 +85,9 @@ def load_metaschema_config(config_fp: Path) -> MetaschemaConfig:
 
     :param config_fp: Path to the metaschema config file.
     :return: Normalized metaschema configuration.
+    :raises TypeError: If the config is not a mapping
     :raises ValueError: If the config or one of its managed sections is invalid.
+
     """
     with config_fp.open(encoding="utf-8") as f:
         config = yaml.load(f, Loader=yaml.SafeLoader)
@@ -93,7 +97,7 @@ def load_metaschema_config(config_fp: Path) -> MetaschemaConfig:
 
     if not isinstance(config, dict):
         msg = "Metaschema config must be a mapping."
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     unknown_keys = set(config) - ALLOWED_CONFIG_KEYS
     if unknown_keys:
@@ -132,9 +136,12 @@ def find_metaschema_config(start_fp: Path) -> Path | None:
     :param start_fp: Source file or directory path to start from.
     :return: Path to the product-level config, or ``None`` if absent.
     :raises ValueError: If nested ``metaschema.yaml`` files exist below the product directory.
+
     """
     resolved_start_fp = start_fp.resolve()
-    start_dir = resolved_start_fp if resolved_start_fp.is_dir() else resolved_start_fp.parent
+    start_dir = (
+        resolved_start_fp if resolved_start_fp.is_dir() else resolved_start_fp.parent
+    )
     config_fp = get_expected_metaschema_config_fp(start_fp)
     product_dir = config_fp.parent
 
@@ -149,11 +156,15 @@ def find_metaschema_config(start_fp: Path) -> Path | None:
     nested_config_fps = [
         directory / METASCHEMA_FN
         for directory in [start_dir, *start_dir.parents]
-        if directory != product_dir and product_dir in directory.parents and (directory / METASCHEMA_FN).exists()
+        if directory != product_dir
+        and product_dir in directory.parents
+        and (directory / METASCHEMA_FN).exists()
     ]
 
     if nested_config_fps:
-        nested_configs = ", ".join(str(nested_config_fp) for nested_config_fp in nested_config_fps)
+        nested_configs = ", ".join(
+            str(nested_config_fp) for nested_config_fp in nested_config_fps
+        )
         msg = f"Nested {METASCHEMA_FN} files are not supported. Use top-level {config_fp} and delete nested config(s): {nested_configs}"
         raise ValueError(msg)
 
@@ -170,6 +181,7 @@ def load_imported_versions(config_fp: Path, imports: dict[str, str]) -> dict[str
     :param config_fp: Path to the importing metaschema config file.
     :param imports: Mapping of import aliases to source schema paths.
     :return: Version strings from imported products.
+
     """
     versions: dict[str, str] = {}
     for import_alias, import_value in imports.items():
@@ -195,12 +207,14 @@ def load_imported_versions(config_fp: Path, imports: dict[str, str]) -> dict[str
     return versions
 
 
-def _normalize_string_mapping(value: Any, key: str) -> dict[str, str]:
+def _normalize_string_mapping(value: object, key: str) -> dict[str, str]:
     """Normalize a config section as a string-to-string mapping.
 
     :param value: Raw YAML value for the config section.
     :param key: Name of the config section being normalized.
     :return: Normalized string mapping.
+    :raises TypeError: If the config is not a mapping or if config keys are not
+        strings
     :raises ValueError: If the section is not a mapping of strings to strings.
     """
     if value is None:
@@ -208,19 +222,21 @@ def _normalize_string_mapping(value: Any, key: str) -> dict[str, str]:
 
     if not isinstance(value, dict):
         msg = f"Metaschema config '{key}' must be a mapping."
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     normalized: dict[str, str] = {}
     for mapping_key, mapping_value in value.items():
         if not isinstance(mapping_key, str) or not isinstance(mapping_value, str):
             msg = f"Metaschema config '{key}' keys and values must be strings."
-            raise ValueError(msg)
+            raise TypeError(msg)
 
         normalized[mapping_key] = mapping_value
     return normalized
 
 
-def render_namespaces(namespaces: dict[str, str], versions: dict[str, str]) -> dict[str, str]:
+def render_namespaces(
+    namespaces: dict[str, str], versions: dict[str, str]
+) -> dict[str, str]:
     """Render namespace templates with configured spec versions.
 
     Example:
@@ -233,6 +249,7 @@ def render_namespaces(namespaces: dict[str, str], versions: dict[str, str]) -> d
     :return: Namespace values with placeholders rendered.
     :raises ValueError: If ``{version}`` cannot be resolved, or if a concrete
         namespace URL version does not match the configured version.
+
     """
     rendered: dict[str, str] = {}
     for key, value in namespaces.items():
@@ -279,6 +296,7 @@ def render_schema_url_versions(text: str, versions: dict[str, str]) -> str:
     :param text: Text that may contain GA4GH schema URLs.
     :param versions: Version strings keyed by spec name.
     :return: Text with matching schema URL version segments rendered.
+
     """
 
     def replace(match: re.Match[str]) -> str:
@@ -298,7 +316,9 @@ def render_schema_url_versions(text: str, versions: dict[str, str]) -> str:
     return SCHEMA_URL_RE.sub(replace, text)
 
 
-def find_stale_schema_url_versions(text: str, versions: dict[str, str]) -> list[StaleSchemaVersion]:
+def find_stale_schema_url_versions(
+    text: str, versions: dict[str, str]
+) -> list[StaleSchemaVersion]:
     """Find GA4GH schema URL versions that do not match configured versions.
 
     Example:
@@ -308,6 +328,7 @@ def find_stale_schema_url_versions(text: str, versions: dict[str, str]) -> list[
     :param text: Text that may contain GA4GH schema URLs.
     :param versions: Version strings keyed by spec name.
     :return: Stale schema version records.
+
     """
     stale_versions: list[StaleSchemaVersion] = []
     for match in SCHEMA_URL_RE.finditer(text):
@@ -316,5 +337,7 @@ def find_stale_schema_url_versions(text: str, versions: dict[str, str]) -> list[
         actual_version = match.group("version")
 
         if expected_version is not None and actual_version != expected_version:
-            stale_versions.append(StaleSchemaVersion(spec, actual_version, expected_version))
+            stale_versions.append(
+                StaleSchemaVersion(spec, actual_version, expected_version)
+            )
     return stale_versions

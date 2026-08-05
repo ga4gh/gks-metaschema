@@ -16,7 +16,7 @@ manually:
 * update the immediate upstream submodule branch in `.gitmodules`
 * initialize the upstream submodule if needed
 * update the upstream submodule from the configured remote branch
-* choose and check out the upstream release tag
+* resolve the upstream release tag
 * update the local product version in `schema/<product>/metaschema.yaml`
 * update source YAML version references before build validation runs
 * run `make clean`, then `make all` to regenerate artifacts
@@ -61,7 +61,7 @@ Release prep performs the following steps:
 
 1. Initialize the submodule if needed, then fetch remote branches and tags.
 2. Verify `origin/<branch>` and resolve the requested or latest reachable tag.
-3. Update `.gitmodules`, update the submodule from the remote branch, and check out the resolved tag.
+3. Update `.gitmodules`, update the submodule from the remote branch, and resolve the tag.
 4. Update the local product version and source YAML version references.
 5. Run `make clean`, then `make all` to regenerate artifacts.
 6. Verify source YAML references with `source2updated --check`.
