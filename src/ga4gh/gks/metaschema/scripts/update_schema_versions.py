@@ -9,6 +9,7 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Callable
 
 import yaml
 
@@ -138,7 +139,7 @@ def _find_config_for_file(file: Path) -> Path:
     raise ValueError(msg)
 
 
-def update_schema_url_versions_in_text(text: str, versions: dict[str, str]) -> tuple[str, list[VersionReference]]:
+def replace_schema_url_versions(text: str, versions: dict[str, str]) -> tuple[str, list[VersionReference]]:
     """Return text with configured GA4GH schema versions updated.
 
     Only URL/path segments matching ``/ga4gh/schema/{spec}/{version}/`` are
@@ -184,7 +185,44 @@ def update_schema_url_versions_in_text(text: str, versions: dict[str, str]) -> t
     return SCHEMA_URL_RE.sub(replace, text), references
 
 
-def remove_managed_source_keys(text: str, managed_keys: set[str]) -> tuple[str, list[str]]:
+def _get_managed_top_level_key(line: str, managed_keys: set[str]) -> str | None:
+    """Get the managed top-level key declared by a line.
+
+    :param line: Source YAML line.
+    :param managed_keys: Top-level config keys managed by ``metaschema.yaml``.
+    :return: Managed key name, or ``None`` when the line should be kept.
+    """
+    match = re.match(r"^(?P<key>[A-Za-z][A-Za-z0-9_.-]*):(?:\s.*)?$", line)
+    if match is None:
+        return None
+
+    key = match.group("key")
+    if key not in managed_keys:
+        return None
+
+    return key
+
+
+def _skip_top_level_yaml_block(lines: list[str], start_index: int) -> int:
+    """Skip a top-level YAML block.
+
+    :param lines: Source YAML lines.
+    :param start_index: Index immediately after the top-level key line.
+    :return: Index of the next top-level line that should be processed.
+    """
+    index = start_index
+    while index < len(lines):
+        line = lines[index]
+        if line.strip() == "" or line.startswith((" ", "\t")):
+            index += 1
+            continue
+
+        break
+
+    return index
+
+
+def remove_source_local_config_keys(text: str, managed_keys: set[str]) -> tuple[str, list[str]]:
     """Remove source-local top-level keys that are managed by metaschema config.
 
     Example:
@@ -205,25 +243,17 @@ def remove_managed_source_keys(text: str, managed_keys: set[str]) -> tuple[str, 
 
     while index < len(lines):
         line = lines[index]
-        match = re.match(r"^(?P<key>[A-Za-z][A-Za-z0-9_.-]*):(?:\s.*)?$", line)
+        managed_key = _get_managed_top_level_key(line, managed_keys)
 
-        if match is None or match.group("key") not in managed_keys:
+        if managed_key is None:
             cleaned_lines.append(line)
             index += 1
             continue
 
         # Drop the matched top-level block, including indented children and
         # blank separator lines that belong to that block.
-        removed_keys.append(match.group("key"))
-        index += 1
-        while index < len(lines):
-            next_line = lines[index]
-
-            if next_line.strip() == "" or next_line.startswith((" ", "\t")):
-                index += 1
-                continue
-
-            break
+        removed_keys.append(managed_key)
+        index = _skip_top_level_yaml_block(lines, index + 1)
 
     return "".join(cleaned_lines), removed_keys
 
@@ -299,13 +329,13 @@ def update_source_file(
     """
     text = file.read_text(encoding="utf-8")
     stale_references = find_stale_version_references(file, text, versions)
-    cleaned_text, removed_keys = remove_managed_source_keys(text, managed_keys)
+    cleaned_text, removed_keys = remove_source_local_config_keys(text, managed_keys)
     source_local_keys = [SourceLocalConfigKey(file, key) for key in removed_keys]
 
     if check:
         return stale_references, source_local_keys
 
-    updated_text, _ = update_schema_url_versions_in_text(cleaned_text, versions)
+    updated_text, _ = replace_schema_url_versions(cleaned_text, versions)
     file.write_text(updated_text, encoding="utf-8")
     return stale_references, source_local_keys
 
@@ -338,15 +368,11 @@ def _format_source_local_key(source_local_key: SourceLocalConfigKey) -> str:
     return f"{source_local_key.file}: {source_local_key.key} is managed by {METASCHEMA_FN}"
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Run the update/check command.
-
-    Expects a YAML file (located at ``metaschema.yaml``) that contains versions,
-    imports, and namespace mappings.
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse CLI arguments for the source-version updater.
 
     :param argv: Optional CLI arguments. Uses ``sys.argv`` when omitted.
-    :return: Process exit code, ``0`` for success and ``1`` when check failures
-        or hard-coded refs are found.
+    :return: Parsed CLI arguments.
     """
     parser = argparse.ArgumentParser(
         description="Update or check GA4GH schema version URL segments in *-source.yaml files."
@@ -358,67 +384,166 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Fail if configured specs are referenced through hard-coded versioned $ref URLs.",
     )
-    args = parser.parse_args(argv)
+    return parser.parse_args(argv)
 
-    files = _iter_source_files(args.paths)
 
+def _get_update_config(file: Path, config_cache: dict[Path, SourceUpdateConfig]) -> SourceUpdateConfig:
+    """Get cached update config for a source file.
+
+    :param file: Source YAML file being processed.
+    :param config_cache: Config cache keyed by metaschema config path.
+    :return: Resolved update config.
+    :raises ValueError: If no owning ``metaschema.yaml`` exists for the source file.
+    """
+    config_fp = _find_config_for_file(file)
+    if config_fp not in config_cache:
+        config_cache[config_fp] = SourceUpdateConfig(
+            versions=_load_versions(config_fp),
+            managed_keys=_load_managed_keys(config_fp),
+        )
+
+    return config_cache[config_fp]
+
+
+def _print_references(header: str, references: list[Any], formatter: Callable[[Any], str]) -> None:
+    """Print a CLI report section.
+
+    :param header: Section header.
+    :param references: References to print.
+    :param formatter: Function that converts one reference to text.
+    """
+    if not references:
+        return
+
+    print(header, file=sys.stderr)
+    for reference in references:
+        print(f"  {formatter(reference)}", file=sys.stderr)
+
+
+def _process_source_files(
+    files: list[Path], check: bool, disallow_versioned_refs: bool
+) -> tuple[list[VersionReference], list[HardcodedReference], list[SourceLocalConfigKey]]:
+    """Process source files and collect version-management findings.
+
+    :param files: Source YAML files to process.
+    :param check: Whether to report without editing.
+    :param disallow_versioned_refs: Whether hard-coded versioned ``$ref`` URLs fail.
+    :return: Stale references, hard-coded references, and source-local config keys.
+    :raises ValueError: If a source file has no owning ``metaschema.yaml``.
+    """
     stale_references: list[VersionReference] = []
     hardcoded_references: list[HardcodedReference] = []
     source_local_keys: list[SourceLocalConfigKey] = []
     config_cache: dict[Path, SourceUpdateConfig] = {}
 
     for file in files:
-        config_fp = _find_config_for_file(file)
-
-        if config_fp not in config_cache:
-            config_cache[config_fp] = SourceUpdateConfig(
-                versions=_load_versions(config_fp),
-                managed_keys=_load_managed_keys(config_fp),
-            )
-
-        config = config_cache[config_fp]
+        config = _get_update_config(file, config_cache)
         file_stale_references, file_source_local_keys = update_source_file(
             file,
             config.versions,
             config.managed_keys,
-            check=args.check,
+            check=check,
         )
         stale_references.extend(file_stale_references)
         source_local_keys.extend(file_source_local_keys)
 
-        if args.disallow_versioned_refs:
+        if disallow_versioned_refs:
             hardcoded_references.extend(
                 find_hardcoded_versioned_refs(file, file.read_text(encoding="utf-8"), config.versions)
             )
 
-    if args.check and stale_references:
-        print("Stale GA4GH schema version references found:", file=sys.stderr)
+    return stale_references, hardcoded_references, source_local_keys
 
-        for reference in stale_references:
-            print(f"  {_format_reference(reference)}", file=sys.stderr)
 
-    if hardcoded_references:
-        print("Hard-coded versioned $ref references found:", file=sys.stderr)
+def _print_check_reports(
+    check: bool,
+    stale_references: list[VersionReference],
+    hardcoded_references: list[HardcodedReference],
+    source_local_keys: list[SourceLocalConfigKey],
+) -> None:
+    """Print check-mode and hard-coded-ref reports.
 
-        for reference in hardcoded_references:
-            print(f"  {_format_hardcoded_reference(reference)}", file=sys.stderr)
+    :param check: Whether the command is running in check mode.
+    :param stale_references: Stale version references found.
+    :param hardcoded_references: Hard-coded versioned ``$ref`` references found.
+    :param source_local_keys: Source-local config keys found.
+    """
+    if check:
+        _print_references(
+            "Stale GA4GH schema version references found:",
+            stale_references,
+            _format_reference,
+        )
+        _print_references(
+            f"Source-local keys managed by {METASCHEMA_FN} found:",
+            source_local_keys,
+            _format_source_local_key,
+        )
 
-    if args.check and source_local_keys:
-        print(f"Source-local keys managed by {METASCHEMA_FN} found:", file=sys.stderr)
+    _print_references(
+        "Hard-coded versioned $ref references found:",
+        hardcoded_references,
+        _format_hardcoded_reference,
+    )
 
-        for source_local_key in source_local_keys:
-            print(f"  {_format_source_local_key(source_local_key)}", file=sys.stderr)
 
-    if (args.check and (stale_references or source_local_keys)) or hardcoded_references:
-        return 1
+def _print_update_reports(
+    stale_references: list[VersionReference], source_local_keys: list[SourceLocalConfigKey]
+) -> None:
+    """Print update-mode summaries.
 
+    :param stale_references: Stale references that were updated.
+    :param source_local_keys: Source-local config keys that were removed.
+    """
     for source_local_key in source_local_keys:
         print(f"removed {_format_source_local_key(source_local_key)}")
 
-    if stale_references:
-        changed_files = sorted({str(reference.file) for reference in stale_references})
-        for file in changed_files:
-            print(f"updated {file}")
+    changed_files = sorted({str(reference.file) for reference in stale_references})
+    for file in changed_files:
+        print(f"updated {file}")
+
+
+def _has_failures(
+    check: bool,
+    stale_references: list[VersionReference],
+    hardcoded_references: list[HardcodedReference],
+    source_local_keys: list[SourceLocalConfigKey],
+) -> bool:
+    """Check whether collected findings should produce a non-zero exit.
+
+    :param check: Whether the command is running in check mode.
+    :param stale_references: Stale version references found.
+    :param hardcoded_references: Hard-coded versioned ``$ref`` references found.
+    :param source_local_keys: Source-local config keys found.
+    :return: ``True`` when the CLI should exit with status ``1``.
+    """
+    return (check and (bool(stale_references) or bool(source_local_keys))) or bool(hardcoded_references)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the update/check command.
+
+    Expects a YAML file (located at ``metaschema.yaml``) that contains versions,
+    imports, and namespace mappings.
+
+    :param argv: Optional CLI arguments. Uses ``sys.argv`` when omitted.
+    :return: Process exit code, ``0`` for success and ``1`` when check failures
+        or hard-coded refs are found.
+    :raises ValueError: If a source file has no owning ``metaschema.yaml``.
+    """
+    args = _parse_args(argv)
+    files = _iter_source_files(args.paths)
+    stale_references, hardcoded_references, source_local_keys = _process_source_files(
+        files,
+        check=args.check,
+        disallow_versioned_refs=args.disallow_versioned_refs,
+    )
+
+    _print_check_reports(args.check, stale_references, hardcoded_references, source_local_keys)
+    if _has_failures(args.check, stale_references, hardcoded_references, source_local_keys):
+        return 1
+
+    _print_update_reports(stale_references, source_local_keys)
 
     return 0
 
