@@ -3,6 +3,32 @@ $id: https://w3id.org/ga4gh/schema/vrs/2.x/vrs-source.yaml
 title: GA4GH-VRS-Definitions
 type: object
 $defs:
+  ValueObject:
+    maturity: draft
+    description: A contextual value whose equality is based on value, not identity.
+      See https://en.wikipedia.org/wiki/Value_object for more on Value Objects.
+    oneOf:
+    - $ref: '#/$defs/Adjacency'
+    - $ref: '#/$defs/Allele'
+    - $ref: '#/$defs/CopyNumberChange'
+    - $ref: '#/$defs/CopyNumberCount'
+    - $ref: '#/$defs/Haplotype'
+    - $ref: '#/$defs/LengthExpression'
+    - $ref: '#/$defs/LiteralSequenceExpression'
+    - $ref: '#/$defs/ReferenceLengthExpression'
+    - $ref: '#/$defs/SequenceLocation'
+    - $ref: '#/$defs/SequenceReference'
+  Ga4ghIdentifiableObject:
+    maturity: draft
+    description: A contextual value object for which a GA4GH computed identifier can
+      be created.
+    oneOf:
+    - $ref: '#/$defs/Adjacency'
+    - $ref: '#/$defs/Allele'
+    - $ref: '#/$defs/CopyNumberChange'
+    - $ref: '#/$defs/CopyNumberCount'
+    - $ref: '#/$defs/Haplotype'
+    - $ref: '#/$defs/SequenceLocation'
   Variation:
     maturity: draft
     description: A representation of the state of one or more biomolecules.
@@ -180,6 +206,13 @@ $defs:
     required:
     - members
     additionalProperties: false
+  CopyNumber:
+    maturity: draft
+    description: A measure of the copies of a Location within a system (e.g. genome,
+      cell, etc.)
+    oneOf:
+    - $ref: '#/$defs/CopyNumberChange'
+    - $ref: '#/$defs/CopyNumberCount'
   CopyNumberCount:
     maturity: draft
     ga4gh:

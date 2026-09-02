@@ -477,8 +477,8 @@ class YamlSchemaProcessor:
             schema_definition.pop("inherits", None)
             schema_definition.pop("protectedClassOf", None)
             if self.class_is_abstract(schema_class):
-                schema_definition.pop("heritableProperties", None)
-                schema_definition.pop("heritableRequired", None)
+                heritable_properties = schema_definition.pop("heritableProperties", None)
+                heritable_required = schema_definition.pop("heritableRequired", None)
                 schema_definition.pop("ga4gh", None)
                 schema_definition.pop("header_level", None)
                 self.concretize_js_object(schema_definition)
@@ -487,7 +487,23 @@ class YamlSchemaProcessor:
                     and "allOf" not in schema_definition
                     and "$ref" not in schema_definition
                 ):
-                    abstract_class_removals.append(schema_class)
+                    # Abstract classes that carry heritableProperties for inheritance
+                    # (e.g. Entity, Element) do not declare an explicit union in the
+                    # source, so historically no schema was emitted for them. Always
+                    # emit a schema for every class: enumerate concrete descendants as
+                    # a oneOf when any exist, otherwise expose the heritable properties
+                    # directly as the object's properties.
+                    cls_url = f"#/{self.schema_def_keyword}/{schema_class}"
+                    descendants = self.concretize_class_ref(cls_url)
+                    if descendants and descendants != {cls_url}:
+                        schema_definition["oneOf"] = self._build_ref_list(descendants)
+                    elif heritable_properties:
+                        schema_definition["type"] = "object"
+                        schema_definition["properties"] = heritable_properties
+                        if heritable_required:
+                            schema_definition["required"] = heritable_required
+                    else:
+                        abstract_class_removals.append(schema_class)
             if "description" in schema_definition:
                 schema_definition["description"] = self._scrub_rst_markup(schema_definition["description"])
             if "properties" in schema_definition:

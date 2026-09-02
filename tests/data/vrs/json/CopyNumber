@@ -1,0 +1,16 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/CopyNumber",
+   "title": "CopyNumber",
+   "type": "object",
+   "maturity": "draft",
+   "description": "A measure of the copies of a Location within a system (e.g. genome, cell, etc.)",
+   "oneOf": [
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/CopyNumberChange"
+      },
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/CopyNumberCount"
+      }
+   ]
+}

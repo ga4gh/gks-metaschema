@@ -1,0 +1,40 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/ValueObject",
+   "title": "ValueObject",
+   "type": "object",
+   "maturity": "draft",
+   "description": "A contextual value whose equality is based on value, not identity. See https://en.wikipedia.org/wiki/Value_object for more on Value Objects.",
+   "oneOf": [
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/Adjacency"
+      },
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/Allele"
+      },
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/CopyNumberChange"
+      },
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/CopyNumberCount"
+      },
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/Haplotype"
+      },
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/LengthExpression"
+      },
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/LiteralSequenceExpression"
+      },
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/ReferenceLengthExpression"
+      },
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/SequenceLocation"
+      },
+      {
+         "$ref": "/ga4gh/schema/vrs/2.x/json/SequenceReference"
+      }
+   ]
+}
