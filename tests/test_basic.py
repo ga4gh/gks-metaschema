@@ -1,10 +1,11 @@
+import json
 import os
 import shutil
+import tempfile
 from pathlib import Path
 
 import pytest
 import yaml
-
 from ga4gh.gks.metaschema.scripts.source2classes import main as s2c
 from ga4gh.gks.metaschema.scripts.source2splitjs import split_defs_to_js
 from ga4gh.gks.metaschema.scripts.y2t import main as y2t
@@ -57,6 +58,44 @@ def test_split_create():
 def test_class_create():
     s2c(processor)
     assert True
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "data/vrs/vrs-source.yaml",
+        "data/gks-common/core-source.yaml",
+    ],
+)
+def test_split_emits_every_class(source):
+    """Every non-protected class in a source must produce a JSON file.
+
+    Guards against classes being silently dropped from generation (see #64,
+    where abstract classes like Entity/Element were not emitted).
+    """
+    p = YamlSchemaProcessor(root / source)
+    p.json_fp = Path(tempfile.mkdtemp())  # hermetic: do not touch committed fixtures
+    split_defs_to_js(p)
+    generated = {f.name for f in p.json_fp.iterdir()}
+    expected = {c for c in p.processed_classes if not p.class_is_protected(c)}
+    assert generated == expected
+
+
+def test_abstract_root_class_is_generated():
+    """Regression guard for #64.
+
+    Abstract classes that carry heritableProperties for inheritance but declare
+    no explicit union in the source (e.g. Entity) must still be generated, as a
+    oneOf of their concrete descendants.
+    """
+    p = YamlSchemaProcessor(root / "data/gks-common/core-source.yaml")
+    p.json_fp = Path(tempfile.mkdtemp())
+    split_defs_to_js(p)
+    entity_fp = p.json_fp / "Entity"
+    assert entity_fp.exists(), "Entity JSON schema was not generated from core-source.yaml"
+    entity = json.load(entity_fp.open())
+    assert entity["title"] == "Entity"
+    assert "oneOf" in entity, "abstract Entity should concretize to a oneOf of descendants"
 
 
 def test_docs_create():
