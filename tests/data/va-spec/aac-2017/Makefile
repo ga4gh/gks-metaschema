@@ -2,6 +2,8 @@
 .DELETE_ON_ERROR:
 
 BUILD_DIR := build
+DEF_DIR := def
+JSON_DIR := json
 IMPORT_DIR := import
 
 vpath %tag $(BUILD_DIR)
@@ -22,14 +24,14 @@ $(BUILD_DIR):
 	touch $(BUILD_DIR)/$@
 
 %.classes: %-source.yaml
-	source2classes.py $< >${BUILD_DIR}/$@
+	source2classes $< >${BUILD_DIR}/$@
 
 %.json-tag: %-source.yaml ${IMPORTS}
-	source2splitjs.py $<
+	source2splitjs $<
 	touch $(BUILD_DIR)/$@
 
 %.defs-tag: %-source.yaml ${IMPORTS}
-	y2t.py $<
+	y2t $<
 	touch $(BUILD_DIR)/$@
 
 prune-tag: ${TAGS}
@@ -38,3 +40,5 @@ prune-tag: ${TAGS}
 
 clean:
 	rm $(BUILD_DIR)/*
+	rm $(DEF_DIR)/*
+	rm $(JSON_DIR)/*
