@@ -7,9 +7,8 @@ import sys
 from io import TextIOWrapper
 from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader
-
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
+from jinja2 import Environment, FileSystemLoader
 
 templates_dir = Path(__file__).resolve().parents[4] / "templates"
 env = Environment(loader=FileSystemLoader(templates_dir))
@@ -156,6 +155,33 @@ def resolve_flags(class_property_attributes: dict) -> str:
     return flags
 
 
+def describe_composition_member(member: dict) -> str:
+    """Human-readable RST for a single allOf/oneOf/anyOf member schema."""
+    if any(key in member for key in ("$ref", "$refCurie", "oneOf", "anyOf")):
+        return resolve_type(member)
+    if "properties" in member:
+        fields = ", ".join(f"``{name}``" for name in member["properties"])
+        if fields:
+            return f"an object constraining {fields}"
+    return "an object with additional constraints"
+
+
+def resolve_composition(class_definition: dict) -> str:
+    """RST describing an allOf/oneOf/anyOf composed class.
+
+    Returns an empty string when the class is not composed. Used to give
+    composed classes (which have no property table of their own) a useful
+    Information Model rather than a blank section.
+    """
+    for keyword, label in (("allOf", "all of"), ("oneOf", "one of"), ("anyOf", "any of")):
+        if keyword in class_definition:
+            members = class_definition[keyword]
+            lines = [f"This class is defined as **{label}** the following:\n"]
+            lines += [f"* {describe_composition_member(m)}" for m in members]
+            return "\n".join(lines) + "\n"
+    return ""
+
+
 def main(proc_schema: YamlSchemaProcessor) -> None:
     """
     Generates the .rst file for each of the classes in the schema
@@ -178,9 +204,19 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
                     file=f,
                 )
                 print(file=f)
+            if proc_schema.class_is_abstract(class_name):
+                print(
+                    "**Abstract Class** — not instantiated directly; concrete "
+                    "subclasses inherit its attributes.\n",
+                    file=f,
+                )
             print("**Computational Definition**\n", file=f)
             print(class_definition["description"], file=f)
             if proc_schema.class_is_passthrough(class_name):
+                composition = resolve_composition(class_definition)
+                if composition:
+                    print("\n**Information Model**\n", file=f)
+                    print(composition, file=f)
                 continue
             if "heritableProperties" in class_definition:
                 p = "heritableProperties"
@@ -228,6 +264,11 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
                         line.rstrip() for line in class_definition_formatted.splitlines()
                     )
                     print(class_definition_formatted, file=f)
+            # Composed classes (allOf/oneOf/anyOf) have no property table of
+            # their own; describe the composition so the section is not blank.
+            composition = resolve_composition(class_definition)
+            if composition:
+                print("\n" + composition, file=f)
 
 
 def cli():

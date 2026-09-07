@@ -220,16 +220,31 @@ class YamlSchemaProcessor:
                     inherited_cls_def = self.imports[namespace].defs[inherited_cls_split_name]
                 else:
                     inherited_cls_def = self.defs[inherited_cls_name]
-                assert "maturity" in cls_def, cls
-                assert "maturity" in inherited_cls_def, inherited_cls_name
-                assert inherited_cls_def["maturity"] >= cls_def["maturity"], (
-                    f"Maturity of {cls} is greater than parent class {inherited_cls_name}."
-                )
-            pass
+                if "maturity" not in cls_def:
+                    raise ValueError(
+                        f"Class '{cls}' is missing the required 'maturity' field. "
+                        f"Fix: add 'maturity' to '{cls}' with one of "
+                        f"{sorted(maturity_levels)}."
+                    )
+                if "maturity" not in inherited_cls_def:
+                    raise ValueError(
+                        f"Parent class '{inherited_cls_name}' (inherited by '{cls}') "
+                        "is missing the required 'maturity' field. Fix: add "
+                        f"'maturity' to '{inherited_cls_name}'."
+                    )
+                if inherited_cls_def["maturity"] < cls_def["maturity"]:
+                    raise ValueError(
+                        f"Class '{cls}' has maturity '{cls_def['maturity']}', which "
+                        f"is more mature than its parent '{inherited_cls_name}' "
+                        f"('{inherited_cls_def['maturity']}'). A subclass may not be "
+                        "more mature than the class it inherits from. Fix: lower the "
+                        f"maturity of '{cls}' to at most '{inherited_cls_def['maturity']}', "
+                        f"or raise the maturity of '{inherited_cls_name}'."
+                    )
 
     def class_is_abstract(self, schema_class):
         schema_class_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
-        return "properties" not in schema_class_def and not self.class_is_primitive(schema_class)
+        return bool(schema_class_def.get("abstract", False))
 
     def class_is_container(self, schema_class):
         cls_def, _ = self.get_local_or_inherited_class(schema_class, raw=True)
@@ -247,11 +262,7 @@ class YamlSchemaProcessor:
         if not self.class_is_abstract(schema_class):
             return False
         raw_class_definition, _ = self.get_local_or_inherited_class(schema_class, raw=True)
-        if (
-            "heritableProperties" not in raw_class_definition
-            and "properties" not in raw_class_definition
-            and raw_class_definition.get("inherits", False)
-        ):
+        if "properties" not in raw_class_definition and raw_class_definition.get("inherits", False):
             return True
         return False
 
@@ -275,9 +286,22 @@ class YamlSchemaProcessor:
         yaml.dump(self.for_js, stream, sort_keys=False)
 
     def resolve_curie(self, curie):
+        if ":" not in curie:
+            raise ValueError(
+                f"CURIE reference {curie!r} is not of the form '<namespace>:"
+                "<identifier>'. Fix: use a declared namespace prefix, e.g. "
+                "'vrs:Variation'."
+            )
         namespace, identifier = curie.split(":")
-        base_url = self.namespaces[namespace]
-        return base_url + identifier
+        if namespace not in self.namespaces:
+            known = sorted(self.namespaces) or ["<none declared>"]
+            raise ValueError(
+                f"CURIE reference {curie!r} uses the undeclared namespace "
+                f"'{namespace}'. Known namespaces: {known}. Fix: add '{namespace}' "
+                f"to the 'namespaces' block of '{self.schema_fp.name}' (mapping it "
+                "to the target schema's '#/$defs/'), or correct the prefix."
+            )
+        return self.namespaces[namespace] + identifier
 
     def process_property_tree_refs(self, raw_node, processed_node):
         if isinstance(raw_node, dict):
@@ -316,7 +340,11 @@ class YamlSchemaProcessor:
             else:
                 inherited_class = proc.processed_schema[proc.schema_def_keyword][inherited_class_name]
         else:
-            raise ValueError
+            raise ValueError(
+                f"Class reference {schema_class!r} has too many ':' separators. "
+                "Fix: use either a local class name ('MyClass') or a single "
+                "namespaced reference ('namespace:MyClass')."
+            )
         return inherited_class, proc
 
     def get_class_uri(self, schema_class, mode):
@@ -348,8 +376,18 @@ class YamlSchemaProcessor:
         processed_class_def = self.processed_schema[self.schema_def_keyword][schema_class]
 
         # Check GKS maturity model on all schemas
-        assert "maturity" in processed_class_def, schema_class
-        assert processed_class_def["maturity"] in maturity_levels, schema_class
+        if "maturity" not in processed_class_def:
+            raise ValueError(
+                f"Class '{schema_class}' is missing the required 'maturity' field. "
+                f"Fix: add a 'maturity' key to '{schema_class}' with one of "
+                f"{sorted(maturity_levels)}, e.g. 'maturity: trial use'."
+            )
+        if processed_class_def["maturity"] not in maturity_levels:
+            raise ValueError(
+                f"Class '{schema_class}' has an invalid maturity "
+                f"'{processed_class_def['maturity']}'. Fix: set 'maturity' on "
+                f"'{schema_class}' to one of {sorted(maturity_levels)}."
+            )
 
         if self.class_is_protected(schema_class):
             containing_class = self.raw_defs[schema_class]["protectedClassOf"]
@@ -366,15 +404,24 @@ class YamlSchemaProcessor:
         inherits = processed_class_def.get("inherits", None)
         if inherits is not None:
             inherited_class, proc = self.get_local_or_inherited_class(inherits)
-            # extract properties / heritableProperties and required / heritableRequired from inherited_class
-            # currently assumes inheritance from abstract classes only–will break otherwise
-            inherited_properties |= copy.deepcopy(inherited_class["heritableProperties"])
-            inherited_required |= set(inherited_class.get("heritableRequired", []))
+            # Inherit the parent's properties / required. Abstract and concrete
+            # classes alike carry their members under 'properties' / 'required';
+            # inheritance currently assumes an abstract parent.
+            inherited_properties |= copy.deepcopy(inherited_class.get("properties", {}))
+            inherited_required |= set(inherited_class.get("required", []))
 
             # inherit ga4gh keys
             if "ga4gh" in processed_class_def or "ga4gh" in inherited_class:
                 if "ga4gh" not in processed_class_def:
-                    assert self.class_is_abstract(schema_class), f"{schema_class} is missing a defined prefix."
+                    if not self.class_is_abstract(schema_class):
+                        raise ValueError(
+                            f"Concrete class '{schema_class}' inherits a 'ga4gh' "
+                            f"identifier config from '{inherits}' but does not define "
+                            "its own 'ga4gh.prefix'. A concrete GA4GH-identifiable "
+                            "class needs its own prefix. Fix: add a 'ga4gh' block to "
+                            f"'{schema_class}' with a 'prefix' (e.g. 'ga4gh:\\n  "
+                            "prefix: XX\\n  inherent: [type, ...]')."
+                        )
                     processed_class_def["ga4gh"] = copy.deepcopy(inherited_class["ga4gh"])
                 elif "ga4gh" not in inherited_class:
                     pass
@@ -383,12 +430,9 @@ class YamlSchemaProcessor:
                     ga4gh_inherent |= set(processed_class_def["ga4gh"].get("inherent", []))
                     processed_class_def["ga4gh"]["inherent"] = sorted(ga4gh_inherent)
 
-        if self.class_is_abstract(schema_class):
-            prop_k = "heritableProperties"
-            req_k = "heritableRequired"
-        else:
-            prop_k = "properties"
-            req_k = "required"
+        # Abstract and concrete classes both store members under properties/required.
+        prop_k = "properties"
+        req_k = "required"
         raw_class_properties = raw_class_def.get(prop_k, {})  # Nested inheritance!
         processed_class_properties = processed_class_def.get(prop_k, {})
         processed_class_required = set(processed_class_def.get(req_k, []))
@@ -403,61 +447,127 @@ class YamlSchemaProcessor:
                 key = "allOf"
             self.process_property_tree_refs(raw_class_def[key], processed_class_def[key])
 
+        specialized = []
         for prop, prop_attribs in processed_class_properties.items():
-            # Mix in inherited properties
+            # 'extends' no longer exists. A subclass specializes an inherited
+            # property by redeclaring it under the same name; it cannot rename.
             if "extends" in prop_attribs:
-                # assert that the extended property is in inherited properties
-                assert prop_attribs["extends"] in inherited_properties
-                extended_property = prop_attribs["extends"]
-                # fix $ref and oneOf $ref inheritance
+                raise ValueError(
+                    f"Property '{schema_class}.{prop}' uses 'extends: "
+                    f"{prop_attribs['extends']!r}', which is no longer supported. "
+                    "Properties are inherited and specialized by matching the "
+                    "inherited property's name, and inherited properties cannot be "
+                    f"renamed. Fix: remove the 'extends' key from '{prop}'. If you "
+                    f"were renaming '{prop_attribs['extends']}' to '{prop}', instead "
+                    f"declare '{prop}' under the inherited name '{prop_attribs['extends']}'."
+                )
+            # Specialize an inherited property of the same name (subclass attributes
+            # win). Merge in place so the property keeps the position it holds in
+            # the superclass; only genuinely new subclass properties are appended.
+            if prop in inherited_properties:
+                merged = inherited_properties[prop]
+                # Schema covariance: a parent schema must still validate a
+                # subclass instance. A subclass may narrow/annotate an inherited
+                # property (add constraints, refine description/comment/array
+                # sizes) but may not change its type, const, or default (nor
+                # rename it). Adding one of these where the parent has none is a
+                # narrowing and is allowed.
+                for guarded in ("type", "const", "default"):
+                    if guarded in merged and guarded in prop_attribs and merged[guarded] != prop_attribs[guarded]:
+                        raise ValueError(
+                            f"Property '{schema_class}.{prop}' changes the inherited "
+                            f"'{guarded}' from {merged[guarded]!r} to "
+                            f"{prop_attribs[guarded]!r}. This breaks schema covariance: "
+                            f"a parent schema must validate every subclass instance, "
+                            f"but changing '{guarded}' makes some subclass instances "
+                            "invalid against the parent. Fix: remove the conflicting "
+                            f"'{guarded}' from '{schema_class}.{prop}' (a subclass may "
+                            "only add constraints, or refine description/$comment/array "
+                            f"sizes). If '{schema_class}' genuinely needs a different "
+                            f"'{guarded}', define '{prop}' as a new property rather than "
+                            "inheriting it."
+                        )
+                # reconcile polymorphic refs when the subclass narrows the type
                 if "$ref" in prop_attribs:
-                    if "oneOf" in inherited_properties[extended_property]:
-                        inherited_properties[extended_property].pop("oneOf")
-                    elif "anyOf" in inherited_properties[extended_property]:
-                        inherited_properties[extended_property].pop("anyOf")
+                    merged.pop("oneOf", None)
+                    merged.pop("anyOf", None)
                 if "oneOf" in prop_attribs or "anyOf" in prop_attribs:
-                    if "$ref" in inherited_properties[extended_property]:
-                        inherited_properties[extended_property].pop("$ref")
-                # merge and clean up inherited properties
-                processed_class_properties[prop] = inherited_properties[extended_property]
-                processed_class_properties[prop].update(prop_attribs)
-                processed_class_properties[prop].pop("extends")
-                inherited_properties.pop(extended_property)
-                # update required field
-                if extended_property in inherited_required:
-                    inherited_required.remove(extended_property)
-                    processed_class_required.add(prop)
+                    merged.pop("$ref", None)
+                merged.update(prop_attribs)
+                specialized.append(prop)
             # Validate required array attribute for GKS specs
             if self.enforce_ordered and prop_attribs.get("type", "") == "array":
-                assert "ordered" in prop_attribs, f"{schema_class}.{prop} missing ordered attribute."
-                assert isinstance(prop_attribs["ordered"], bool)
+                if "ordered" not in prop_attribs:
+                    raise ValueError(
+                        f"Array property '{schema_class}.{prop}' is missing the "
+                        "required 'ordered' attribute (required because this schema "
+                        "is strict / enforce_ordered). Fix: add 'ordered: true' if "
+                        "element order is meaningful, otherwise 'ordered: false'."
+                    )
+                if not isinstance(prop_attribs["ordered"], bool):
+                    raise ValueError(
+                        f"Array property '{schema_class}.{prop}' has a non-boolean "
+                        f"'ordered' value ({prop_attribs['ordered']!r}). "
+                        "Fix: set 'ordered' to a YAML boolean, 'true' or 'false'."
+                    )
             if self.strict and prop_attribs.get("type", "") == "object":
-                assert prop_attribs.get("additionalProperties", None) is not None, (
-                    f'"additionalProperties" expected to be defined in {schema_class}.{prop}'
-                )
+                if prop_attribs.get("additionalProperties", None) is None:
+                    raise ValueError(
+                        f"Object property '{schema_class}.{prop}' must declare "
+                        "'additionalProperties' (required because this schema is "
+                        "strict). Fix: add 'additionalProperties: false' to close the "
+                        "object, or 'additionalProperties: true' to allow extra keys."
+                    )
+        # Drop specialized props from the subclass set so they aren't appended a
+        # second time; the merged value already lives in its inherited position.
+        for prop in specialized:
+            del processed_class_properties[prop]
 
-        # Validate class structures for GKS specs
-        if self.class_is_abstract(schema_class):
-            assert "type" not in processed_class_def, schema_class
-        else:
-            assert "type" in processed_class_def, schema_class
-            assert processed_class_def["type"] == "object", schema_class
-            if self.class_is_ga4gh_identifiable(schema_class):
-                assert isinstance(processed_class_def["ga4gh"]["prefix"], str), schema_class
-                assert processed_class_def["ga4gh"]["prefix"] != "", schema_class
-                l = len(processed_class_def["ga4gh"]["inherent"])  # noqa: E741
-                assert l >= 2, (
-                    f"GA4GH identifiable objects are expected to be defined by at least 2 properties, {schema_class} has {l}."
+        # Validate class structures for GKS specs. Concrete classes omit
+        # 'type' in source; the processor injects "type": "object" so every
+        # emitted class (abstract and concrete alike) is a valid object schema.
+        processed_class_def["type"] = "object"
+        if self.class_is_ga4gh_identifiable(schema_class):
+            prefix = processed_class_def["ga4gh"]["prefix"]
+            if not isinstance(prefix, str) or prefix == "":
+                raise ValueError(
+                    f"GA4GH-identifiable class '{schema_class}' has an invalid "
+                    f"'ga4gh.prefix' ({prefix!r}). Fix: set 'ga4gh.prefix' on "
+                    f"'{schema_class}' to a non-empty string, e.g. 'prefix: VA'."
                 )
-                assert "type" in processed_class_def["ga4gh"]["inherent"], (
-                    f"GA4GH identifiable objects are expected to include the class type but not included for {schema_class}."
+            inherent = processed_class_def["ga4gh"]["inherent"]
+            if len(inherent) < 2:
+                raise ValueError(
+                    f"GA4GH-identifiable class '{schema_class}' defines "
+                    f"{len(inherent)} inherent propert(ies) ({inherent}) but at "
+                    "least 2 are required (the computed identifier must be defined "
+                    "by 'type' plus at least one other property). Fix: add the "
+                    "identifying properties to 'ga4gh.inherent' on "
+                    f"'{schema_class}'."
                 )
-                # Two properites should be `type` and at least one other field
+            if "type" not in inherent:
+                raise ValueError(
+                    f"GA4GH-identifiable class '{schema_class}' omits 'type' from "
+                    f"'ga4gh.inherent' ({inherent}). The class type must contribute "
+                    "to the computed identifier. Fix: add 'type' to "
+                    f"'ga4gh.inherent' on '{schema_class}'."
+                )
 
         processed_class_def[prop_k] = inherited_properties | processed_class_properties
         processed_class_def[req_k] = sorted(inherited_required | processed_class_required)
+        # Close concrete classes only. Abstract classes are left open (no
+        # additionalProperties keyword): JSON Schema already allows extra
+        # properties by default, and emitting additionalProperties: true would
+        # mark every property "evaluated", defeating unevaluatedProperties: false
+        # on any concrete class that composes the abstract class via allOf.
         if self.strict and not self.class_is_abstract(schema_class):
-            processed_class_def["additionalProperties"] = False
+            # allOf/anyOf/oneOf-composed classes need the composition-aware
+            # 'unevaluatedProperties'; plain 'additionalProperties' is blind to
+            # properties introduced via those applicators and would reject them.
+            if any(applicator in processed_class_def for applicator in ("allOf", "anyOf", "oneOf")):
+                processed_class_def["unevaluatedProperties"] = False
+            else:
+                processed_class_def["additionalProperties"] = False
         self.processed_classes.add(schema_class)
 
     @staticmethod
@@ -472,54 +582,23 @@ class YamlSchemaProcessor:
         self.for_js.pop("strict", None)
         self.for_js.pop("enforce_ordered", None)
         self.for_js.pop("imports", None)
-        abstract_class_removals = []
         for schema_class, schema_definition in self.for_js.get(self.schema_def_keyword, {}).items():
+            # Every class (abstract included) is emitted as its own JSON Schema,
+            # and $refs stay direct (no concretization to oneOf of descendants).
+            # Strip metaschema-only keywords that are not valid JSON Schema.
             schema_definition.pop("inherits", None)
             schema_definition.pop("protectedClassOf", None)
-            if self.class_is_abstract(schema_class):
-                schema_definition.pop("heritableProperties", None)
-                schema_definition.pop("heritableRequired", None)
-                schema_definition.pop("ga4gh", None)
-                schema_definition.pop("header_level", None)
-                self.concretize_js_object(schema_definition)
-                if (
-                    "oneOf" not in schema_definition
-                    and "allOf" not in schema_definition
-                    and "$ref" not in schema_definition
-                ):
-                    abstract_class_removals.append(schema_class)
+            schema_definition.pop("abstract", None)
+            schema_definition.pop("header_level", None)
             if "description" in schema_definition:
                 schema_definition["description"] = self._scrub_rst_markup(schema_definition["description"])
             if "properties" in schema_definition:
                 for p, p_def in schema_definition["properties"].items():
                     if "description" in p_def:
                         p_def["description"] = self._scrub_rst_markup(p_def["description"])
-                    self.concretize_js_object(p_def)
-
-        for cls in abstract_class_removals:
-            self.for_js[self.schema_def_keyword].pop(cls)
-
-    def concretize_js_object(self, js_obj):
-        if "$ref" in js_obj:
-            descendents = self.concretize_class_ref(js_obj["$ref"])
-            if descendents != {js_obj["$ref"]}:
-                js_obj.pop("$ref")
-                js_obj["oneOf"] = self._build_ref_list(descendents)
-        elif "oneOf" in js_obj:
-            # do the same check for each member
-            ref_list = js_obj["oneOf"]
-            descendents = set()
-            inlined = []
-            for ref in ref_list:
-                if "$ref" not in ref:
-                    inlined.append(ref)
-                else:
-                    descendents.update(self.concretize_class_ref(ref["$ref"]))
-            js_obj["oneOf"] = self._build_ref_list(descendents) + inlined
-        elif js_obj.get("type", "") == "array":
-            self.concretize_js_object(js_obj["items"])
 
     def concretize_class_ref(self, cls_url):
+        # Still used by class_is_subclass to walk the inheritance/container tree.
         children = self.has_children_urls.get(cls_url, None)
         if children is None:
             return {cls_url}
@@ -527,7 +606,3 @@ class YamlSchemaProcessor:
         for child in children:
             out.update(self.concretize_class_ref(child))
         return out
-
-    @staticmethod
-    def _build_ref_list(cls_urls):
-        return [{"$ref": url} for url in sorted(cls_urls)]
