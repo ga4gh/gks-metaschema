@@ -4,7 +4,7 @@
 
 **Computational Definition**
 
-An assessment of the copy number of a :ref:`Location` or a :ref:`Gene` within a system (e.g. genome, cell, etc.) relative to a baseline ploidy.
+An assessment of the copy number of a :ref:`Location` within a system (e.g. genome, cell, etc.) relative to a baseline ploidy.
 
 **GA4GH Digest**
 
@@ -23,7 +23,7 @@ An assessment of the copy number of a :ref:`Location` or a :ref:`Gene` within a 
 
 **Information Model**
 
-Some CopyNumberChange attributes are inherited from :ref:`CopyNumber`.
+Some CopyNumberChange attributes are inherited from :ref:`Variation`.
 
 .. list-table::
    :class: clean-wrap
@@ -40,30 +40,38 @@ Some CopyNumberChange attributes are inherited from :ref:`CopyNumber`.
       -
       - string
       - 0..1
-      - The 'logical' identifier of the entity in the system of record, e.g. a UUID. This 'id' is unique within a given system. The identified entity may have a different 'id' in a different system, or may refer to an 'id' for the shared concept in another system (e.g. a CURIE).
-   *  - label
+      - The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+   *  - type
+      -
+      - string
+      - 1..1
+      - MUST be "CopyNumberChange"
+   *  - name
       -
       - string
       - 0..1
-      - A primary label for the entity.
+      - A primary name for the entity.
    *  - description
       -
       - string
       - 0..1
-      - A free-text description of the entity.
+      - A free-text description of the Entity.
+   *  - aliases
+      -
+                        .. raw:: html
+
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Unordered">&#8942;</span>
+      - string
+      - 0..m
+      - Alternative name(s) for the Entity.
    *  - extensions
       -
                         .. raw:: html
 
-                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Ordered">&#8595;</span>
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Unordered">&#8942;</span>
       - :ref:`Extension`
       - 0..m
-      -
-   *  - type
-      -
-      - string
-      - 0..1
-      - MUST be "CopyNumberChange"
+      - A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
    *  - digest
       -
       - string
@@ -79,11 +87,11 @@ Some CopyNumberChange attributes are inherited from :ref:`CopyNumber`.
       -
    *  - location
       -
-      - :ref:`IRI` | :ref:`Location`
+      - :ref:`iriReference` | :ref:`SequenceLocation`
       - 1..1
-      - A location for which the number of systemic copies is described.
+      - The location of the subject of the copy change.
    *  - copyChange
       -
       - string
       - 1..1
-      - MUST be one of "efo:0030069" (complete genomic loss), "efo:0020073" (high-level loss), "efo:0030068" (low-level loss), "efo:0030067" (loss), "efo:0030064" (regional base ploidy), "efo:0030070" (gain), "efo:0030071" (low-level gain), "efo:0030072" (high-level gain).
+      - MUST use one of the defined enumerations that are based on the corresponding EFO ontological terms for copy number variation. See Implementation Guidance for more details.

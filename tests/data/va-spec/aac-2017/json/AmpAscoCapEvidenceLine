@@ -1,0 +1,61 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/aac-2017/json/AmpAscoCapEvidenceLine",
+   "title": "AmpAscoCapEvidenceLine",
+   "description": "Evidence line for AMP/ASCO/CAP",
+   "maturity": "draft",
+   "allOf": [
+      {
+         "$refCurie": "va.core:EvidenceLine"
+      },
+      {
+         "properties": {
+            "targetProposition": {
+               "oneOf": [
+                  {
+                     "$refCurie": "va.core:VariantPrognosticProposition"
+                  },
+                  {
+                     "$refCurie": "va.core:VariantDiagnosticProposition"
+                  },
+                  {
+                     "$refCurie": "va.core:VariantTherapeuticResponseProposition"
+                  }
+               ]
+            },
+            "strengthOfEvidenceProvided": {
+               "properties": {
+                  "primaryCoding": {
+                     "allOf": [
+                        {
+                           "$refCurie": "gkm.core:Coding"
+                        },
+                        {
+                           "properties": {
+                              "code": {
+                                 "enum": [
+                                    "A",
+                                    "B",
+                                    "C",
+                                    "D"
+                                 ]
+                              },
+                              "system": {
+                                 "const": "AMP/ASCO/CAP Guidelines, 2017"
+                              }
+                           }
+                        }
+                     ]
+                  }
+               }
+            }
+         }
+      }
+   ],
+   "required": [
+      "targetProposition"
+   ],
+   "type": "object",
+   "properties": {},
+   "unevaluatedProperties": false
+}

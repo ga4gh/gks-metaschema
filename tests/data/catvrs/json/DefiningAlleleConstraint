@@ -1,0 +1,39 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.x/json/DefiningAlleleConstraint",
+   "title": "DefiningAlleleConstraint",
+   "type": "object",
+   "maturity": "trial use",
+   "description": "The defining allele and its associated relationships that are congruent with member variants.",
+   "properties": {
+      "type": {
+         "type": "string",
+         "description": "MUST be \"DefiningAlleleConstraint\"",
+         "const": "DefiningAlleleConstraint",
+         "default": "DefiningAlleleConstraint"
+      },
+      "allele": {
+         "oneOf": [
+            {
+               "$ref": "/ga4gh/schema/vrs/1.x/json/Allele"
+            },
+            {
+               "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+            }
+         ]
+      },
+      "relations": {
+         "type": "array",
+         "ordered": false,
+         "items": {
+            "$ref": "/ga4gh/schema/gkm-core/v1/json/MappableConcept"
+         },
+         "description": "Defined relationships from which members relate to the defining allele."
+      }
+   },
+   "required": [
+      "allele",
+      "type"
+   ],
+   "additionalProperties": false
+}

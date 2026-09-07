@@ -1,10 +1,10 @@
-.. warning:: This data class is at a **draft** maturity level and may \
-    change significantly in future releases. Maturity \
+.. note:: This data class is at a **trial use** maturity level and may \
+    change in future releases. Maturity \
     levels are described in the :ref:`maturity-model`.
 
 **Computational Definition**
 
-The absolute count of discrete copies of a :ref:`Location` or :ref:`Gene`, within a system (e.g. genome, cell, etc.).
+The absolute count of discrete copies of a :ref:`Location` within a system (e.g. genome, cell, etc.).
 
 **GA4GH Digest**
 
@@ -23,7 +23,7 @@ The absolute count of discrete copies of a :ref:`Location` or :ref:`Gene`, withi
 
 **Information Model**
 
-Some CopyNumberCount attributes are inherited from :ref:`CopyNumber`.
+Some CopyNumberCount attributes are inherited from :ref:`Variation`.
 
 .. list-table::
    :class: clean-wrap
@@ -40,30 +40,38 @@ Some CopyNumberCount attributes are inherited from :ref:`CopyNumber`.
       -
       - string
       - 0..1
-      - The 'logical' identifier of the entity in the system of record, e.g. a UUID. This 'id' is unique within a given system. The identified entity may have a different 'id' in a different system, or may refer to an 'id' for the shared concept in another system (e.g. a CURIE).
-   *  - label
+      - The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+   *  - type
+      -
+      - string
+      - 1..1
+      - MUST be "CopyNumberCount"
+   *  - name
       -
       - string
       - 0..1
-      - A primary label for the entity.
+      - A primary name for the entity.
    *  - description
       -
       - string
       - 0..1
-      - A free-text description of the entity.
+      - A free-text description of the Entity.
+   *  - aliases
+      -
+                        .. raw:: html
+
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Unordered">&#8942;</span>
+      - string
+      - 0..m
+      - Alternative name(s) for the Entity.
    *  - extensions
       -
                         .. raw:: html
 
-                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Ordered">&#8595;</span>
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Unordered">&#8942;</span>
       - :ref:`Extension`
       - 0..m
-      -
-   *  - type
-      -
-      - string
-      - 0..1
-      - MUST be "CopyNumberCount"
+      - A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
    *  - digest
       -
       - string
@@ -79,9 +87,9 @@ Some CopyNumberCount attributes are inherited from :ref:`CopyNumber`.
       -
    *  - location
       -
-      - :ref:`IRI` | :ref:`Location`
+      - :ref:`iriReference` | :ref:`SequenceLocation`
       - 1..1
-      - A location for which the number of systemic copies is described.
+      - The location of the subject of the copy count.
    *  - copies
       -
       - integer | :ref:`Range`
