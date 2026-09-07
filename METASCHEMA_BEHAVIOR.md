@@ -1,7 +1,7 @@
 # Metaschema Processor — Behavior Reference
 
 This document describes how the metaschema processor (MSP,
-[`source_proc.py`](src/ga4gh/gks/metaschema/tools/source_proc.py)) turns a
+[`source_proc.py`](src/ga4gh/gkm/metaschema/tools/source_proc.py)) turns a
 `*-source.yaml` document into the artifacts consumed downstream:
 
 - the in-memory **processed schema** (`processor.for_js`) — a JSON Schema

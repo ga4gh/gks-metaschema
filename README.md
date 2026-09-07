@@ -1,4 +1,4 @@
-# gks-metaschema
+# gkm-metaschema
 
 
 Tools and scripts for parsing the GA4GH Genomic Knowledge Standards (GKS) metaschemas.
@@ -49,11 +49,11 @@ when processor behavior changes.
 
 ### Installation Steps
 
-Fork the repo at <https://github.com/ga4gh/gks-metaschema>, and initialize a development
+Fork the repo at <https://github.com/ga4gh/gkm-metaschema>, and initialize a development
 environment.
 
-    git clone git@github.com:YOUR_GITHUB_ID/gks-metaschema.git
-    cd gks-metaschema
+    git clone git@github.com:YOUR_GITHUB_ID/gkm-metaschema.git
+    cd gkm-metaschema
     make devready
     source venv/3.12/bin/activate
 
