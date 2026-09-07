@@ -13,6 +13,34 @@ Currently used in:
 * [VA-Spec](https://github.com/ga4gh/va-spec/)
 * [Cat-VRS](https://github.com/ga4gh/cat-vrs)
 
+## Metaschema processing model
+
+A `*-source.yaml` document is JSON Schema 2020-12 with a few GKS conventions
+the processor expands into standard JSON Schema. In brief:
+
+* **Classes** are abstract (`abstract: true`) or concrete (`inherits:` a
+  parent). Both carry members under `properties` / `required`; the processor
+  injects `type: object`. Every class — abstract included — is emitted as its
+  own schema.
+* **Inheritance** copies the parent's `properties`/`required` into the child,
+  **superclass-first**. A subclass **specializes** an inherited property by
+  redeclaring it under the **same name**; the legacy `extends` keyword is
+  **removed** and now raises an error.
+* **Schema covariance (Liskov):** a parent schema must always validate a
+  subclass instance. A subclass may narrow properties (add constraints), refine
+  descriptions/comments/array sizes, and add properties — but it may **not**
+  rename an inherited property or change its `type`/`const`/`default`
+  (violations raise an error).
+* **References** to an abstract class stay direct `$ref`s (no expansion into a
+  `oneOf` of descendants).
+* **Closure** (with `strict: true`): concrete classes get
+  `additionalProperties: false`; `allOf`/`anyOf`/`oneOf`-composed classes get
+  `unevaluatedProperties: false`; abstract classes are left open.
+
+The full, authoritative description — including known limitations — is in
+**[METASCHEMA_BEHAVIOR.md](METASCHEMA_BEHAVIOR.md)**. Keep that document in sync
+when processor behavior changes.
+
 ## Installing for development
 
 ### Prerequisites

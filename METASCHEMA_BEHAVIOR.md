@@ -1,0 +1,209 @@
+# Metaschema Processor — Behavior Reference
+
+This document describes how the metaschema processor (MSP,
+[`source_proc.py`](src/ga4gh/gks/metaschema/tools/source_proc.py)) turns a
+`*-source.yaml` document into the artifacts consumed downstream:
+
+- the in-memory **processed schema** (`processor.for_js`) — a JSON Schema
+  2020-12 document with every class under `$defs`;
+- **split per-class JSON** files (`source2splitjs.py` → `json/<Class>`);
+- **reStructuredText docs** (`y2t.py` → `def/<Class>.rst`).
+
+It is the source of truth for *current* processor behavior. Keep it in sync
+when the processing rules change.
+
+> **Status:** This reflects the migration to the `abstract: true` class
+> convention. The older `heritableProperties` / `heritableRequired` /
+> `extends` model has been removed (see [History](#history)).
+
+---
+
+## 1. Class model
+
+Every entry under `$defs` is one of three kinds:
+
+| Kind | How it is recognized | In the source |
+|------|----------------------|---------------|
+| **Abstract** | `abstract: true` | `type: object` + `properties` / `required` |
+| **Concrete** | no `abstract` flag | `inherits:` + `properties` (no `type`; the processor injects `type: object`) |
+| **Primitive** | `type` is not `object`/absent | e.g. `type: string`, `type: array` |
+
+Notes:
+
+- **`type: object` is injected** by the processor for every non-primitive
+  class (abstract and concrete), so concrete sources omit it.
+- Abstract and concrete classes both store members under **`properties`** /
+  **`required`**. `heritableProperties` / `heritableRequired` are no longer
+  used.
+
+## 2. Inheritance (`inherits`)
+
+A class declares a single parent with `inherits: <Class>` (or
+`inherits: <namespace>:<Class>` for an imported parent). The processor copies
+the parent's resolved `properties` and `required` into the child.
+
+- **Property order is superclass-first.** The top-level superclass's
+  properties come first, and each descendant appends its own. See
+  [§4](#4-property-ordering).
+- Inheritance currently assumes an **abstract parent**.
+
+## 3. Property specialization — schema covariance (no renaming; `extends` removed)
+
+A subclass **specializes** an inherited property by **redeclaring it under the
+same name**. The subclass attributes are merged over the inherited definition
+(subclass wins), and polymorphic refs are reconciled (a narrowing `$ref`
+replaces an inherited `oneOf`/`anyOf`, and vice versa).
+
+The governing invariant is **schema covariance (Liskov substitution): a parent
+schema must always validate an instance of a subclass.** Concretely, a subclass
+**may**:
+
+- add new properties (the abstract parent is left open — see [§7](#7-closure-of-additional-properties-strict) — so it still accepts them);
+- narrow an inherited property with additional constraints (e.g. add `const`,
+  `enum`, `pattern`, tighter `minItems`/`maxItems`);
+- specialize `description` / `$comment` / array sizes.
+
+A subclass **may not**:
+
+- **rename** an inherited property;
+- **change** an inherited property's `type`, `const`, or `default` (adding one
+  where the parent has none is a narrowing and *is* allowed).
+
+Violations raise a `ValueError` during processing. The legacy **`extends`
+keyword is not supported** and also raises; redeclare the property under its own
+name instead.
+
+## 4. Property ordering
+
+Emitted properties follow the inheritance chain top-down:
+
+1. top-level superclass properties (in their declared order),
+2. then each descendant's own properties, appended,
+3. an **overridden** property keeps its **inherited position** (it is merged in
+   place, not moved to the end).
+
+Example — `Allele`:
+
+```text
+id, type, name, description, aliases, extensions,   # from Entity (top-level)
+digest,                                             # from Ga4ghIdentifiableObject
+expressions,                                        # from Variation
+location, state                                     # Allele's own
+```
+
+`type` is overridden by `Allele` (adds `const: "Allele"`) but keeps `Entity`'s
+position 2.
+
+## 5. Every class is emitted
+
+Every class — **including abstract classes** — is emitted as its own JSON
+Schema under `$defs`. Nothing is pruned, and abstract classes are **not**
+collapsed into a `oneOf` of their descendants.
+
+## 6. References
+
+- `$refCurie` values are resolved against the schema's `namespaces` map into
+  `$ref`s.
+- A `$ref` that targets an **abstract class stays a direct `$ref`** — it is
+  *not* expanded into a `oneOf` of concrete descendants.
+- Metaschema-only keywords (`inherits`, `abstract`, `protectedClassOf`,
+  `header_level`) are stripped from the emitted JSON Schema.
+
+## 7. Closure of additional properties (`strict`)
+
+Whether a schema closes its objects is driven by the top-level `strict: true`
+flag. For a **strict** schema the processor emits:
+
+| Class shape | Emitted keyword |
+|-------------|-----------------|
+| Concrete, **not** composed | `additionalProperties: false` |
+| Concrete, composed with `allOf` / `anyOf` / `oneOf` | `unevaluatedProperties: false` |
+| Abstract | *nothing* — left open (see below) |
+
+Why the distinction matters:
+
+- `additionalProperties: false` is **blind to `allOf`/`$ref`/`oneOf`**: on a
+  composed class it would see no locally-declared properties and reject the
+  inherited/composed ones. Composed classes therefore use the
+  composition-aware `unevaluatedProperties: false`.
+- **Abstract classes deliberately omit `additionalProperties`.** JSON Schema
+  already allows extra properties by default, so this does not loosen
+  standalone validation. Crucially, emitting `additionalProperties: true`
+  would mark *every* property "evaluated" and **defeat**
+  `unevaluatedProperties: false` on any concrete class that composes the
+  abstract class via `allOf`.
+
+`strict` also enables `enforce_ordered`: every array property must declare an
+`ordered: <bool>` attribute (`enforce_ordered` can be set independently).
+
+## 8. Outputs
+
+- `processor.for_js` — the cleaned JSON Schema document (descriptions
+  RST-scrubbed to Markdown, metaschema-only keywords removed).
+- `source2splitjs.split_defs_to_js(proc)` — one JSON file per class under
+  `json/`, with cross-references rewritten to file paths.
+- `y2t.main(proc)` — one `.rst` file per class under `def/`. Abstract classes
+  are flagged with an **Abstract Class** notation, and `allOf`/`oneOf`/`anyOf`
+  composed classes render a composition summary (e.g. "defined as **all of**:
+  …") instead of an empty property table.
+
+Imports are only pulled in as dependencies; a schema's own `json/` and `def/`
+artifacts are produced only when the scripts are run **on that schema's
+processor** (see the tests for examples).
+
+---
+
+## Known limitations
+
+- **Bare, unresolvable `$ref`s in `recipes-source.yaml`.** The cat-vrs recipe
+  classes compose with `allOf: [ {$ref: CategoricalVariant}, … ]` using **bare**
+  references (`$ref: CategoricalVariant`, `$ref: DefiningAlleleConstraint`, …)
+  rather than `#/$defs/CategoricalVariant` or a namespaced/URL form. The
+  processor emits them verbatim without error, but they do **not** resolve in a
+  JSON Schema validator. Consequently a full recipe **instance cannot be
+  validated end-to-end** yet. The `allOf` closure *mechanism* is proven
+  behaviorally against a processor-generated synthetic class, and the real
+  recipe classes are proven structurally to meet both closure preconditions
+  (see [Testing](#testing)).
+- **`merge_imported()` fails on the recipes import graph.** Recipes import
+  cat-vrs (which imports vrs + gkm-core) *and* vrs/gkm-core directly; the merge
+  step asserts a single location per import name and raises on this diamond.
+- **`recipes-source.yaml` `namespaces` look inconsistent** (e.g.
+  `./gkm-core/gkm-core-source.yaml` rather than `../gkm-core/…`).
+- **Test scope.** Automated tests currently cover `gkm-core`, `vrs`,
+  `cat-vrs`, `recipes`, and the `va-spec` schemas (`base/domain-entities`,
+  `base/va-core`, and the `aac-2017` / `acmg-2015` / `ccv-2022` profiles).
+  Other GKS source YAMLs are excluded while the set is mid-migration; a few
+  legacy tests are skipped for removed fixtures.
+
+## Testing
+
+- [`tests/test_source_proc_units.py`](tests/test_source_proc_units.py) —
+  unit tests for pure helpers and class predicates, plus **structural**
+  assertions that the correct closure keyword is emitted per class shape.
+- [`tests/test_schema_validation.py`](tests/test_schema_validation.py) —
+  **behavioral** proof (via a real draft 2020-12 validator) that concrete
+  classes reject extra properties (`additionalProperties`) and that
+  `allOf`-composed classes reject extras (`unevaluatedProperties`) while still
+  accepting composed properties.
+- [`tests/test_gkm_vrs.py`](tests/test_gkm_vrs.py) — build, output-generation,
+  ordering, abstract-emission, direct-ref, and `extends`-rejection checks
+  across the in-scope schemas.
+
+Run everything with `make test` (or `pytest tests/`).
+
+---
+
+## History
+
+Behaviors intentionally **removed / changed** during the migration:
+
+- `extends` (property renaming) — **removed**; now raises `ValueError`.
+- `heritableProperties` / `heritableRequired` — **removed**; replaced by
+  `properties` / `required` plus the explicit `abstract: true` flag.
+- Abstract classes were previously **pruned** from output or collapsed into a
+  `oneOf` union; they are now **emitted as their own schemas** and referenced
+  directly.
+- Abstract classes briefly emitted `additionalProperties: true`; this was
+  **removed** because it defeats `unevaluatedProperties: false` on composed
+  classes.
