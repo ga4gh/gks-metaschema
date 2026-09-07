@@ -7,8 +7,9 @@ import sys
 from io import TextIOWrapper
 from pathlib import Path
 
-from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 from jinja2 import Environment, FileSystemLoader
+
+from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 templates_dir = Path(__file__).resolve().parents[4] / "templates"
 env = Environment(loader=FileSystemLoader(templates_dir))
@@ -206,8 +207,7 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
                 print(file=f)
             if proc_schema.class_is_abstract(class_name):
                 print(
-                    "**Abstract Class** — not instantiated directly; concrete "
-                    "subclasses inherit its attributes.\n",
+                    "**Abstract Class** — not instantiated directly; concrete subclasses inherit its attributes.\n",
                     file=f,
                 )
             print("**Computational Definition**\n", file=f)
