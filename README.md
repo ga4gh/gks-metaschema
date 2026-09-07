@@ -41,6 +41,26 @@ The full, authoritative description — including known limitations — is in
 **[METASCHEMA_BEHAVIOR.md](METASCHEMA_BEHAVIOR.md)**. Keep that document in sync
 when processor behavior changes.
 
+<details>
+<summary><b>📊 Visual overview</b> — how the processor works (click to expand)</summary>
+
+<br>
+
+<a href="docs/assets/msp-explainer-light.png">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/msp-explainer-dark.png">
+    <img
+      width="900"
+      alt="The metaschema processor explained as a compiler: a DRY *-source.yaml is compiled — inlining inheritance, resolving $refs, injecting type: object — into self-contained per-class JSON Schemas plus RST docs, subject to type-system guarantees (base members first, Liskov substitution, concrete types sealed / abstract left open, abstract types not instantiated)."
+      src="docs/assets/msp-explainer-light.png">
+  </picture>
+</a>
+
+_Click the image for full resolution, or open the self-contained interactive
+version at [`docs/msp-explainer.html`](docs/msp-explainer.html)._
+
+</details>
+
 ## Installing for development
 
 ### Prerequisites
