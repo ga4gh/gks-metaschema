@@ -270,6 +270,14 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
             if composition:
                 print("\n" + composition, file=f)
 
+        # Normalize generated RST: strip trailing whitespace on every line and
+        # end each file with a single newline, so output matches what pre-commit
+        # produces and re-running the generator never dirties the working tree.
+        for rst_file in proc_schema.def_fp.glob("*.rst"):
+            text = rst_file.read_text()
+            normalized = "\n".join(line.rstrip() for line in text.splitlines())
+            rst_file.write_text(normalized.rstrip("\n") + "\n")
+
 
 def cli():
     source_file = pathlib.Path(sys.argv[1])
