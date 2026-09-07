@@ -18,4 +18,3 @@ This class is defined as **one of** the following:
 * :ref:`Adjacency`
 * :ref:`Terminus`
 * :ref:`DerivativeMolecule`
-

@@ -21,4 +21,3 @@ This class is defined as **all of** the following:
 * an object with additional constraints
 * an object with additional constraints
 * an object with additional constraints
-

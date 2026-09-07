@@ -12,4 +12,3 @@ This class is defined as **all of** the following:
 
 * :ref:`CategoricalVariant`
 * an object constraining ``constraints``
-

@@ -84,4 +84,3 @@ This class is defined as **one of** the following:
 * :ref:`VariantOncogenicityProposition`
 * :ref:`VariantTherapeuticResponseProposition`
 * :ref:`VariantClinicalSignificanceProposition`
-

@@ -14,4 +14,3 @@ This class is defined as **one of** the following:
 
 * :ref:`SequenceLocation`
 * :ref:`RelativeSequenceLocation`
-

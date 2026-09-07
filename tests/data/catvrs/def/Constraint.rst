@@ -37,4 +37,3 @@ This class is defined as **one of** the following:
 * :ref:`CopyCountConstraint`
 * :ref:`CopyChangeConstraint`
 * :ref:`FunctionConstraint`
-

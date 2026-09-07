@@ -12,4 +12,3 @@ This class is defined as **all of** the following:
 
 * :ref:`gkm.core:ConceptSet`
 * an object constraining ``concepts``
-

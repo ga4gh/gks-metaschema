@@ -12,4 +12,3 @@ This class is defined as **all of** the following:
 
 * :ref:`va.core:EvidenceLine`
 * an object constraining ``targetProposition``, ``strengthOfEvidenceProvided``
-
