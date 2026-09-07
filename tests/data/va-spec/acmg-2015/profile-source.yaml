@@ -11,7 +11,7 @@ imports:
 
 namespaces:
   gkm.core: ../../gkm-core/gkm-core.yaml#/$defs/
-  va.core: ../base/va-core.yaml#/$defs/ 
+  va.core: ../base/va-core.yaml#/$defs/
 
 $defs:
   # Variant Pathogenicity Statement

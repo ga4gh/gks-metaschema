@@ -64,7 +64,7 @@ $defs:
           - $ref: "#/$defs/Document"
           - $refCurie: gkm.core:iriReference
         description: A document in which the the Information Entity is reported.
-     
+
   StudyResult:
     inherits: InformationEntity
     abstract: true

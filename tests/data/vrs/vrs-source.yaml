@@ -19,7 +19,7 @@ imports:
 
 namespaces:
   gkm.core: ../gkm-core/gkm-core.yaml#/$defs/
-  
+
 $defs:
   # VRS definitions are presented top-down.  Everything rolls up to
   # Variation, which is a polymorphic abstraction of many kinds of
