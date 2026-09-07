@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+
 from ga4gh.gks.metaschema.scripts.source2splitjs import split_defs_to_js
 from ga4gh.gks.metaschema.scripts.y2t import main as y2t
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor

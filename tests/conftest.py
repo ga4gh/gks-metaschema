@@ -8,6 +8,7 @@ once per session and reused across tests.
 from pathlib import Path
 
 import pytest
+
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 DATA = Path(__file__).parent / "data"

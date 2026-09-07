@@ -8,6 +8,7 @@ policy (open on abstract, closed on strict concrete classes).
 
 import pytest
 import yaml
+
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 
 
@@ -148,9 +149,7 @@ def test_strict_composed_class_uses_unevaluated_properties(
         ("default", {"type": "string", "default": "a"}, {"type": "string", "default": "b"}),
     ],
 )
-def test_changing_inherited_type_const_default_is_rejected(
-    tmp_path, guarded, parent_type_prop, child_type_prop
-):
+def test_changing_inherited_type_const_default_is_rejected(tmp_path, guarded, parent_type_prop, child_type_prop):
     with pytest.raises(ValueError, match=guarded):
         _build_parent_child(tmp_path, parent_type_prop, child_type_prop)
 
@@ -168,9 +167,7 @@ def test_changing_inherited_type_const_default_is_rejected(
         ({"type": "string"}, {"type": "string", "description": "more specific"}),
     ],
 )
-def test_narrowing_or_annotating_inherited_property_is_allowed(
-    tmp_path, parent_type_prop, child_type_prop
-):
+def test_narrowing_or_annotating_inherited_property_is_allowed(tmp_path, parent_type_prop, child_type_prop):
     proc = _build_parent_child(tmp_path, parent_type_prop, child_type_prop)
     # the child's type property built successfully and carries the merged result
     assert "type" in proc.for_js["$defs"]["Child"]["properties"]
