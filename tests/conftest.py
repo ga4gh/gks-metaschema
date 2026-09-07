@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
+from ga4gh.gkm.metaschema.tools.source_proc import YamlSchemaProcessor
 
 DATA = Path(__file__).parent / "data"
 

@@ -9,7 +9,7 @@ policy (open on abstract, closed on strict concrete classes).
 import pytest
 import yaml
 
-from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
+from ga4gh.gkm.metaschema.tools.source_proc import YamlSchemaProcessor
 
 
 def _build_parent_child(tmp_path, parent_type_prop, child_type_prop):

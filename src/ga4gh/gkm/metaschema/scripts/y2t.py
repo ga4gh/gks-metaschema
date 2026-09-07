@@ -9,7 +9,7 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
-from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
+from ga4gh.gkm.metaschema.tools.source_proc import YamlSchemaProcessor
 
 templates_dir = Path(__file__).resolve().parents[4] / "templates"
 env = Environment(loader=FileSystemLoader(templates_dir))

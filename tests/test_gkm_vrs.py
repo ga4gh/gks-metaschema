@@ -19,9 +19,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ga4gh.gks.metaschema.scripts.source2splitjs import split_defs_to_js
-from ga4gh.gks.metaschema.scripts.y2t import main as y2t
-from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
+from ga4gh.gkm.metaschema.scripts.source2splitjs import split_defs_to_js
+from ga4gh.gkm.metaschema.scripts.y2t import main as y2t
+from ga4gh.gkm.metaschema.tools.source_proc import YamlSchemaProcessor
 
 root = Path(__file__).parent
 GKM_CORE = root / "data/gkm-core/gkm-core-source.yaml"

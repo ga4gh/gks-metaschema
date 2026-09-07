@@ -22,7 +22,7 @@ import pytest
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
-from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
+from ga4gh.gkm.metaschema.tools.source_proc import YamlSchemaProcessor
 
 # A minimal, self-contained schema mirroring the recipe pattern: a concrete
 # class composed via allOf from an abstract base plus a local properties block.
