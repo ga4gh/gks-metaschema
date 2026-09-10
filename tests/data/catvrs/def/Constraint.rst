@@ -28,7 +28,7 @@ Constraints are used to construct an intensional semantics of categorical varian
       - 1..1
       - MUST be set to the name of the concrete Constraint subtype.
 
-This class is defined as **one of** the following:
+This class must match **one of** the following:
 
 * :ref:`DefiningAlleleConstraint`
 * :ref:`DefiningLocationConstraint`

@@ -10,7 +10,7 @@ A contiguous segment of a biological sequence.
 
 **Information Model**
 
-This class is defined as **one of** the following:
+This class must match **one of** the following:
 
 * :ref:`SequenceLocation`
 * :ref:`RelativeSequenceLocation`

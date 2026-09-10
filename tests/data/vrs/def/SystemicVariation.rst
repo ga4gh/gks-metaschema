@@ -10,7 +10,7 @@ A Variation of multiple molecules in the context of a system, e.g. a genome, sam
 
 **Information Model**
 
-This class is defined as **one of** the following:
+This class must match **one of** the following:
 
 * :ref:`CopyNumberCount`
 * :ref:`CopyNumberChange`

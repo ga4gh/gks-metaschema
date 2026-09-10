@@ -76,7 +76,7 @@ Some MappableConcept attributes are inherited from :ref:`Entity`.
       - 0..m
       - A list of mappings to concepts in terminologies or code systems. Each mapping should include a coding and a relation.
 
-This class is defined as **any of** the following:
+This class must match **any of** the following:
 
 * an object with additional constraints
 * an object with additional constraints

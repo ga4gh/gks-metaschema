@@ -10,7 +10,7 @@ A :ref:`variation` on a contiguous molecule.
 
 **Information Model**
 
-This class is defined as **one of** the following:
+This class must match **one of** the following:
 
 * :ref:`Allele`
 * :ref:`RelativeAllele`

@@ -174,13 +174,120 @@ def resolve_composition(class_definition: dict) -> str:
     composed classes (which have no property table of their own) a useful
     Information Model rather than a blank section.
     """
-    for keyword, label in (("allOf", "all of"), ("oneOf", "one of"), ("anyOf", "any of")):
+    for keyword, label in (("oneOf", "one of"), ("anyOf", "any of")):
         if keyword in class_definition:
             members = class_definition[keyword]
-            lines = [f"This class is defined as **{label}** the following:\n"]
+            lines = [f"This class must match **{label}** the following:\n"]
             lines += [f"* {describe_composition_member(m)}" for m in members]
             return "\n".join(lines) + "\n"
     return ""
+
+
+def _class_registry(proc: YamlSchemaProcessor) -> dict:
+    """Map class name -> processed definition, across this schema and its imports.
+
+    Cached on the processor. Used to resolve the base class(es) an allOf-composed
+    class refines, so their (already-flattened) properties can be overlaid.
+    """
+    cached = getattr(proc, "_y2t_registry", None)
+    if cached is not None:
+        return cached
+    reg: dict = {}
+
+    def collect(p: YamlSchemaProcessor, seen: set) -> None:
+        if id(p) in seen:
+            return
+        seen.add(id(p))
+        for name, defn in p.processed_schema.get(p.schema_def_keyword, {}).items():
+            reg.setdefault(name, defn)
+        for imported in p.imports.values():
+            collect(imported, seen)
+
+    collect(proc, set())
+    proc._y2t_registry = reg
+    return reg
+
+
+def _ref_class_name(member: dict) -> str | None:
+    """Extract the referenced class name from a $ref (path) or $refCurie member."""
+    ref = member.get("$ref") or member.get("$refCurie")
+    if not ref:
+        return None
+    frag = ref.split("#")[-1]  # drop any JSON-pointer fragment
+    name = frag.rsplit("/", 1)[-1]  # last path segment
+    return name.rsplit(":", 1)[-1] or None  # strip a CURIE namespace prefix
+
+
+def flatten_allof(class_definition: dict, proc: YamlSchemaProcessor):
+    """Flatten an allOf-composed class to its effective property set.
+
+    Overlays each referenced base class's properties (in order) with the local
+    ``properties`` refinements. Returns (effective_properties, refined_names,
+    sorted_required, base_class_names). Refined/added names win but keep the
+    position they hold in the base (superclass-first ordering).
+    """
+    registry = _class_registry(proc)
+    effective: dict = {}
+    refined: set = set()
+    required: set = set()
+    bases: list = []
+    for member in class_definition.get("allOf", []):
+        base_name = _ref_class_name(member)
+        if base_name and base_name in registry:
+            base = registry[base_name]
+            bases.append(base_name)
+            for name, attribs in base.get("properties", {}).items():
+                effective.setdefault(name, attribs)
+            required.update(base.get("required", []))
+        if "properties" in member:
+            for name, attribs in member["properties"].items():
+                # overlay the refinement on the base definition so inherited
+                # facets (e.g. type/items) survive alongside the new constraints
+                effective[name] = {**effective.get(name, {}), **attribs}
+                refined.add(name)
+            required.update(member.get("required", []))
+    # fold in any properties declared directly on the class as well
+    for name, attribs in class_definition.get("properties", {}).items():
+        effective[name] = {**effective.get(name, {}), **attribs}
+        refined.add(name)
+    required.update(class_definition.get("required", []))
+    return effective, refined, sorted(required), bases
+
+
+def render_information_model(f, properties: dict, required: list, note: str = "", refined=frozenset()) -> None:
+    """Render an Information Model list-table for a property set.
+
+    Shared by ordinary classes and allOf-composed classes. ``refined`` names are
+    flagged so a reader can see which fields a recipe/profile constrained.
+    """
+    if not properties:
+        return
+    print(
+        f"""
+{note}
+.. list-table::
+   :class: clean-wrap
+   :header-rows: 1
+   :align: left
+   :widths: auto
+
+   *  - Field
+      - Flags
+      - Type
+      - Limits
+      - Description""",
+        file=f,
+    )
+    synthetic = {"required": required}
+    for name, attribs in properties.items():
+        field = f"{name} *(refined)*" if name in refined else name
+        row = f"""\
+   *  - {field}
+      - {resolve_flags(attribs)}
+      - {resolve_type(attribs)}
+      - {resolve_cardinality(name, attribs, synthetic)}
+      - {attribs.get("description", "")}"""
+        print("\n".join(line.rstrip() for line in row.splitlines()), file=f)
 
 
 def main(proc_schema: YamlSchemaProcessor) -> None:
@@ -236,36 +343,23 @@ def main(proc_schema: YamlSchemaProcessor) -> None:
             add_ga4gh_digest(class_definition, f)
 
             print("\n**Information Model**", file=f)
-            if class_definition[p].items():
-                print(
-                    f"""
-{inheritance}
-.. list-table::
-   :class: clean-wrap
-   :header-rows: 1
-   :align: left
-   :widths: auto
-
-   *  - Field
-      - Flags
-      - Type
-      - Limits
-      - Description""",
-                    file=f,
-                )
-                for class_property_name, class_property_attributes in class_definition[p].items():
-                    class_definition_formatted = f"""\
-   *  - {class_property_name}
-      - {resolve_flags(class_property_attributes)}
-      - {resolve_type(class_property_attributes)}
-      - {resolve_cardinality(class_property_name, class_property_attributes, class_definition)}
-      - {class_property_attributes.get("description", "")}"""
-                    class_definition_formatted = "\n".join(
-                        line.rstrip() for line in class_definition_formatted.splitlines()
-                    )
-                    print(class_definition_formatted, file=f)
-            # Composed classes (allOf/oneOf/anyOf) have no property table of
-            # their own; describe the composition so the section is not blank.
+            if "allOf" in class_definition:
+                # allOf = refinement: show the effective (flattened) property
+                # table — base class properties overlaid with the local
+                # refinements — like any other class, marking refined fields.
+                effective, refined, required, bases = flatten_allof(class_definition, proc_schema)
+                if effective:
+                    note = ""
+                    if bases:
+                        note = "This class refines " + ", ".join(f":ref:`{b}`" for b in bases) + ".\n"
+                    render_information_model(f, effective, required, note, refined)
+                else:
+                    composition = resolve_composition(class_definition)
+                    if composition:
+                        print("\n" + composition, file=f)
+            else:
+                render_information_model(f, class_definition[p], class_definition.get("required", []), inheritance)
+            # oneOf/anyOf unions: list the alternative member schemas.
             composition = resolve_composition(class_definition)
             if composition:
                 print("\n" + composition, file=f)
