@@ -80,7 +80,7 @@ This class refines :ref:`Statement`.
       - A document in which the the Information Entity is reported.
    *  - proposition *(refined)*
       -
-      - :ref:`Proposition`
+      - :ref:`VariantClinicalSignificanceProposition`
       - 1..1
       - A possible fact, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.
    *  - direction

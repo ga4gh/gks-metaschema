@@ -80,7 +80,7 @@ This class refines :ref:`EvidenceLine`.
       - A document in which the the Information Entity is reported.
    *  - targetProposition *(refined)*
       -
-      - :ref:`Proposition`
+      - :ref:`VariantPrognosticProposition` | :ref:`VariantDiagnosticProposition` | :ref:`VariantTherapeuticResponseProposition`
       - 1..1
       - The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.
    *  - hasEvidenceItems

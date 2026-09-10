@@ -70,7 +70,7 @@ This class refines :ref:`CategoricalVariant`.
                         .. raw:: html
 
                             <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Unordered">&#8942;</span>
-      - :ref:`Constraint`
+      - :ref:`DefiningLocationConstraint` + :ref:`CopyCountConstraint` | :ref:`CopyChangeConstraint`
       - 2..2
       - The constraints array must contain exactly two items: a DefiningLocationConstraint and either a CopyChangeConstraint or CopyCountConstraint.
    *  - mappings

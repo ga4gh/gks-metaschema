@@ -80,7 +80,7 @@ This class refines :ref:`EvidenceLine`.
       - A document in which the the Information Entity is reported.
    *  - targetProposition *(refined)*
       -
-      - :ref:`Proposition`
+      - :ref:`VariantPathogenicityProposition`
       - 0..1
       - A Variant Pathogenicity Proposition against which a specific type of evidence was assessed, to determine the strength and direction of support this evidence provides for or against the proposition's validity.
    *  - hasEvidenceItems

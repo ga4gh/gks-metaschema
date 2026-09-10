@@ -70,7 +70,7 @@ This class refines :ref:`CategoricalVariant`.
                         .. raw:: html
 
                             <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Unordered">&#8942;</span>
-      - :ref:`Constraint`
+      - :ref:`FunctionConstraint` + :ref:`DefiningAlleleConstraint` | :ref:`DefiningLocationConstraint` | :ref:`FeatureContextConstraint`
       - 2..m
       - The constraints must contain at least two items: a FunctionConstraint and either a DefiningAlleleConstraint, DefiningLocationConstraint, or FeatureContextConstraint.
    *  - mappings

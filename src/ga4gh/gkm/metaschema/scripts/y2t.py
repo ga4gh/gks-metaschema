@@ -26,39 +26,68 @@ MATURITY_MAPPING: dict[str, tuple[str, str]] = {
 ORDERED_MAPPING: dict[bool, str] = {True: "&#8595;", False: "&#8942;"}
 
 
-def resolve_type(class_property_definition: dict) -> str:
-    """Resolves a class definition to a concrete type.
+def _ref_label(ref: str) -> str:
+    """Class-name label for a $ref path or $refCurie (namespace/path stripped)."""
+    frag = ref.split("#")[-1]
+    return frag.rsplit("/", 1)[-1].rsplit(":", 1)[-1]
 
-    :param class_property_definition: type definition, "_Not Specified_" if undetermined
+
+def _array_item_type(class_property_definition: dict) -> str:
+    """Effective item type of an array: prefer narrowed ``contains`` schemas
+    (top-level or within ``allOf``) over the base ``items``."""
+    contained = []
+    if "contains" in class_property_definition:
+        contained.append(class_property_definition["contains"])
+    for member in class_property_definition.get("allOf", []):
+        if isinstance(member, dict) and "contains" in member:
+            contained.append(member["contains"])
+    types: list = []
+    for schema in contained:
+        resolved = resolve_type(schema)
+        if resolved != "_Not Specified_" and resolved not in types:
+            types.append(resolved)
+    if types:
+        return " + ".join(types)
+    return resolve_type(class_property_definition.get("items", {}))
+
+
+def resolve_type(class_property_definition: dict) -> str:
+    """Resolves a class/property definition to a concrete type label.
+
+    Returns "_Not Specified_" if undetermined. Arrays report their effective
+    item type (a narrowing ``contains`` wins over ``items``); ``allOf`` resolves
+    to its primary member; $ref/$refCurie are shown as the bare class name.
     """
-    if "type" in class_property_definition:
-        if class_property_definition["type"] == "array":
-            return resolve_type(class_property_definition["items"])
-        return class_property_definition["type"]
-    elif "$ref" in class_property_definition:
-        ref = class_property_definition["$ref"]
-        identifier = ref.split("/")[-1]
-        return f":ref:`{identifier}`"
-    elif "$refCurie" in class_property_definition:
-        ref = class_property_definition["$refCurie"]
-        identifier = ref.split("/")[-1]
-        return f":ref:`{identifier}`"
-    elif "oneOf" in class_property_definition or "anyOf" in class_property_definition:
-        kw = "oneOf"
-        if "anyOf" in class_property_definition:
-            kw = "anyOf"
-        deprecated_types = class_property_definition.get("deprecated", [])
+    d = class_property_definition
+    if not isinstance(d, dict):
+        return "_Not Specified_"
+    if d.get("type") == "array":
+        return _array_item_type(d)
+    if "type" in d:
+        return d["type"]
+    if "$ref" in d:
+        return f":ref:`{_ref_label(d['$ref'])}`"
+    if "$refCurie" in d:
+        return f":ref:`{_ref_label(d['$refCurie'])}`"
+    if "allOf" in d:
+        for member in d["allOf"]:
+            resolved = resolve_type(member)
+            if resolved != "_Not Specified_":
+                return resolved
+        return "_Not Specified_"
+    if "oneOf" in d or "anyOf" in d:
+        kw = "anyOf" if "anyOf" in d else "oneOf"
+        deprecated_types = d.get("deprecated", [])
         resolved_deprecated = []
         resolved_active = []
-        for property_type in class_property_definition[kw]:
+        for property_type in d[kw]:
             resolved_type = resolve_type(property_type)
             if property_type in deprecated_types:
                 resolved_deprecated.append(resolved_type + " (deprecated)")
             else:
                 resolved_active.append(resolved_type)
         return " | ".join(resolved_active + resolved_deprecated)
-    else:
-        return "_Not Specified_"
+    return "_Not Specified_"
 
 
 def resolve_cardinality(class_property_name: str, class_property_attributes: dict, class_definition: dict) -> str:
@@ -218,6 +247,27 @@ def _ref_class_name(member: dict) -> str | None:
     return name.rsplit(":", 1)[-1] or None  # strip a CURIE namespace prefix
 
 
+# Mutually-exclusive "what kind of thing is this" keywords. If a refinement
+# supplies one, the base's others are cleared so the narrower type wins.
+_TYPE_KEYS = ("type", "$ref", "$refCurie", "oneOf", "anyOf")
+
+
+def _merge_property(base: dict, refinement: dict) -> dict:
+    """Overlay a refinement onto a base property definition.
+
+    If the refinement redefines the type (any of ``_TYPE_KEYS``), the base's
+    type-signal keys are dropped first so the narrower type replaces the base's
+    rather than colliding with it; otherwise base facets (e.g. ``type: array`` /
+    ``items``) survive alongside the refinement (e.g. ``contains``/``minItems``).
+    """
+    merged = dict(base)
+    if any(key in refinement for key in _TYPE_KEYS):
+        for key in _TYPE_KEYS:
+            merged.pop(key, None)
+    merged.update(refinement)
+    return merged
+
+
 def flatten_allof(class_definition: dict, proc: YamlSchemaProcessor):
     """Flatten an allOf-composed class to its effective property set.
 
@@ -241,14 +291,12 @@ def flatten_allof(class_definition: dict, proc: YamlSchemaProcessor):
             required.update(base.get("required", []))
         if "properties" in member:
             for name, attribs in member["properties"].items():
-                # overlay the refinement on the base definition so inherited
-                # facets (e.g. type/items) survive alongside the new constraints
-                effective[name] = {**effective.get(name, {}), **attribs}
+                effective[name] = _merge_property(effective.get(name, {}), attribs)
                 refined.add(name)
             required.update(member.get("required", []))
     # fold in any properties declared directly on the class as well
     for name, attribs in class_definition.get("properties", {}).items():
-        effective[name] = {**effective.get(name, {}), **attribs}
+        effective[name] = _merge_property(effective.get(name, {}), attribs)
         refined.add(name)
     required.update(class_definition.get("required", []))
     return effective, refined, sorted(required), bases

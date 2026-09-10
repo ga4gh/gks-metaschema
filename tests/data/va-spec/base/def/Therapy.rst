@@ -59,7 +59,7 @@ This class refines :ref:`MappableConcept`.
       - A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
    *  - conceptType *(refined)*
       -
-      - string
+      - _Not Specified_ | string
       - 0..1
       - A term indicating the type of concept being represented by the MappableConcept.
    *  - primaryCoding
