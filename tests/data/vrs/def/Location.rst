@@ -8,9 +8,6 @@
 
 A contiguous segment of a biological sequence.
 
-**Information Model**
+**Subclasses:** :ref:`RelativeSequenceLocation`, :ref:`SequenceLocation`
 
-This class must match **one of** the following:
-
-* :ref:`SequenceLocation`
-* :ref:`RelativeSequenceLocation`
+**Used in:** :ref:`Adjacency`, :ref:`Terminus`

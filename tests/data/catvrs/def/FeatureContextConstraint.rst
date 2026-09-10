@@ -31,3 +31,5 @@ Some FeatureContextConstraint attributes are inherited from :ref:`Constraint`.
       - :ref:`MappableConcept`
       - 1..1
       - A feature identifier.
+
+**Used in:** :ref:`FunctionVariant`

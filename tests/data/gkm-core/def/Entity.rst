@@ -58,3 +58,5 @@ Anything that exists, has existed, or will exist.
       - :ref:`Extension`
       - 0..m
       - A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+
+**Subclasses:** :ref:`ConceptSet`, :ref:`MappableConcept`

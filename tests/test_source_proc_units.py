@@ -74,8 +74,9 @@ def test_resolve_curie_unknown_namespace_raises(vrs_processor: YamlSchemaProcess
     "cls,abstract,primitive,container,ga4gh_identifiable",
     [
         ("Ga4ghIdentifiableObject", True, False, False, False),
-        ("Variation", True, False, True, False),
-        ("Location", True, False, True, False),
+        # abstract, but no class-level oneOf/anyOf -> not a container
+        ("Variation", True, False, False, False),
+        ("Location", True, False, False, False),
         ("Allele", False, False, False, True),
         ("SequenceLocation", False, False, False, True),
         ("Expression", False, False, False, False),

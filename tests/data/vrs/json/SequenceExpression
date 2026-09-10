@@ -10,17 +10,6 @@
       ]
    },
    "description": "An expression describing a sequence.",
-   "oneOf": [
-      {
-         "$ref": "/ga4gh/schema/vrs/1.x/json/LiteralSequenceExpression"
-      },
-      {
-         "$ref": "/ga4gh/schema/vrs/1.x/json/ReferenceLengthExpression"
-      },
-      {
-         "$ref": "/ga4gh/schema/vrs/1.x/json/LengthExpression"
-      }
-   ],
    "discriminator": {
       "propertyName": "type"
    },

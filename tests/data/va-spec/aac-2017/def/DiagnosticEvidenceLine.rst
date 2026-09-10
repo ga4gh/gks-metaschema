@@ -5,3 +5,5 @@
 **Computational Definition**
 
 Diagnostic evidence line for AMP/ASCO/CAP
+
+**Used in:** :ref:`VariantClinicalSignificanceStatement`

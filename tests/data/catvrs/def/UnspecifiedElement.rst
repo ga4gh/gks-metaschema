@@ -57,3 +57,5 @@ Some UnspecifiedElement attributes are inherited from :ref:`gkm-core:Entity`.
       - :ref:`Extension`
       - 0..m
       - A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+
+**Used in:** :ref:`AdjacencyConstraint`, :ref:`GeneFusion`

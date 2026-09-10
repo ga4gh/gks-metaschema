@@ -44,3 +44,5 @@ Some DefiningLocationConstraint attributes are inherited from :ref:`Constraint`.
       - :ref:`MappableConcept`
       - 1..1
       - A characteristic of the location that is used to match the defining location to member locations.
+
+**Used in:** :ref:`CategoricalCnv`, :ref:`FunctionVariant`

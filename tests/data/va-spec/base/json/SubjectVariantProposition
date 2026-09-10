@@ -4,29 +4,6 @@
    "title": "SubjectVariantProposition",
    "maturity": "trial use",
    "description": "A Proposition that has a variant as the subject.",
-   "oneOf": [
-      {
-         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/ExperimentalVariantFunctionalImpactProposition"
-      },
-      {
-         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantPathogenicityProposition"
-      },
-      {
-         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantDiagnosticProposition"
-      },
-      {
-         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantPrognosticProposition"
-      },
-      {
-         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantOncogenicityProposition"
-      },
-      {
-         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantTherapeuticResponseProposition"
-      },
-      {
-         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantClinicalSignificanceProposition"
-      }
-   ],
    "properties": {
       "id": {
          "type": "string",

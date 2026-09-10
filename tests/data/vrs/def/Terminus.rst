@@ -90,3 +90,5 @@ Some Terminus attributes are inherited from :ref:`Variation`.
       - :ref:`iriReference` | :ref:`Location`
       - 1..1
       - The location of the terminus.
+
+**Used in:** :ref:`DerivativeMolecule`

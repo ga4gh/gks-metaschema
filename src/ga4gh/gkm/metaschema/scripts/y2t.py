@@ -338,87 +338,183 @@ def render_information_model(f, properties: dict, required: list, note: str = ""
         print("\n".join(line.rstrip() for line in row.splitlines()), file=f)
 
 
-def main(proc_schema: YamlSchemaProcessor) -> None:
+def _folder_processors(proc: YamlSchemaProcessor) -> list:
+    """All source processors in the same folder as ``proc`` (including it).
+
+    A folder's docs cover every ``*-source.yaml`` beside it (e.g. cat-vrs +
+    recipes), so cross-references are computed over the whole folder.
     """
-    Generates the .rst file for each of the classes in the schema
+    procs = {proc.schema_fp.resolve(): proc}
+    for src in sorted(proc.schema_fp.parent.glob("*-source.yaml")):
+        key = src.resolve()
+        if key not in procs:
+            procs[key] = YamlSchemaProcessor(src)
+    return list(procs.values())
 
-    :param proc_schema: schema processor object
+
+def _closure_owners(processors: list) -> dict:
+    """Map class name -> owning processor across the processors and their
+    imports (recursively). First definition wins; class names are unique."""
+    owners: dict = {}
+
+    def walk(p: YamlSchemaProcessor, seen: set) -> None:
+        if id(p) in seen:
+            return
+        seen.add(id(p))
+        for name in p.processed_schema.get(p.schema_def_keyword, {}):
+            owners.setdefault(name, p)
+        for imported in p.imports.values():
+            walk(imported, seen)
+
+    seen: set = set()
+    for p in processors:
+        walk(p, seen)
+    return owners
+
+
+def _collect_ref_names(node, out: set) -> None:
+    """Collect referenced class names from every $ref/$refCurie under ``node``."""
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key in ("$ref", "$refCurie") and isinstance(value, str):
+                out.add(_ref_label(value))
+            else:
+                _collect_ref_names(value, out)
+    elif isinstance(node, list):
+        for item in node:
+            _collect_ref_names(item, out)
+
+
+def build_cross_references(owners: dict):
+    """Compute (used_in, subclasses) over the class closure in ``owners``.
+
+    ``subclasses[X]`` = classes whose ``inherits`` resolves to X.
+    ``used_in[X]``   = classes that reference X via $ref/$refCurie (property or
+    composition), excluding the abstract-parent-enumerates-its-subclass mirror.
+    Only targets present in the closure are recorded, so every :ref: resolves.
     """
-    for class_name, class_definition in proc_schema.defs.items():
-        with open(proc_schema.def_fp / (class_name + ".rst"), "w") as f:
-            maturity = class_definition.get("maturity", "")
-            template = env.get_template("maturity")
-            if maturity == "draft":
-                print(
-                    template.render(info="warning", maturity_level="draft", modifier="significantly"),
-                    file=f,
-                )
-                print(file=f)
-            elif maturity == "trial use":
-                print(
-                    template.render(info="note", maturity_level="trial use", modifier=""),
-                    file=f,
-                )
-                print(file=f)
-            if proc_schema.class_is_abstract(class_name):
-                print(
-                    "**Abstract Class** — not instantiated directly; concrete subclasses inherit its attributes.\n",
-                    file=f,
-                )
-            print("**Computational Definition**\n", file=f)
-            print(class_definition["description"], file=f)
-            if proc_schema.class_is_passthrough(class_name):
-                composition = resolve_composition(class_definition)
-                if composition:
-                    print("\n**Information Model**\n", file=f)
-                    print(composition, file=f)
+    parent: dict = {}
+    for name, proc in owners.items():
+        raw = proc.raw_schema.get(proc.schema_def_keyword, {}).get(name, {})
+        inherits = raw.get("inherits")
+        if isinstance(inherits, str):
+            parent[name] = inherits.rsplit(":", 1)[-1]
+    subclasses: dict = {}
+    for child, par in parent.items():
+        if par in owners:
+            subclasses.setdefault(par, set()).add(child)
+    used_in: dict = {}
+    for name, proc in owners.items():
+        refs: set = set()
+        _collect_ref_names(proc.processed_schema[proc.schema_def_keyword][name], refs)
+        for target in refs:
+            if target == name or target not in owners:
                 continue
-            if "heritableProperties" in class_definition:
-                p = "heritableProperties"
-            elif "properties" in class_definition:
-                p = "properties"
-            elif proc_schema.class_is_primitive(class_name):
+            if parent.get(target) == name:  # skip subclass-enumeration mirror
                 continue
-            else:
-                raise ValueError(class_name, class_definition)
-            ancestor = proc_schema.raw_defs[class_name].get("inherits")
-            if ancestor:
-                ancestor = get_ancestor_with_attributes(ancestor, proc_schema)
-                inheritance = f"Some {class_name} attributes are inherited from :ref:`{ancestor}`.\n"
-            else:
-                inheritance = ""
+            used_in.setdefault(target, set()).add(name)
+    return used_in, subclasses
 
-            add_ga4gh_digest(class_definition, f)
 
-            print("\n**Information Model**", file=f)
-            if "allOf" in class_definition:
-                # allOf = refinement: show the effective (flattened) property
-                # table — base class properties overlaid with the local
-                # refinements — like any other class, marking refined fields.
-                effective, refined, required, bases = flatten_allof(class_definition, proc_schema)
-                if effective:
-                    note = ""
-                    if bases:
-                        note = "This class refines " + ", ".join(f":ref:`{b}`" for b in bases) + ".\n"
-                    render_information_model(f, effective, required, note, refined)
-                else:
-                    composition = resolve_composition(class_definition)
-                    if composition:
-                        print("\n" + composition, file=f)
-            else:
-                render_information_model(f, class_definition[p], class_definition.get("required", []), inheritance)
-            # oneOf/anyOf unions: list the alternative member schemas.
+def _print_xrefs(f, class_name: str, used_in: dict, subclasses: dict) -> None:
+    """Append 'Subclasses:' and 'Used in:' :ref: lists for a class."""
+    subs = sorted(subclasses.get(class_name, []))
+    if subs:
+        print("\n**Subclasses:** " + ", ".join(f":ref:`{s}`" for s in subs), file=f)
+    uses = sorted(used_in.get(class_name, []))
+    if uses:
+        print("\n**Used in:** " + ", ".join(f":ref:`{u}`" for u in uses), file=f)
+
+
+def render_class(
+    proc: YamlSchemaProcessor, class_name: str, class_definition: dict, def_fp, used_in: dict, subclasses: dict
+) -> None:
+    """Render one class's .rst into ``def_fp`` using its owning processor."""
+    with open(def_fp / (class_name + ".rst"), "w") as f:
+        maturity = class_definition.get("maturity", "")
+        template = env.get_template("maturity")
+        if maturity == "draft":
+            print(template.render(info="warning", maturity_level="draft", modifier="significantly"), file=f)
+            print(file=f)
+        elif maturity == "trial use":
+            print(template.render(info="note", maturity_level="trial use", modifier=""), file=f)
+            print(file=f)
+        if proc.class_is_abstract(class_name):
+            print(
+                "**Abstract Class** — not instantiated directly; concrete subclasses inherit its attributes.\n",
+                file=f,
+            )
+        print("**Computational Definition**\n", file=f)
+        print(class_definition["description"], file=f)
+        if proc.class_is_passthrough(class_name):
             composition = resolve_composition(class_definition)
             if composition:
-                print("\n" + composition, file=f)
+                print("\n**Information Model**\n", file=f)
+                print(composition, file=f)
+            _print_xrefs(f, class_name, used_in, subclasses)
+            return
+        if "heritableProperties" in class_definition:
+            p = "heritableProperties"
+        elif "properties" in class_definition:
+            p = "properties"
+        elif proc.class_is_primitive(class_name):
+            _print_xrefs(f, class_name, used_in, subclasses)
+            return
+        else:
+            raise ValueError(class_name, class_definition)
+        ancestor = proc.raw_defs[class_name].get("inherits")
+        if ancestor:
+            ancestor = get_ancestor_with_attributes(ancestor, proc)
+            inheritance = f"Some {class_name} attributes are inherited from :ref:`{ancestor}`.\n"
+        else:
+            inheritance = ""
 
-        # Normalize generated RST: strip trailing whitespace on every line and
-        # end each file with a single newline, so output matches what pre-commit
-        # produces and re-running the generator never dirties the working tree.
-        for rst_file in proc_schema.def_fp.glob("*.rst"):
-            text = rst_file.read_text()
-            normalized = "\n".join(line.rstrip() for line in text.splitlines())
-            rst_file.write_text(normalized.rstrip("\n") + "\n")
+        add_ga4gh_digest(class_definition, f)
+
+        print("\n**Information Model**", file=f)
+        if "allOf" in class_definition:
+            # allOf = refinement: show the effective (flattened) property table.
+            effective, refined, required, bases = flatten_allof(class_definition, proc)
+            if effective:
+                note = ""
+                if bases:
+                    note = "This class refines " + ", ".join(f":ref:`{b}`" for b in bases) + ".\n"
+                render_information_model(f, effective, required, note, refined)
+            else:
+                composition = resolve_composition(class_definition)
+                if composition:
+                    print("\n" + composition, file=f)
+        else:
+            render_information_model(f, class_definition[p], class_definition.get("required", []), inheritance)
+        composition = resolve_composition(class_definition)
+        if composition:
+            print("\n" + composition, file=f)
+        _print_xrefs(f, class_name, used_in, subclasses)
+
+
+def main(proc_schema: YamlSchemaProcessor) -> None:
+    """Generate .rst for every class in the folder's import closure.
+
+    All ``*-source.yaml`` beside ``proc_schema``, plus their imports (recursively
+    across levels), are rendered into ``proc_schema.def_fp`` so the folder is
+    self-contained and its 'Used in:' / 'Subclasses:' lists are accurate from
+    that folder's perspective.
+    """
+    processors = _folder_processors(proc_schema)
+    owners = _closure_owners(processors)
+    used_in, subclasses = build_cross_references(owners)
+    def_fp = proc_schema.def_fp
+    os.makedirs(def_fp, exist_ok=True)
+    for class_name, owner in owners.items():
+        class_definition = owner.processed_schema[owner.schema_def_keyword][class_name]
+        render_class(owner, class_name, class_definition, def_fp, used_in, subclasses)
+
+    # Normalize generated RST: strip trailing whitespace on every line and end
+    # each file with a single newline, so output matches what pre-commit produces
+    # and re-running the generator never dirties the working tree.
+    for rst_file in def_fp.glob("*.rst"):
+        text = rst_file.read_text()
+        rst_file.write_text("\n".join(line.rstrip() for line in text.splitlines()).rstrip("\n") + "\n")
 
 
 def cli():

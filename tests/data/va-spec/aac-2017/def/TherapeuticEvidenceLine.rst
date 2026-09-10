@@ -5,3 +5,5 @@
 **Computational Definition**
 
 Therapeutic evidence line for AMP/ASCO/CAP
+
+**Used in:** :ref:`VariantClinicalSignificanceStatement`

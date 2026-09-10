@@ -86,10 +86,6 @@ $defs:
       'focusAlleleFrequency', and 'locusAlleleCount' attributes in a CohortAlleleFrequencyStudyResult profile).
       But technical limitations in our current profiling framework tooling forced us to omit a core 'dataItems
       attribute that these specialized attributes would conceptually extend.
-    oneOf:
-      - $ref: "#/$defs/CohortAlleleFrequencyStudyResult"
-      - $ref: "#/$defs/ExperimentalVariantFunctionalImpactStudyResult"
-      - $ref: "#/$defs/ComputationalVariantFunctionalImpactAnalysisResult"
     properties:
       focus:
         oneOf:
@@ -192,14 +188,6 @@ $defs:
     maturity: trial use
     description: >-
       A :ref:`Proposition` that has a variant as the subject.
-    oneOf:
-      - $ref: "#/$defs/ExperimentalVariantFunctionalImpactProposition"
-      - $ref: "#/$defs/VariantPathogenicityProposition"
-      - $ref: "#/$defs/VariantDiagnosticProposition"
-      - $ref: "#/$defs/VariantPrognosticProposition"
-      - $ref: "#/$defs/VariantOncogenicityProposition"
-      - $ref: "#/$defs/VariantTherapeuticResponseProposition"
-      - $ref: "#/$defs/VariantClinicalSignificanceProposition"
     properties:
       subject:
         oneOf:

@@ -35,3 +35,5 @@ The base definition for all identifiable data objects.
       - :ref:`Extension`
       - 0..m
       - A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+
+**Subclasses:** :ref:`Coding`, :ref:`ConceptMapping`, :ref:`Extension`

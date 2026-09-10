@@ -5,26 +5,6 @@
    "type": "object",
    "maturity": "trial use",
    "description": "A variation on a contiguous molecule.",
-   "oneOf": [
-      {
-         "$ref": "/ga4gh/schema/vrs/1.x/json/Allele"
-      },
-      {
-         "$ref": "/ga4gh/schema/vrs/1.x/json/RelativeAllele"
-      },
-      {
-         "$ref": "/ga4gh/schema/vrs/1.x/json/CisPhasedBlock"
-      },
-      {
-         "$ref": "/ga4gh/schema/vrs/1.x/json/Adjacency"
-      },
-      {
-         "$ref": "/ga4gh/schema/vrs/1.x/json/Terminus"
-      },
-      {
-         "$ref": "/ga4gh/schema/vrs/1.x/json/DerivativeMolecule"
-      }
-   ],
    "discriminator": {
       "propertyName": "type"
    },

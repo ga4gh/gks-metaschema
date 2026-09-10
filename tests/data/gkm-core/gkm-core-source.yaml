@@ -193,6 +193,14 @@ $defs:
         const: ConceptSet
         default: ConceptSet
         description: MUST be "ConceptSet".
+      conceptSetType:
+        type: string
+        description: >-
+          A term indicating the type of concept being represented by the ConceptSet.
+        $comment: >-
+          This attribute can be used to indicate the type of concept being represented by the ConceptSet.
+          For example, in a variant pathogenicity assessment, the conceptSetType could be 'Condition',
+          'TherapyGroup', etc...
       concepts:
         type: array
         ordered: false
