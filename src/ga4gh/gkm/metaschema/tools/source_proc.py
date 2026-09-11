@@ -232,7 +232,7 @@ class YamlSchemaProcessor:
                         "is missing the required 'maturity' field. Fix: add "
                         f"'maturity' to '{inherited_cls_name}'."
                     )
-                if inherited_cls_def["maturity"] < cls_def["maturity"]:
+                if maturity_levels[inherited_cls_def["maturity"]] < maturity_levels[cls_def["maturity"]]:
                     raise ValueError(
                         f"Class '{cls}' has maturity '{cls_def['maturity']}', which "
                         f"is more mature than its parent '{inherited_cls_name}' "
