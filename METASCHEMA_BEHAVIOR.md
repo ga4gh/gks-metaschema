@@ -20,12 +20,13 @@ when the processing rules change.
 
 ## 1. Class model
 
-Every entry under `$defs` is one of three kinds:
+Every entry under `$defs` is one of these kinds:
 
 | Kind | How it is recognized | In the source |
 |------|----------------------|---------------|
 | **Abstract** | `abstract: true` | `type: object` + `properties` / `required` |
-| **Concrete** | no `abstract` flag | `inherits:` + `properties` (no `type`; the processor injects `type: object`) |
+| **Concrete (inherited)** | no `abstract` flag; `inherits:` a parent | `inherits:` + `properties` (no `type`; the processor injects `type: object`) |
+| **Concrete (composed)** | no `abstract` flag; top-level `allOf` / `anyOf` / `oneOf` | `allOf: [ {$ref: Base}, {properties: …} ]` — no `inherits`, no `type` (injected). Used by the recipes/profiles, e.g. `Condition`, `VariantPathogenicityStatement` |
 | **Primitive** | `type` is not `object`/absent | e.g. `type: string`, `type: array` |
 
 Notes:
@@ -41,6 +42,14 @@ Notes:
   properties — the processor emits no `properties: {}` / `required: []`. (Both
   are valid Draft 2020-12 but pure noise on property-less/requirement-less
   classes.)
+- **Composed concrete classes are not property-merged at the source level.**
+  Unlike the `inherits:` form (which copies the parent's `properties`/`required`
+  into the child — see [§2](#2-inheritance-inherits)), a composed concrete
+  class keeps its `allOf`/`anyOf`/`oneOf` in the emitted schema; the base's
+  members apply via composition. It is closed with the composition-aware
+  `unevaluatedProperties: false` (see [§7](#7-closure-of-additional-properties-strict))
+  and its RST renders the flattened effective-property table
+  (see [§8](#8-outputs)).
 
 ## 2. Inheritance (`inherits`)
 
