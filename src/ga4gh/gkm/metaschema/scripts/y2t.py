@@ -476,7 +476,11 @@ def render_class(
         else:
             inheritance = ""
 
-        add_ga4gh_digest(class_definition, f)
+        # Abstract classes never carry a GA4GH Digest section: they are not
+        # instantiated, so the digest (prefix/inherent) applies only to the
+        # concrete subclasses that inherit it.
+        if not proc.class_is_abstract(class_name):
+            add_ga4gh_digest(class_definition, f)
 
         print("\n**Information Model**", file=f)
         if "allOf" in class_definition:

@@ -21,6 +21,7 @@ import yaml
 
 from ga4gh.gkm.metaschema.scripts.source2splitjs import split_defs_to_js
 from ga4gh.gkm.metaschema.scripts.y2t import main as y2t
+from ga4gh.gkm.metaschema.scripts.y2t import render_class
 from ga4gh.gkm.metaschema.tools.source_proc import YamlSchemaProcessor
 
 root = Path(__file__).parent
@@ -79,6 +80,30 @@ def test_recipes_builds():
     proc = YamlSchemaProcessor(RECIPES)
     _assert_no_extends(proc.processed_schema)
     _assert_no_extends(proc.for_js)
+
+
+def _render_one(proc, class_name, tmp_path):
+    """Render a single class's .rst into tmp_path and return its text."""
+    kw = proc.schema_def_keyword
+    class_def = proc.processed_schema[kw][class_name]
+    render_class(proc, class_name, class_def, tmp_path, used_in={}, subclasses={})
+    return (tmp_path / f"{class_name}.rst").read_text()
+
+
+def test_abstract_class_has_no_ga4gh_digest(vrs_processor, tmp_path):
+    """An abstract class must not render a GA4GH Digest section even though it
+    carries a ga4gh block that its concrete subclasses inherit — it is never
+    instantiated, so the digest applies only to the concrete subclasses.
+    """
+    # Ga4ghIdentifiableObject is abstract and defines the ga4gh prefix/inherent.
+    assert vrs_processor.class_is_abstract("Ga4ghIdentifiableObject")
+    assert "ga4gh" in vrs_processor.processed_schema[vrs_processor.schema_def_keyword]["Ga4ghIdentifiableObject"]
+    abstract_rst = _render_one(vrs_processor, "Ga4ghIdentifiableObject", tmp_path)
+    assert "GA4GH Digest" not in abstract_rst
+
+    # A concrete GA4GH-identifiable subclass still renders the digest.
+    concrete_rst = _render_one(vrs_processor, "Allele", tmp_path)
+    assert "GA4GH Digest" in concrete_rst
 
 
 def _generate_outputs(proc, clean=True):

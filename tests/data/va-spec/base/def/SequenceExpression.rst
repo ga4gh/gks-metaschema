@@ -8,21 +8,6 @@
 
 An expression describing a :ref:`sequence <sequenceString>`.
 
-**GA4GH Digest**
-
-.. list-table::
-    :class: clean-wrap
-    :header-rows: 1
-    :align: left
-    :widths: auto
-
-    *  - Prefix
-       - Inherent
-
-    *  - None
-       - ['type']
-
-
 **Information Model**
 
 Some SequenceExpression attributes are inherited from :ref:`gkm-core:Entity`.

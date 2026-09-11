@@ -184,6 +184,10 @@ Why the distinction matters:
   - Each class table is followed by **Used in:** (classes that reference it via
     `$ref`/`$refCurie`) and **Subclasses:** (classes whose `inherits` resolves
     to it) cross-reference lists.
+  - A **GA4GH Digest** section (prefix + inherent properties) is rendered for
+    **concrete** GA4GH-identifiable classes only. Abstract classes omit it even
+    when they carry/inherit a `ga4gh` block, since they are never instantiated —
+    the digest applies to the concrete subclasses that inherit it.
   - `y2t` is a **folder-level** build: it renders every class in a folder's
     import closure (all `*-source.yaml` beside it plus their imports,
     recursively) into that folder's `def/`, so the folder is self-contained and
