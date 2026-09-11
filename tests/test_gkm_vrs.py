@@ -90,6 +90,27 @@ def _render_one(proc, class_name, tmp_path):
     return (tmp_path / f"{class_name}.rst").read_text()
 
 
+def test_maturity_note_is_condensed_single_line(gkm_core_processor, recipes_processor, tmp_path):
+    """The maturity note is a single-line admonition: `.. note::` for trial use
+    and `.. warning::` for draft (distinct colors), linking to the repo's
+    /appendices/maturity_model.html.
+    """
+    link = "`Maturity Model </appendices/maturity_model.html>`_"
+
+    def first_line(proc, level):
+        defs = proc.processed_schema[proc.schema_def_keyword]
+        cls = next(c for c, d in defs.items() if d.get("maturity") == level)
+        return _render_one(proc, cls, tmp_path).splitlines()[0]
+
+    trial = first_line(gkm_core_processor, "trial use")
+    assert trial.startswith(".. note:: **Trial Use** — may change in future releases.")
+    assert link in trial
+
+    draft = first_line(recipes_processor, "draft")
+    assert draft.startswith(".. warning:: **Draft** — may change significantly in future releases.")
+    assert link in draft
+
+
 def test_abstract_class_has_no_ga4gh_digest(vrs_processor, tmp_path):
     """An abstract class must not render a GA4GH Digest section even though it
     carries a ga4gh block that its concrete subclasses inherit — it is never

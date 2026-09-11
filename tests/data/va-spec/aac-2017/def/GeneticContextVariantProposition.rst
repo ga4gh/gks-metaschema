@@ -1,6 +1,4 @@
-.. note:: This data class is at a **trial use** maturity level and may \
-    change in future releases. Maturity \
-    levels are described in the :ref:`maturity-model`.
+.. note:: **Trial Use** — may change in future releases. `Maturity Model </appendices/maturity_model.html>`_
 
 **Abstract Class** — not instantiated directly; concrete subclasses inherit its attributes.
 

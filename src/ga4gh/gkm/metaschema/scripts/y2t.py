@@ -434,10 +434,10 @@ def render_class(
         maturity = class_definition.get("maturity", "")
         template = env.get_template("maturity")
         if maturity == "draft":
-            print(template.render(info="warning", maturity_level="draft", modifier="significantly"), file=f)
+            print(template.render(info="warning", label="Draft", modifier="significantly"), file=f)
             print(file=f)
         elif maturity == "trial use":
-            print(template.render(info="note", maturity_level="trial use", modifier=""), file=f)
+            print(template.render(info="note", label="Trial Use", modifier=""), file=f)
             print(file=f)
         if proc.class_is_abstract(class_name):
             print(
