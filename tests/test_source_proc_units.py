@@ -170,6 +170,22 @@ def test_empty_properties_and_required_are_omitted(
     assert "required" not in element
 
 
+def test_comment_is_stripped_from_emitted_schema(
+    gkm_core_processor: YamlSchemaProcessor,
+    vrs_processor: YamlSchemaProcessor,
+    recipes_processor: YamlSchemaProcessor,
+) -> None:
+    """`$comment` is an internal source-only annotation and must not appear in
+    the emitted JSON Schema — at class level, in properties, or nested inside
+    composition branches.
+    """
+    import json
+
+    for proc in (gkm_core_processor, vrs_processor, recipes_processor):
+        for name, definition in proc.for_js["$defs"].items():
+            assert "$comment" not in json.dumps(definition), f"{name} leaked a $comment"
+
+
 def test_composition_refcuries_are_resolved(recipes_processor: YamlSchemaProcessor) -> None:
     """$refCurie values nested inside a class-level allOf/anyOf/oneOf must be
     resolved to real $refs. Concrete (non-container) composed classes such as

@@ -134,6 +134,11 @@ collapsed into a `oneOf` of their descendants.
   *not* expanded into a `oneOf` of concrete descendants.
 - Metaschema-only keywords (`inherits`, `abstract`, `protectedClassOf`,
   `header_level`) are stripped from the emitted JSON Schema.
+- **`$comment` is stripped everywhere.** It is treated as an internal,
+  source-only annotation: it stays in the `*-source.yaml` but is removed
+  recursively from the emitted JSON Schema wherever it appears (class level,
+  properties, or nested composition branches). (It is a valid JSON Schema
+  keyword; the processor drops it by policy, not because it is invalid.)
 
 ## 7. Closure of additional properties (`strict`)
 

@@ -596,11 +596,27 @@ class YamlSchemaProcessor:
         string = string.replace("\n", " ")
         return string
 
+    @staticmethod
+    def _strip_key(node, key):
+        """Recursively delete every occurrence of ``key`` from a nested
+        dict/list structure (mutates in place)."""
+        if isinstance(node, dict):
+            node.pop(key, None)
+            for value in node.values():
+                YamlSchemaProcessor._strip_key(value, key)
+        elif isinstance(node, list):
+            for item in node:
+                YamlSchemaProcessor._strip_key(item, key)
+
     def clean_for_js(self):
         self.for_js.pop("namespaces", None)
         self.for_js.pop("strict", None)
         self.for_js.pop("enforce_ordered", None)
         self.for_js.pop("imports", None)
+        # `$comment` is an internal, source-only annotation: it stays in the
+        # *-source.yaml but is stripped from the emitted JSON Schema wherever it
+        # appears (class level, properties, or nested composition branches).
+        self._strip_key(self.for_js, "$comment")
         for schema_class, schema_definition in self.for_js.get(self.schema_def_keyword, {}).items():
             # Every class (abstract included) is emitted as its own JSON Schema,
             # and $refs stay direct (no concretization to oneOf of descendants).
