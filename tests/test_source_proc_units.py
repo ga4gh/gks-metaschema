@@ -135,6 +135,24 @@ def test_strict_composed_class_uses_unevaluated_properties(
         assert "additionalProperties" not in d
 
 
+def test_composition_refcuries_are_resolved(recipes_processor: YamlSchemaProcessor) -> None:
+    """$refCurie values nested inside a class-level allOf/anyOf/oneOf must be
+    resolved to real $refs. Concrete (non-container) composed classes such as
+    GeneFusion carry $refCurie deep inside their allOf; ref resolution must not
+    be gated on class_is_container(), or these leak unresolved into the emitted
+    schema (a validator silently ignores the unknown $refCurie keyword).
+    """
+    import json
+
+    # GeneFusion has $refCurie values buried in allOf -> contains -> anyOf.
+    gene_fusion = json.dumps(recipes_processor.for_js["$defs"]["GeneFusion"])
+    assert "Curie" not in gene_fusion
+
+    # Nothing in the whole built schema should retain an unresolved *Curie key.
+    for name, definition in recipes_processor.for_js["$defs"].items():
+        assert "Curie" not in json.dumps(definition), f"{name} leaked an unresolved curie"
+
+
 # --------------------------------------------------------------------------
 # Schema covariance: a parent schema must validate a subclass instance, so a
 # subclass may narrow/annotate an inherited property but may not change its

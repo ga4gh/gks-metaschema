@@ -29,7 +29,7 @@
                   "primaryCoding": {
                      "allOf": [
                         {
-                           "$refCurie": "gkm.core:Coding"
+                           "$ref": "/ga4gh/schema/gkm-core/v1/json/Coding"
                         },
                         {
                            "properties": {

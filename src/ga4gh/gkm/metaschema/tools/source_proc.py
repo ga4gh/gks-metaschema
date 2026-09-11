@@ -397,6 +397,11 @@ class YamlSchemaProcessor:
                     self.has_protected_members[descendant].add(schema_class)
 
         if self.class_is_primitive(schema_class):
+            # Primitive/type-alias classes (e.g. array aliases) skip the
+            # property/composition ref passes below, but may still carry nested
+            # $refCurie/$ref values (e.g. under 'items'/'contains'/'anyOf').
+            # Resolve them here so they don't leak unresolved into the schema.
+            self.process_property_tree_refs(raw_class_def, processed_class_def)
             self.processed_classes.add(schema_class)
             return
         inherited_properties = {}
@@ -438,14 +443,13 @@ class YamlSchemaProcessor:
         processed_class_required = set(processed_class_def.get(req_k, []))
         # Process refs
         self.process_property_tree_refs(raw_class_properties, processed_class_properties)
-        if self.class_is_container(schema_class):
-            if "anyOf" in raw_class_def:
-                key = "anyOf"
-            elif "oneOf" in raw_class_def:
-                key = "oneOf"
-            elif "allOf" in raw_class_def:
-                key = "allOf"
-            self.process_property_tree_refs(raw_class_def[key], processed_class_def[key])
+        # Resolve refs nested inside any class-level composition keyword. This is
+        # not gated on class_is_container(): concrete allOf/anyOf/oneOf-composed
+        # classes (the recipes/profiles) carry $refCurie values here too, and
+        # gating left them unresolved (they leaked into the emitted schema).
+        for key in ("allOf", "anyOf", "oneOf"):
+            if key in raw_class_def:
+                self.process_property_tree_refs(raw_class_def[key], processed_class_def[key])
 
         specialized = []
         for prop, prop_attribs in processed_class_properties.items():

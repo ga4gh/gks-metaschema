@@ -6,20 +6,20 @@
    "maturity": "draft",
    "allOf": [
       {
-         "$refCurie": "va.core:EvidenceLine"
+         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/EvidenceLine"
       },
       {
          "properties": {
             "targetProposition": {
                "oneOf": [
                   {
-                     "$refCurie": "va.core:VariantPrognosticProposition"
+                     "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantPrognosticProposition"
                   },
                   {
-                     "$refCurie": "va.core:VariantDiagnosticProposition"
+                     "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantDiagnosticProposition"
                   },
                   {
-                     "$refCurie": "va.core:VariantTherapeuticResponseProposition"
+                     "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantTherapeuticResponseProposition"
                   }
                ]
             },
@@ -28,7 +28,7 @@
                   "primaryCoding": {
                      "allOf": [
                         {
-                           "$refCurie": "gkm.core:Coding"
+                           "$ref": "/ga4gh/schema/gkm-core/v1/json/Coding"
                         },
                         {
                            "properties": {

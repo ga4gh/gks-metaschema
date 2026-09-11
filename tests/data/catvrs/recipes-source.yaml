@@ -10,8 +10,8 @@ imports:
   vrs: ../vrs/vrs-source.yaml
 
 namespaces:
-  gkm.core: ../gkm-core/gkm-core-source.yaml
-  vrs: ../vrs/vrs-source.yaml
+  gkm.core: ../gkm-core/gkm-core.yaml#/$defs/
+  vrs: ../vrs/vrs-source.yaml#/$defs/
 
 $defs:
   ProteinSequenceConsequence:

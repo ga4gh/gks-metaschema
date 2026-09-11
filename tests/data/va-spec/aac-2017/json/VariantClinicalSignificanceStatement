@@ -6,12 +6,12 @@
    "maturity": "draft",
    "allOf": [
       {
-         "$refCurie": "va.core:Statement"
+         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Statement"
       },
       {
          "properties": {
             "proposition": {
-               "$refCurie": "va.core:VariantClinicalSignificanceProposition"
+               "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantClinicalSignificanceProposition"
             },
             "strength": {
                "description": "The strength of support that the Statement is determined to provide for or against the Variant Clinical Significance Proposition for the assessed variant, based on the curation and reporting conventions of the AMP/ASCO/CAP 2017 Guidelines.",
@@ -19,7 +19,7 @@
                   "primaryCoding": {
                      "allOf": [
                         {
-                           "$refCurie": "gkm.core:Coding"
+                           "$ref": "/ga4gh/schema/gkm-core/v1/json/Coding"
                         },
                         {
                            "properties": {
@@ -44,7 +44,7 @@
                   "primaryCoding": {
                      "allOf": [
                         {
-                           "$refCurie": "gkm.core:Coding"
+                           "$ref": "/ga4gh/schema/gkm-core/v1/json/Coding"
                         },
                         {
                            "properties": {
@@ -103,7 +103,7 @@
                "hasEvidenceLines": {
                   "oneOf": [
                      {
-                        "$refCurie": "gkm.core:iriReference"
+                        "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
                      },
                      {
                         "$ref": "/ga4gh/schema/va-spec/1.x/aac-2017/json/DiagnosticEvidenceLine"
@@ -189,7 +189,7 @@
                "hasEvidenceLines": {
                   "oneOf": [
                      {
-                        "$refCurie": "gkm.core:iriReference"
+                        "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
                      },
                      {
                         "$ref": "/ga4gh/schema/va-spec/1.x/aac-2017/json/DiagnosticEvidenceLine"
