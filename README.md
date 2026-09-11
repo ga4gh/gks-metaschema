@@ -1,4 +1,4 @@
-# gks-metaschema
+# gkm-metaschema
 
 
 Tools and scripts for parsing the GA4GH Genomic Knowledge Standards (GKS) metaschemas.
@@ -13,6 +13,56 @@ Currently used in:
 * [VA-Spec](https://github.com/ga4gh/va-spec/)
 * [Cat-VRS](https://github.com/ga4gh/cat-vrs)
 
+## Metaschema processing model
+
+A `*-source.yaml` document is JSON Schema 2020-12 with a few GKS conventions
+the processor expands into standard JSON Schema. In brief:
+
+* **Classes** are abstract (`abstract: true`) or concrete. A concrete class is
+  either **inherited** (`inherits:` a parent, with members under
+  `properties` / `required`) or **composed** (a top-level
+  `allOf`/`anyOf`/`oneOf` — e.g. the VA/cat-vrs profiles and recipes). The
+  processor injects `type: object`, and every class — abstract included — is
+  emitted as its own schema.
+* **Inheritance** copies the parent's `properties`/`required` into the child,
+  **superclass-first**. A subclass **specializes** an inherited property by
+  redeclaring it under the **same name**; the legacy `extends` keyword is
+  **removed** and now raises an error.
+* **Schema covariance (Liskov):** a parent schema must always validate a
+  subclass instance. A subclass may narrow properties (add constraints), refine
+  descriptions/comments/array sizes, and add properties — but it may **not**
+  rename an inherited property or change its `type`/`const`/`default`
+  (violations raise an error).
+* **References** to an abstract class stay direct `$ref`s (no expansion into a
+  `oneOf` of descendants).
+* **Closure** (with `strict: true`): concrete classes get
+  `additionalProperties: false`; `allOf`/`anyOf`/`oneOf`-composed classes get
+  `unevaluatedProperties: false`; abstract classes are left open.
+
+The full, authoritative description — including known limitations — is in
+**[METASCHEMA_BEHAVIOR.md](METASCHEMA_BEHAVIOR.md)**. Keep that document in sync
+when processor behavior changes.
+
+<details>
+<summary><b>📊 Visual overview</b> — how the processor works (click to expand)</summary>
+
+<br>
+
+<a href="docs/assets/msp-explainer-light.png">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/msp-explainer-dark.png">
+    <img
+      width="900"
+      alt="The metaschema processor explained as a compiler: a DRY *-source.yaml is compiled — inlining inheritance, resolving $refs, injecting type: object — into self-contained per-class JSON Schemas plus RST docs, subject to type-system guarantees (base members first, Liskov substitution, concrete types sealed / abstract left open, abstract types not instantiated)."
+      src="docs/assets/msp-explainer-light.png">
+  </picture>
+</a>
+
+_Click the image for full resolution, or open the self-contained interactive
+version at [`docs/msp-explainer.html`](docs/msp-explainer.html)._
+
+</details>
+
 ## Installing for development
 
 ### Prerequisites
@@ -21,11 +71,11 @@ Currently used in:
 
 ### Installation Steps
 
-Fork the repo at <https://github.com/ga4gh/gks-metaschema>, and initialize a development
+Fork the repo at <https://github.com/ga4gh/gkm-metaschema>, and initialize a development
 environment.
 
-    git clone git@github.com:YOUR_GITHUB_ID/gks-metaschema.git
-    cd gks-metaschema
+    git clone git@github.com:YOUR_GITHUB_ID/gkm-metaschema.git
+    cd gkm-metaschema
     make devready
     source venv/3.12/bin/activate
 

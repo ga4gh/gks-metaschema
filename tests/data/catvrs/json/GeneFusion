@@ -1,0 +1,54 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-msp.test/json/GeneFusion",
+   "title": "GeneFusion",
+   "type": "object",
+   "maturity": "draft",
+   "description": "A representation of the joining of two genes resulting in a chimeric transcript and/or novel interaction between a rearranged regulatory elements with the expression of a partner gene product (a regulatory fusion).",
+   "allOf": [
+      {
+         "$ref": "/ga4gh/schema/cat-vrs/1.0.0-msp.test/json/CategoricalVariant"
+      },
+      {
+         "properties": {
+            "constraints": {
+               "description": "The constraints must contain at least one item of an Adjacency Constraint.",
+               "minItems": 1,
+               "contains": {
+                  "allOf": [
+                     {
+                        "$ref": "/ga4gh/schema/cat-vrs/1.0.0-msp.test/json/AdjacencyConstraint"
+                     },
+                     {
+                        "properties": {
+                           "adjoinedElements": {
+                              "contains": {
+                                 "anyOf": [
+                                    {
+                                       "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
+                                    },
+                                    {
+                                       "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/MappableConcept"
+                                    },
+                                    {
+                                       "$ref": "/ga4gh/schema/vrs/1.0.0-msp.test/json/Location"
+                                    },
+                                    {
+                                       "$ref": "/ga4gh/schema/cat-vrs/1.0.0-msp.test/json/UnspecifiedElement"
+                                    }
+                                 ]
+                              }
+                           }
+                        }
+                     }
+                  ]
+               }
+            }
+         },
+         "required": [
+            "constraints"
+         ]
+      }
+   ],
+   "unevaluatedProperties": false
+}

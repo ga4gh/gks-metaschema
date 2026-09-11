@@ -1,10 +1,11 @@
-.. warning:: This data class is at a **draft** maturity level and may \
-    change significantly in future releases. Maturity \
-    levels are described in the :ref:`maturity-model`.
+.. admonition:: Trial Use
+    :class: note
+
+    May change in future releases. `Maturity Model </appendices/maturity_model.html>`_
 
 **Computational Definition**
 
-A :ref:`Location` defined by an interval on a referenced :ref:`Sequence`.
+A :ref:`Location` defined by an interval on a :ref:`SequenceReference`.
 
 **GA4GH Digest**
 
@@ -40,30 +41,38 @@ Some SequenceLocation attributes are inherited from :ref:`Ga4ghIdentifiableObjec
       -
       - string
       - 0..1
-      - The 'logical' identifier of the entity in the system of record, e.g. a UUID. This 'id' is unique within a given system. The identified entity may have a different 'id' in a different system, or may refer to an 'id' for the shared concept in another system (e.g. a CURIE).
-   *  - label
+      - The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+   *  - type
+      -
+      - string
+      - 1..1
+      - MUST be "SequenceLocation"
+   *  - name
       -
       - string
       - 0..1
-      - A primary label for the entity.
+      - A primary name for the entity.
    *  - description
       -
       - string
       - 0..1
-      - A free-text description of the entity.
+      - A free-text description of the Entity.
+   *  - aliases
+      -
+                        .. raw:: html
+
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Unordered">&#8942;</span>
+      - string
+      - 0..m
+      - Alternative name(s) for the Entity.
    *  - extensions
       -
                         .. raw:: html
 
-                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Ordered">&#8595;</span>
+                            <span style="background-color: #B2DFEE; color: black; padding: 2px 6px; border: 1px solid black; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 5px;" title="Unordered">&#8942;</span>
       - :ref:`Extension`
       - 0..m
-      -
-   *  - type
-      -
-      - string
-      - 0..1
-      - MUST be "SequenceLocation"
+      - A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
    *  - digest
       -
       - string
@@ -71,16 +80,23 @@ Some SequenceLocation attributes are inherited from :ref:`Ga4ghIdentifiableObjec
       - A sha512t24u digest created using the VRS Computed Identifier algorithm.
    *  - sequenceReference
       -
-      - :ref:`IRI` | :ref:`SequenceReference`
+      - :ref:`iriReference` | :ref:`SequenceReference`
       - 0..1
-      - A :ref:`SequenceReference`.
+      - A reference to a :ref:`SequenceReference` on which the location is defined.
    *  - start
       -
       - integer | :ref:`Range`
       - 0..1
-      - The start coordinate or range of the SequenceLocation. The minimum value of this coordinate or range is 0. MUST represent a coordinate or range less than or equal to the value of `end`.
+      - The start coordinate or range of the SequenceLocation. The minimum value of this coordinate or range is 0. For locations on linear sequences, this MUST represent a coordinate or range less than or equal to the value of `end`. For circular sequences, `start` is greater than `end` when the location spans the sequence 0 coordinate.
    *  - end
       -
       - integer | :ref:`Range`
       - 0..1
-      - The end coordinate or range of the SequenceLocation. The minimum value of this coordinate or range is 0. MUST represent a coordinate or range greater than or equal to the value of `start`.
+      - The end coordinate or range of the SequenceLocation. The minimum value of this coordinate or range is 0. For locations on linear sequences, this MUST represent a coordinate or range greater than or equal to the value of `start`. For circular sequences, `end` is less than `start` when the location spans the sequence 0 coordinate.
+   *  - sequence
+      -
+      - :ref:`sequenceString`
+      - 0..1
+      - The literal sequence encoded by the `sequenceReference` at these coordinates.
+
+**Used in:** :ref:`Allele`, :ref:`CopyNumberChange`, :ref:`CopyNumberCount`, :ref:`RelativeSequenceLocation`

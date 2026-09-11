@@ -1,7 +1,10 @@
-.. warning:: This data class is at a **draft** maturity level and may \
-    change significantly in future releases. Maturity \
-    levels are described in the :ref:`maturity-model`.
+.. admonition:: Trial Use
+    :class: note
+
+    May change in future releases. `Maturity Model </appendices/maturity_model.html>`_
 
 **Computational Definition**
 
 An inclusive range of values bounded by one or more integers.
+
+**Used in:** :ref:`CopyNumberCount`, :ref:`LengthExpression`, :ref:`ReferenceLengthExpression`, :ref:`SequenceLocation`, :ref:`SequenceOffsetLocation`

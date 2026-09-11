@@ -1,0 +1,301 @@
+"""Scoped tests for the metaschema processor.
+
+These tests exercise the migrated schema set: ``gkm-core-source.yaml``,
+``vrs-source.yaml`` (imports gkm-core), ``cat-vrs-source.yaml`` (imports
+gkm-core + vrs), ``recipes-source.yaml`` (imports cat-vrs), and the va-spec
+schemas under ``data/va-spec`` (base: domain-entities + va-core; profiles:
+aac-2017, acmg-2015, ccv-2022). Other source YAMLs are intentionally excluded
+for now while the set is mid-migration.
+
+They also lock in the removal of ``extends`` property renaming: subclasses
+specialize an inherited property by reusing its name (auto-merge, subclass
+attributes win) and may no longer rename inherited properties.
+"""
+
+import os
+import shutil
+from pathlib import Path
+
+import pytest
+import yaml
+
+from ga4gh.gkm.metaschema.scripts.source2splitjs import split_defs_to_js
+from ga4gh.gkm.metaschema.scripts.y2t import main as y2t
+from ga4gh.gkm.metaschema.scripts.y2t import render_class
+from ga4gh.gkm.metaschema.tools.source_proc import YamlSchemaProcessor
+
+root = Path(__file__).parent
+GKM_CORE = root / "data/gkm-core/gkm-core-source.yaml"
+VRS = root / "data/vrs/vrs-source.yaml"
+CAT_VRS = root / "data/catvrs/cat-vrs-source.yaml"
+RECIPES = root / "data/catvrs/recipes-source.yaml"
+
+# va-spec: base/ holds two schemas that share one json/ + def/ output dir;
+# each profile lives in its own directory.
+DOMAIN_ENTITIES = root / "data/va-spec/base/domain-entities-source.yaml"
+VA_CORE = root / "data/va-spec/base/va-core-source.yaml"
+VA_PROFILES = [
+    root / "data/va-spec/aac-2017/profile-source.yaml",
+    root / "data/va-spec/acmg-2015/profile-source.yaml",
+    root / "data/va-spec/ccv-2022/profile-source.yaml",
+]
+VA_SPEC_ALL = [DOMAIN_ENTITIES, VA_CORE, *VA_PROFILES]
+
+
+def _iter_dicts(node):
+    """Yield every dict nested anywhere within ``node``."""
+    if isinstance(node, dict):
+        yield node
+        for value in node.values():
+            yield from _iter_dicts(value)
+    elif isinstance(node, list):
+        for item in node:
+            yield from _iter_dicts(item)
+
+
+def _assert_no_extends(schema):
+    for d in _iter_dicts(schema):
+        assert "extends" not in d, "'extends' should not survive processing"
+
+
+def test_gkm_core_builds():
+    proc = YamlSchemaProcessor(GKM_CORE)
+    _assert_no_extends(proc.processed_schema)
+    _assert_no_extends(proc.for_js)
+
+
+def test_vrs_builds():
+    proc = YamlSchemaProcessor(VRS)
+    _assert_no_extends(proc.processed_schema)
+    _assert_no_extends(proc.for_js)
+
+
+def test_cat_vrs_builds():
+    proc = YamlSchemaProcessor(CAT_VRS)
+    _assert_no_extends(proc.processed_schema)
+    _assert_no_extends(proc.for_js)
+
+
+def test_recipes_builds():
+    proc = YamlSchemaProcessor(RECIPES)
+    _assert_no_extends(proc.processed_schema)
+    _assert_no_extends(proc.for_js)
+
+
+def _render_one(proc, class_name, tmp_path):
+    """Render a single class's .rst into tmp_path and return its text."""
+    kw = proc.schema_def_keyword
+    class_def = proc.processed_schema[kw][class_name]
+    render_class(proc, class_name, class_def, tmp_path, used_in={}, subclasses={})
+    return (tmp_path / f"{class_name}.rst").read_text()
+
+
+def test_maturity_note_admonition(gkm_core_processor, recipes_processor, tmp_path):
+    """The maturity note is an admonition titled with the maturity level
+    (Draft / Trial Use), colored via :class: (warning / note), whose body links
+    to the repo's /appendices/maturity_model.html.
+    """
+    link = "`Maturity Model </appendices/maturity_model.html>`_"
+
+    def rendered(proc, level):
+        defs = proc.processed_schema[proc.schema_def_keyword]
+        cls = next(c for c, d in defs.items() if d.get("maturity") == level)
+        return _render_one(proc, cls, tmp_path)
+
+    trial = rendered(gkm_core_processor, "trial use")
+    assert trial.startswith(".. admonition:: Trial Use\n    :class: note\n")
+    assert "May change in future releases. " + link in trial
+
+    draft = rendered(recipes_processor, "draft")
+    assert draft.startswith(".. admonition:: Draft\n    :class: warning\n")
+    assert "May change significantly in future releases. " + link in draft
+
+
+def test_abstract_class_has_no_ga4gh_digest(vrs_processor, tmp_path):
+    """An abstract class must not render a GA4GH Digest section even though it
+    carries a ga4gh block that its concrete subclasses inherit — it is never
+    instantiated, so the digest applies only to the concrete subclasses.
+    """
+    # Ga4ghIdentifiableObject is abstract and defines the ga4gh prefix/inherent.
+    assert vrs_processor.class_is_abstract("Ga4ghIdentifiableObject")
+    assert "ga4gh" in vrs_processor.processed_schema[vrs_processor.schema_def_keyword]["Ga4ghIdentifiableObject"]
+    abstract_rst = _render_one(vrs_processor, "Ga4ghIdentifiableObject", tmp_path)
+    assert "GA4GH Digest" not in abstract_rst
+
+    # A concrete GA4GH-identifiable subclass still renders the digest.
+    concrete_rst = _render_one(vrs_processor, "Allele", tmp_path)
+    assert "GA4GH Digest" in concrete_rst
+
+
+def _generate_outputs(proc, clean=True):
+    """Write the per-class json/ split schemas and def/ .rst docs for a schema.
+
+    ``clean=False`` keeps existing def/ artifacts, needed when two schemas
+    (e.g. cat-vrs and recipes) share one output directory.
+    """
+    split_defs_to_js(proc)  # creates <schema_dir>/json/<Class>
+    if clean:
+        shutil.rmtree(proc.def_fp, ignore_errors=True)
+    os.makedirs(proc.def_fp, exist_ok=True)
+    y2t(proc)  # creates <schema_dir>/def/<Class>.rst
+
+
+def test_gkm_core_outputs_generated():
+    """gkm-core must emit json/ and def/ artifacts like vrs does. Because it is
+    only pulled in as an import elsewhere, nothing generated these before; the
+    scoped suite now drives them directly. Abstract classes are emitted too."""
+    proc = YamlSchemaProcessor(GKM_CORE)
+    _generate_outputs(proc)
+    # concrete class
+    assert (proc.json_fp / "Coding").exists()
+    assert (proc.def_fp / "Coding.rst").exists()
+    # abstract class is emitted as well
+    assert (proc.json_fp / "Entity").exists()
+
+
+def test_vrs_outputs_generated():
+    proc = YamlSchemaProcessor(VRS)
+    _generate_outputs(proc)
+    assert (proc.json_fp / "Allele").exists()
+    assert (proc.def_fp / "Allele.rst").exists()
+    # abstract class emitted
+    assert (proc.json_fp / "Variation").exists()
+
+
+def test_catvrs_outputs_generated():
+    """cat-vrs and recipes live in the same directory and share json/ and def/.
+    Generate cat-vrs first (clean), then recipes without wiping cat-vrs's docs."""
+    cat = YamlSchemaProcessor(CAT_VRS)
+    _generate_outputs(cat, clean=True)
+    assert (cat.json_fp / "CategoricalVariant").exists()
+    assert (cat.def_fp / "CategoricalVariant.rst").exists()
+
+    rec = YamlSchemaProcessor(RECIPES)
+    _generate_outputs(rec, clean=False)
+    assert (rec.json_fp / "ProteinSequenceConsequence").exists()
+    assert (rec.def_fp / "ProteinSequenceConsequence.rst").exists()
+    # cat-vrs docs survived the recipes generation in the shared directory
+    assert (cat.def_fp / "CategoricalVariant.rst").exists()
+
+
+@pytest.mark.parametrize("src", VA_SPEC_ALL, ids=lambda p: str(p.relative_to(root)))
+def test_va_spec_builds(src):
+    proc = YamlSchemaProcessor(src)
+    _assert_no_extends(proc.processed_schema)
+    _assert_no_extends(proc.for_js)
+
+
+def test_va_spec_base_outputs_generated():
+    """domain-entities and va-core share base/json and base/def; generate
+    domain-entities first (clean), then va-core without wiping its docs."""
+    de = YamlSchemaProcessor(DOMAIN_ENTITIES)
+    _generate_outputs(de, clean=True)
+    assert (de.json_fp / "Condition").exists()
+    assert (de.def_fp / "Condition.rst").exists()
+
+    vc = YamlSchemaProcessor(VA_CORE)
+    _generate_outputs(vc, clean=False)
+    assert (vc.json_fp / "Method").exists()
+    assert (vc.def_fp / "Method.rst").exists()
+    # domain-entities docs survived va-core generation in the shared directory
+    assert (de.def_fp / "Condition.rst").exists()
+
+
+@pytest.mark.parametrize("src", VA_PROFILES, ids=lambda p: p.parent.name)
+def test_va_spec_profile_outputs_generated(src):
+    proc = YamlSchemaProcessor(src)
+    _generate_outputs(proc)
+    assert proc.json_fp.is_dir() and any(proc.json_fp.iterdir())
+    assert proc.def_fp.is_dir() and any(proc.def_fp.iterdir())
+
+
+def test_same_name_override_merges_inherited_attributes():
+    """Allele.type specializes the inherited ``type`` property by name.
+
+    The subclass supplies ``const``/``default``/``description`` while the
+    inherited ``type: string`` (from Ga4ghIdentifiableObject) is preserved
+    via the auto-merge that replaced ``extends``.
+    """
+    proc = YamlSchemaProcessor(VRS)
+    allele_type = proc.defs["Allele"]["properties"]["type"]
+    assert allele_type["const"] == "Allele"
+    assert allele_type["default"] == "Allele"
+    # inherited attribute retained through the name-based merge
+    assert allele_type["type"] == "string"
+
+
+def test_property_order_is_superclass_first():
+    """Emitted properties follow the inheritance chain: top-level superclass
+    properties first, each descendant appending its own, with overridden
+    properties keeping their inherited position."""
+    proc = YamlSchemaProcessor(VRS)
+    order = list(proc.for_js["$defs"]["Allele"]["properties"].keys())
+    # Entity (top-level superclass) contributes id, type, ... first.
+    assert order[0] == "id"
+    assert order[1] == "type"  # overridden by Allele but keeps Entity's position
+    # digest (Ga4ghIdentifiableObject) and expressions (Variation) come before
+    # Allele's own location/state, which are appended last.
+    assert order.index("digest") < order.index("location")
+    assert order.index("expressions") < order.index("location")
+    assert order[-2:] == ["location", "state"]
+
+
+def test_abstract_classes_are_emitted_as_object_schemas():
+    """Every class, abstract included, is emitted with type: object and no
+    metaschema-only keywords (`abstract`, `inherits`) leaking into output."""
+    proc = YamlSchemaProcessor(VRS)
+    defs = proc.for_js["$defs"]
+    for abstract_cls in ("Ga4ghIdentifiableObject", "Variation", "Location"):
+        assert abstract_cls in defs, f"{abstract_cls} should be emitted"
+        emitted = defs[abstract_cls]
+        assert emitted.get("type") == "object"
+        assert "abstract" not in emitted
+        assert "inherits" not in emitted
+
+
+def test_ref_to_abstract_class_stays_direct():
+    """A $ref to an abstract class is NOT expanded into a oneOf of concrete
+    descendants; it remains a direct reference.
+
+    Allele.state references the abstract SequenceExpression. The old
+    concretization would have replaced the $ref with a oneOf of the three
+    concrete SequenceExpression subclasses.
+    """
+    proc = YamlSchemaProcessor(VRS)
+    state = proc.for_js["$defs"]["Allele"]["properties"]["state"]
+    assert state.get("$ref") == "#/$defs/SequenceExpression"
+    assert "oneOf" not in state
+
+
+def test_renaming_inherited_property_is_rejected(tmp_path):
+    """A subclass that uses ``extends`` to rename a property must error."""
+    schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://example.org/schema/test/test-source.yaml",
+        "title": "Test",
+        "type": "object",
+        "$defs": {
+            "Parent": {
+                "maturity": "draft",
+                "description": "parent",
+                "heritableProperties": {
+                    "subject": {"type": "string", "description": "the subject"},
+                },
+            },
+            "Child": {
+                "maturity": "draft",
+                "inherits": "Parent",
+                "description": "child",
+                "type": "object",
+                "properties": {
+                    "variant": {"extends": "subject", "description": "renamed"},
+                },
+            },
+        },
+    }
+    fp = tmp_path / "test-source.yaml"
+    with open(fp, "w") as f:
+        yaml.safe_dump(schema, f)
+
+    with pytest.raises(ValueError, match="extends"):
+        YamlSchemaProcessor(fp)

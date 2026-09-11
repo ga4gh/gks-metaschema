@@ -1,5 +1,5 @@
 [project]
-name = "ga4gh.gks.metaschema"
+name = "ga4gh.gkm.metaschema"
 authors = [
     {name = "Alex Wagner", email = "alex.wagner@nationwidechildrens.org"},
 ]
@@ -37,26 +37,27 @@ dynamic = ["version"]
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "jsonschema>=4.18",
     "ruff==0.14.10",
     "pre-commit~=4.1.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/ga4gh/gks-metaschema"
-Documentation = "https://github.com/ga4gh/gks-metaschema"
-Changelog = "https://github.com/ga4gh/gks-metaschema/releases"
-Source = "https://github.com/ga4gh/gks-metaschema"
-"Bug Tracker" = "https://github.com/ga4gh/gks-metaschema/issues"
+Homepage = "https://github.com/ga4gh/gkm-metaschema"
+Documentation = "https://github.com/ga4gh/gkm-metaschema"
+Changelog = "https://github.com/ga4gh/gkm-metaschema/releases"
+Source = "https://github.com/ga4gh/gkm-metaschema"
+"Bug Tracker" = "https://github.com/ga4gh/gkm-metaschema/issues"
 
 [tool.setuptools_scm]
 
 [project.scripts]
-jsy2js = "ga4gh.gks.metaschema.scripts.jsy2js:cli"
-source2jsy = "ga4gh.gks.metaschema.scripts.source2jsy:cli"
-y2t = "ga4gh.gks.metaschema.scripts.y2t:cli"
-source2mergedjsy = "ga4gh.gks.metaschema.scripts.source2mergedjsy:cli"
-source2splitjs = "ga4gh.gks.metaschema.scripts.source2splitjs:cli"
-source2classes = "ga4gh.gks.metaschema.scripts.source2classes:cli"
+jsy2js = "ga4gh.gkm.metaschema.scripts.jsy2js:cli"
+source2jsy = "ga4gh.gkm.metaschema.scripts.source2jsy:cli"
+y2t = "ga4gh.gkm.metaschema.scripts.y2t:cli"
+source2mergedjsy = "ga4gh.gkm.metaschema.scripts.source2mergedjsy:cli"
+source2splitjs = "ga4gh.gkm.metaschema.scripts.source2splitjs:cli"
+source2classes = "ga4gh.gkm.metaschema.scripts.source2classes:cli"
 
 [build-system]
 requires = ["setuptools>=65.3", "setuptools_scm>=8"]

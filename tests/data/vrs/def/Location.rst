@@ -1,7 +1,14 @@
-.. warning:: This data class is at a **draft** maturity level and may \
-    change significantly in future releases. Maturity \
-    levels are described in the :ref:`maturity-model`.
+.. admonition:: Trial Use
+    :class: note
+
+    May change in future releases. `Maturity Model </appendices/maturity_model.html>`_
+
+**Abstract Class** — not instantiated directly; concrete subclasses inherit its attributes.
 
 **Computational Definition**
 
 A contiguous segment of a biological sequence.
+
+**Subclasses:** :ref:`RelativeSequenceLocation`, :ref:`SequenceLocation`
+
+**Used in:** :ref:`Adjacency`, :ref:`Terminus`

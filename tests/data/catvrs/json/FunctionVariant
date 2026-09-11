@@ -1,0 +1,51 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-msp.test/json/FunctionVariant",
+   "title": "FunctionVariant",
+   "type": "object",
+   "maturity": "draft",
+   "description": "A representation of the constraints for matching knowledge about function variants; e.g., gain-of-function or loss-of-function.",
+   "allOf": [
+      {
+         "$ref": "/ga4gh/schema/cat-vrs/1.0.0-msp.test/json/CategoricalVariant"
+      },
+      {
+         "properties": {
+            "constraints": {
+               "description": "The constraints must contain at least two items: a FunctionConstraint and either a DefiningAlleleConstraint, DefiningLocationConstraint, or FeatureContextConstraint.",
+               "minItems": 2,
+               "allOf": [
+                  {
+                     "contains": {
+                        "allOf": [
+                           {
+                              "$ref": "/ga4gh/schema/cat-vrs/1.0.0-msp.test/json/FunctionConstraint"
+                           }
+                        ]
+                     }
+                  },
+                  {
+                     "contains": {
+                        "anyOf": [
+                           {
+                              "$ref": "/ga4gh/schema/cat-vrs/1.0.0-msp.test/json/DefiningAlleleConstraint"
+                           },
+                           {
+                              "$ref": "/ga4gh/schema/cat-vrs/1.0.0-msp.test/json/DefiningLocationConstraint"
+                           },
+                           {
+                              "$ref": "/ga4gh/schema/cat-vrs/1.0.0-msp.test/json/FeatureContextConstraint"
+                           }
+                        ]
+                     }
+                  }
+               ]
+            }
+         },
+         "required": [
+            "constraints"
+         ]
+      }
+   ],
+   "unevaluatedProperties": false
+}
