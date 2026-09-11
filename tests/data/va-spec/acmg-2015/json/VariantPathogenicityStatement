@@ -114,7 +114,5 @@
       }
    ],
    "type": "object",
-   "properties": {},
-   "required": [],
    "unevaluatedProperties": false
 }

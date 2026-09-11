@@ -135,6 +135,35 @@ def test_strict_composed_class_uses_unevaluated_properties(
         assert "additionalProperties" not in d
 
 
+def test_empty_properties_and_required_are_omitted(
+    gkm_core_processor: YamlSchemaProcessor,
+    vrs_processor: YamlSchemaProcessor,
+    recipes_processor: YamlSchemaProcessor,
+) -> None:
+    """Empty 'properties: {}' / 'required: []' are valid Draft 2020-12 but pure
+    noise; the processor omits them. Classes that genuinely have members keep
+    the keywords.
+    """
+    # allOf-composed recipes carry their members under 'allOf'; their top-level
+    # properties/required are empty and must be dropped.
+    gene_fusion = recipes_processor.for_js["$defs"]["GeneFusion"]
+    assert "properties" not in gene_fusion
+    assert "required" not in gene_fusion
+    # closure keyword is still emitted (composition-aware)
+    assert gene_fusion["unevaluatedProperties"] is False
+
+    # A concrete class with real members keeps both keywords.
+    allele = vrs_processor.for_js["$defs"]["Allele"]
+    assert allele["properties"]
+    assert allele["required"]
+
+    # A class with properties but no required members keeps properties, drops
+    # the empty required (Element has properties but requires none of them).
+    element = gkm_core_processor.for_js["$defs"]["Element"]
+    assert element["properties"]
+    assert "required" not in element
+
+
 def test_composition_refcuries_are_resolved(recipes_processor: YamlSchemaProcessor) -> None:
     """$refCurie values nested inside a class-level allOf/anyOf/oneOf must be
     resolved to real $refs. Concrete (non-container) composed classes such as

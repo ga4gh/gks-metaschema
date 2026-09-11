@@ -457,11 +457,18 @@ def render_class(
             p = "heritableProperties"
         elif "properties" in class_definition:
             p = "properties"
-        elif proc.class_is_primitive(class_name):
-            _print_xrefs(f, class_name, used_in, subclasses)
-            return
         else:
-            raise ValueError(class_name, class_definition)
+            # No top-level property table (e.g. an allOf-composed recipe whose
+            # members live under 'allOf', now that empty 'properties: {}' is
+            # omitted). A composed class renders from its composition below; a
+            # primitive just gets cross-references; anything else has nothing
+            # to render and is a bug.
+            p = None
+            if not any(k in class_definition for k in ("allOf", "anyOf", "oneOf")):
+                if proc.class_is_primitive(class_name):
+                    _print_xrefs(f, class_name, used_in, subclasses)
+                    return
+                raise ValueError(class_name, class_definition)
         ancestor = proc.raw_defs[class_name].get("inherits")
         if ancestor:
             ancestor = get_ancestor_with_attributes(ancestor, proc)
@@ -484,7 +491,7 @@ def render_class(
                 composition = resolve_composition(class_definition)
                 if composition:
                     print("\n" + composition, file=f)
-        else:
+        elif p is not None:
             render_information_model(f, class_definition[p], class_definition.get("required", []), inheritance)
         composition = resolve_composition(class_definition)
         if composition:

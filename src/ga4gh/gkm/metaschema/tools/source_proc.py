@@ -557,8 +557,20 @@ class YamlSchemaProcessor:
                     f"'ga4gh.inherent' on '{schema_class}'."
                 )
 
-        processed_class_def[prop_k] = inherited_properties | processed_class_properties
-        processed_class_def[req_k] = sorted(inherited_required | processed_class_required)
+        # Emit 'properties'/'required' only when non-empty. An empty
+        # 'properties: {}' / 'required: []' is valid Draft 2020-12 but pure
+        # noise on property-less/requirement-less classes (e.g. Element,
+        # Condition, allOf-composed recipes whose members live under allOf).
+        merged_properties = inherited_properties | processed_class_properties
+        if merged_properties:
+            processed_class_def[prop_k] = merged_properties
+        else:
+            processed_class_def.pop(prop_k, None)
+        merged_required = sorted(inherited_required | processed_class_required)
+        if merged_required:
+            processed_class_def[req_k] = merged_required
+        else:
+            processed_class_def.pop(req_k, None)
         # Close concrete classes only. Abstract classes are left open (no
         # additionalProperties keyword): JSON Schema already allows extra
         # properties by default, and emitting additionalProperties: true would
