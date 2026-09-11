@@ -18,10 +18,12 @@ Currently used in:
 A `*-source.yaml` document is JSON Schema 2020-12 with a few GKS conventions
 the processor expands into standard JSON Schema. In brief:
 
-* **Classes** are abstract (`abstract: true`) or concrete (`inherits:` a
-  parent). Both carry members under `properties` / `required`; the processor
-  injects `type: object`. Every class — abstract included — is emitted as its
-  own schema.
+* **Classes** are abstract (`abstract: true`) or concrete. A concrete class is
+  either **inherited** (`inherits:` a parent, with members under
+  `properties` / `required`) or **composed** (a top-level
+  `allOf`/`anyOf`/`oneOf` — e.g. the VA/cat-vrs profiles and recipes). The
+  processor injects `type: object`, and every class — abstract included — is
+  emitted as its own schema.
 * **Inheritance** copies the parent's `properties`/`required` into the child,
   **superclass-first**. A subclass **specializes** an inherited property by
   redeclaring it under the **same name**; the legacy `extends` keyword is
