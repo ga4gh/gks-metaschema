@@ -90,25 +90,25 @@ def _render_one(proc, class_name, tmp_path):
     return (tmp_path / f"{class_name}.rst").read_text()
 
 
-def test_maturity_note_is_condensed_single_line(gkm_core_processor, recipes_processor, tmp_path):
-    """The maturity note is a single-line admonition: `.. note::` for trial use
-    and `.. warning::` for draft (distinct colors), linking to the repo's
-    /appendices/maturity_model.html.
+def test_maturity_note_admonition(gkm_core_processor, recipes_processor, tmp_path):
+    """The maturity note is an admonition titled with the maturity level
+    (Draft / Trial Use), colored via :class: (warning / note), whose body links
+    to the repo's /appendices/maturity_model.html.
     """
     link = "`Maturity Model </appendices/maturity_model.html>`_"
 
-    def first_line(proc, level):
+    def rendered(proc, level):
         defs = proc.processed_schema[proc.schema_def_keyword]
         cls = next(c for c, d in defs.items() if d.get("maturity") == level)
-        return _render_one(proc, cls, tmp_path).splitlines()[0]
+        return _render_one(proc, cls, tmp_path)
 
-    trial = first_line(gkm_core_processor, "trial use")
-    assert trial.startswith(".. note:: **Trial Use** — may change in future releases.")
-    assert link in trial
+    trial = rendered(gkm_core_processor, "trial use")
+    assert trial.startswith(".. admonition:: Trial Use\n    :class: note\n")
+    assert "May change in future releases. " + link in trial
 
-    draft = first_line(recipes_processor, "draft")
-    assert draft.startswith(".. warning:: **Draft** — may change significantly in future releases.")
-    assert link in draft
+    draft = rendered(recipes_processor, "draft")
+    assert draft.startswith(".. admonition:: Draft\n    :class: warning\n")
+    assert "May change significantly in future releases. " + link in draft
 
 
 def test_abstract_class_has_no_ga4gh_digest(vrs_processor, tmp_path):

@@ -174,10 +174,11 @@ Why the distinction matters:
 - `source2splitjs.split_defs_to_js(proc)` — one JSON file per class under
   `json/`, with cross-references rewritten to file paths.
 - `y2t.main(proc)` — the `.rst` docs under `def/`. Highlights:
-  - A **maturity note** (draft or trial use) is emitted as a single-line
-    admonition at the top of each class — `.. warning::` for *Draft*,
-    `.. note::` for *Trial Use* (so the colors differ) — linking to the
-    repo's `/appendices/maturity_model.html`. Normative classes get no note.
+  - A **maturity note** (draft or trial use) is emitted as an admonition at the
+    top of each class, **titled with the maturity level** (*Draft* / *Trial
+    Use*) and colored via `:class:` (`warning` for draft, `note` for trial use,
+    so the colors differ). Its body links to the repo's
+    `/appendices/maturity_model.html`. Normative classes get no note.
   - Abstract classes are flagged with an **Abstract Class** notation.
   - **`allOf`-composed** classes (recipes/profiles) render a **flattened
     effective-property table**: the base class's properties overlaid with the
