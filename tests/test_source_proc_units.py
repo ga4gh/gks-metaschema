@@ -49,6 +49,12 @@ def _build_parent_child(tmp_path, parent_type_prop, child_type_prop):
         (":ref:`Allele`", "Allele"),
         (":ref:`an allele <Allele>`", "an allele"),
         ("`RFC3986 <https://example.com>`_", "[RFC3986](https://example.com)"),
+        # multiple links in one string must each convert independently; a
+        # greedy URL group would collapse them into one broken link.
+        (
+            "see `A <https://a.example>`_ and `B <https://b.example>`_.",
+            "see [A](https://a.example) and [B](https://b.example).",
+        ),
         ("line one\nline two", "line one line two"),
         ("plain text, no markup", "plain text, no markup"),
     ],

@@ -17,7 +17,10 @@ SCHEMA_DEF_KEYWORD_BY_VERSION = {
 
 
 ref_re = re.compile(r":ref:`(.*?)(\s?<.*>)?`")
-link_re = re.compile(r"`(.*?)\s?\<(.*)\>`_")
+# Non-greedy on BOTH the label and the URL: a description may contain several
+# `text <url>`_ links, and a greedy URL group would swallow everything from the
+# first '<' to the last '>`_', collapsing all links into one broken match.
+link_re = re.compile(r"`(.*?)\s?\<(.*?)\>`_")
 curie_re = re.compile(r"(\S+):(\S+)")
 defs_re = re.compile(r"#/(\$defs|definitions)/.*")
 
