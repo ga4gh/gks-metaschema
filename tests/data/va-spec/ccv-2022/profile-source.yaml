@@ -1,5 +1,5 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-$id: "https://w3id.org/ga4gh/schema/va-spec/1.x/ccv-2022/profile-source.yaml"
+$id: "https://w3id.org/ga4gh/schema/va-spec/1.0.0-msp.test/ccv-2022/profile-source.yaml"
 title: CCV 2022 Variant Oncogenicity Profiles
 description: >-
   Profiles defined to align with terminology and conventions from the Clinical Genome Resource (ClinGen),

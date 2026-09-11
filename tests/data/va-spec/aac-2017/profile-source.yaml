@@ -1,5 +1,5 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-$id: "https://w3id.org/ga4gh/schema/va-spec/1.x/aac-2017/profile-source.yaml"
+$id: "https://w3id.org/ga4gh/schema/va-spec/1.0.0-msp.test/aac-2017/profile-source.yaml"
 title: AAC 2017 Profiles
 description: >-
   Profiles defined to align with terminology and conventions from the Association for Molecular Pathology (AMP),

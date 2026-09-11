@@ -1,6 +1,6 @@
 {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
-   "$id": "https://w3id.org/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Proposition",
+   "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/Proposition",
    "title": "Proposition",
    "maturity": "trial use",
    "description": "An abstract entity representing a possible fact that may be true or false. As abstract entities, Propositions capture a 'sharable' piece of meaning whose identify and existence is independent of space and time, or whether it is ever asserted to be true by some agent.",
@@ -33,7 +33,7 @@
          "type": "array",
          "ordered": false,
          "items": {
-            "$ref": "/ga4gh/schema/gkm-core/v1/json/Extension"
+            "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/Extension"
          },
          "description": "A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model."
       },

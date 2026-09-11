@@ -1,6 +1,6 @@
 {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
-   "$id": "https://w3id.org/ga4gh/schema/vrs/1.x/json/Range",
+   "$id": "https://w3id.org/ga4gh/schema/vrs/1.0.0-msp.test/json/Range",
    "title": "Range",
    "type": "array",
    "maturity": "trial use",

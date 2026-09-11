@@ -1,6 +1,6 @@
 {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
-   "$id": "https://w3id.org/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/ComputationalVariantFunctionalImpactAnalysisResult",
+   "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/ComputationalVariantFunctionalImpactAnalysisResult",
    "title": "ComputationalVariantFunctionalImpactAnalysisResult",
    "maturity": "draft",
    "description": "An AnalysisResult that reports the output of a single in silico tool's analysis of a variant's functional impact, including any numeric score(s) and optional categorical interpretation.",
@@ -35,17 +35,17 @@
          "type": "array",
          "ordered": false,
          "items": {
-            "$ref": "/ga4gh/schema/gkm-core/v1/json/Extension"
+            "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/Extension"
          },
          "description": "A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model."
       },
       "specifiedBy": {
          "oneOf": [
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
             },
             {
-               "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Method"
+               "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/Method"
             }
          ],
          "description": "The in silico method or algorithm that was applied to generate the reported score(s)."
@@ -54,7 +54,7 @@
          "type": "array",
          "ordered": true,
          "items": {
-            "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Contribution"
+            "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/Contribution"
          },
          "description": "Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of this Information Entity."
       },
@@ -64,10 +64,10 @@
          "items": {
             "oneOf": [
                {
-                  "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Document"
+                  "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/Document"
                },
                {
-                  "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+                  "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
                }
             ]
          },
@@ -76,19 +76,19 @@
       "focus": {
          "oneOf": [
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
             },
             {
-               "$ref": "/ga4gh/schema/vrs/1.x/json/Allele"
+               "$ref": "/ga4gh/schema/vrs/1.0.0-msp.test/json/Allele"
             },
             {
-               "$ref": "/ga4gh/schema/cat-vrs/1.x/json/CategoricalVariant"
+               "$ref": "/ga4gh/schema/cat-vrs/1.0.0-msp.test/json/CategoricalVariant"
             }
          ],
          "description": "The genetic variant for which the in silico analysis was performed."
       },
       "sourceDataSet": {
-         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/DataSet",
+         "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/DataSet",
          "description": "The dataset from which the in silico scores were retrieved or derived (e.g., an Ensembl VEP annotation dataset)."
       },
       "ancillaryResults": {
@@ -106,10 +106,10 @@
       "transcriptVariationContext": {
          "oneOf": [
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
             },
             {
-               "$ref": "/ga4gh/schema/vrs/1.x/json/Allele"
+               "$ref": "/ga4gh/schema/vrs/1.0.0-msp.test/json/Allele"
             }
          ],
          "description": "The transcript in the context of which the in silico analysis was performed."
@@ -121,10 +121,10 @@
       "impactScoreType": {
          "oneOf": [
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
             },
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/MappableConcept"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/MappableConcept"
             }
          ],
          "description": "A descriptor indicating what the score represents (e.g., 'SIFT impact score', 'CADD Phred-scaled impact score')."
@@ -132,10 +132,10 @@
       "categoricalImpact": {
          "oneOf": [
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
             },
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/MappableConcept"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/MappableConcept"
             }
          ],
          "description": "The categorical interpretation derived from the score by the in silico tool (e.g., 'tolerated', 'benign', 'pathogenic')."
@@ -143,10 +143,10 @@
       "impactedFeatureType": {
          "oneOf": [
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
             },
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/MappableConcept"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/MappableConcept"
             }
          ],
          "description": "A descriptor indicating the type of feature for which the focus variant has a predicted impact"
@@ -154,10 +154,10 @@
       "impactedFeature": {
          "oneOf": [
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
             },
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/MappableConcept"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/MappableConcept"
             }
          ],
          "description": "The specific feature for which the focus variant has a predicted impact"

@@ -1,6 +1,6 @@
 {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
-   "$id": "https://w3id.org/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/CohortAlleleFrequencyStudyResult",
+   "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/CohortAlleleFrequencyStudyResult",
    "title": "CohortAlleleFrequencyStudyResult",
    "maturity": "trial use",
    "description": "A StudyResult that reports measures related to the frequency of an Allele in a cohort",
@@ -35,17 +35,17 @@
          "type": "array",
          "ordered": false,
          "items": {
-            "$ref": "/ga4gh/schema/gkm-core/v1/json/Extension"
+            "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/Extension"
          },
          "description": "A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model."
       },
       "specifiedBy": {
          "oneOf": [
             {
-               "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Method"
+               "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/Method"
             },
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
             }
          ],
          "description": "A specification that describes all or part of the process that led to creation of the Information Entity"
@@ -54,7 +54,7 @@
          "type": "array",
          "ordered": true,
          "items": {
-            "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Contribution"
+            "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/Contribution"
          },
          "description": "Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity."
       },
@@ -64,10 +64,10 @@
          "items": {
             "oneOf": [
                {
-                  "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Document"
+                  "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/Document"
                },
                {
-                  "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+                  "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
                }
             ]
          },
@@ -76,16 +76,16 @@
       "focus": {
          "oneOf": [
             {
-               "$ref": "/ga4gh/schema/vrs/1.x/json/Allele"
+               "$ref": "/ga4gh/schema/vrs/1.0.0-msp.test/json/Allele"
             },
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
             }
          ],
          "description": "The Allele for which frequency results are reported."
       },
       "sourceDataSet": {
-         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/DataSet",
+         "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/DataSet",
          "description": "The dataset from which the CohortAlleleFrequencyStudyResult was reported."
       },
       "ancillaryResults": {
@@ -113,7 +113,7 @@
          "description": "The frequency of the focusAllele in the cohort."
       },
       "cohort": {
-         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/StudyGroup",
+         "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/StudyGroup",
          "description": "The cohort from which the frequency was derived."
       },
       "subCohortFrequency": {
@@ -121,7 +121,7 @@
          "ordered": false,
          "description": "A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.",
          "items": {
-            "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/CohortAlleleFrequencyStudyResult"
+            "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/CohortAlleleFrequencyStudyResult"
          }
       }
    },

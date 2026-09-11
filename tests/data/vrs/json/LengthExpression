@@ -1,6 +1,6 @@
 {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
-   "$id": "https://w3id.org/ga4gh/schema/vrs/1.x/json/LengthExpression",
+   "$id": "https://w3id.org/ga4gh/schema/vrs/1.0.0-msp.test/json/LengthExpression",
    "title": "LengthExpression",
    "type": "object",
    "maturity": "draft",
@@ -42,7 +42,7 @@
          "type": "array",
          "ordered": false,
          "items": {
-            "$ref": "/ga4gh/schema/gkm-core/v1/json/Extension"
+            "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/Extension"
          },
          "description": "A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model."
       },
@@ -50,7 +50,7 @@
          "description": "The length of the sequence.",
          "oneOf": [
             {
-               "$ref": "/ga4gh/schema/vrs/1.x/json/Range"
+               "$ref": "/ga4gh/schema/vrs/1.0.0-msp.test/json/Range"
             },
             {
                "type": "integer"

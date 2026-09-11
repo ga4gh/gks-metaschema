@@ -1,6 +1,6 @@
 {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
-   "$id": "https://w3id.org/ga4gh/schema/vrs/1.x/json/CisPhasedBlock",
+   "$id": "https://w3id.org/ga4gh/schema/vrs/1.0.0-msp.test/json/CisPhasedBlock",
    "title": "CisPhasedBlock",
    "type": "object",
    "maturity": "trial use",
@@ -43,7 +43,7 @@
          "type": "array",
          "ordered": false,
          "items": {
-            "$ref": "/ga4gh/schema/gkm-core/v1/json/Extension"
+            "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/Extension"
          },
          "description": "A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model."
       },
@@ -56,7 +56,7 @@
          "type": "array",
          "ordered": false,
          "items": {
-            "$ref": "/ga4gh/schema/vrs/1.x/json/Expression"
+            "$ref": "/ga4gh/schema/vrs/1.0.0-msp.test/json/Expression"
          }
       },
       "members": {
@@ -67,17 +67,17 @@
          "items": {
             "oneOf": [
                {
-                  "$ref": "/ga4gh/schema/vrs/1.x/json/Allele"
+                  "$ref": "/ga4gh/schema/vrs/1.0.0-msp.test/json/Allele"
                },
                {
-                  "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+                  "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
                }
             ]
          },
          "description": "A list of Alleles that are found in-cis on a shared molecule."
       },
       "sequenceReference": {
-         "$ref": "/ga4gh/schema/vrs/1.x/json/SequenceReference",
+         "$ref": "/ga4gh/schema/vrs/1.0.0-msp.test/json/SequenceReference",
          "description": "An optional Sequence Reference on which all of the in-cis Alleles are found. When defined, this may be used to implicitly define the `sequenceReference` attribute for each of the CisPhasedBlock member Alleles."
       }
    },

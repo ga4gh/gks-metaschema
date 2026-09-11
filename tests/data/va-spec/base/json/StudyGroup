@@ -1,6 +1,6 @@
 {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
-   "$id": "https://w3id.org/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/StudyGroup",
+   "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/StudyGroup",
    "title": "StudyGroup",
    "maturity": "trial use",
    "description": "A collection of individuals or specimens from the same taxonomic class, selected for analysis in a scientific study based on their exhibiting one or more common characteristics  (e.g. species, race, age, gender, disease state, income). May be referred to as a 'cohort' or 'population' in specific research settings.",
@@ -35,7 +35,7 @@
          "type": "array",
          "ordered": false,
          "items": {
-            "$ref": "/ga4gh/schema/gkm-core/v1/json/Extension"
+            "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/Extension"
          },
          "description": "A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model."
       },
@@ -47,7 +47,7 @@
       "characteristics": {
          "type": "array",
          "items": {
-            "$ref": "/ga4gh/schema/gkm-core/v1/json/MappableConcept"
+            "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/MappableConcept"
          },
          "ordered": false,
          "description": "A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group."

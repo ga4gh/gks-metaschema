@@ -1,6 +1,6 @@
 {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
-   "$id": "https://w3id.org/ga4gh/schema/vrs/1.x/json/Terminus",
+   "$id": "https://w3id.org/ga4gh/schema/vrs/1.0.0-msp.test/json/Terminus",
    "title": "Terminus",
    "type": "object",
    "maturity": "draft",
@@ -43,7 +43,7 @@
          "type": "array",
          "ordered": false,
          "items": {
-            "$ref": "/ga4gh/schema/gkm-core/v1/json/Extension"
+            "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/Extension"
          },
          "description": "A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model."
       },
@@ -56,16 +56,16 @@
          "type": "array",
          "ordered": false,
          "items": {
-            "$ref": "/ga4gh/schema/vrs/1.x/json/Expression"
+            "$ref": "/ga4gh/schema/vrs/1.0.0-msp.test/json/Expression"
          }
       },
       "location": {
          "oneOf": [
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
             },
             {
-               "$ref": "/ga4gh/schema/vrs/1.x/json/Location"
+               "$ref": "/ga4gh/schema/vrs/1.0.0-msp.test/json/Location"
             }
          ],
          "description": "The location of the terminus."

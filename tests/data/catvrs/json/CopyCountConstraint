@@ -1,6 +1,6 @@
 {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
-   "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.x/json/CopyCountConstraint",
+   "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-msp.test/json/CopyCountConstraint",
    "title": "CopyCountConstraint",
    "type": "object",
    "maturity": "trial use",
@@ -19,7 +19,7 @@
                "type": "integer"
             },
             {
-               "$ref": "/ga4gh/schema/vrs/1.x/json/Range"
+               "$ref": "/ga4gh/schema/vrs/1.0.0-msp.test/json/Range"
             }
          ]
       }

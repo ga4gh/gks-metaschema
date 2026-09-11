@@ -1,6 +1,6 @@
 {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
-   "$id": "https://w3id.org/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/EvidenceLine",
+   "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/EvidenceLine",
    "title": "EvidenceLine",
    "maturity": "trial use",
    "description": "An independent, evidence-based argument that may support or refute the validity of a specific Proposition. The strength and direction of this argument is based on an interpretation of one or more pieces of information as evidence for or against the target Proposition.",
@@ -35,17 +35,17 @@
          "type": "array",
          "ordered": false,
          "items": {
-            "$ref": "/ga4gh/schema/gkm-core/v1/json/Extension"
+            "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/Extension"
          },
          "description": "A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model."
       },
       "specifiedBy": {
          "oneOf": [
             {
-               "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Method"
+               "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/Method"
             },
             {
-               "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+               "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
             }
          ],
          "description": "A specification that describes all or part of the process that led to creation of the Information Entity"
@@ -54,7 +54,7 @@
          "type": "array",
          "ordered": true,
          "items": {
-            "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Contribution"
+            "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/Contribution"
          },
          "description": "Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity."
       },
@@ -64,17 +64,17 @@
          "items": {
             "oneOf": [
                {
-                  "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Document"
+                  "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/Document"
                },
                {
-                  "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+                  "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
                }
             ]
          },
          "description": "A document in which the the Information Entity is reported."
       },
       "targetProposition": {
-         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Proposition",
+         "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/Proposition",
          "description": "The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease."
       },
       "hasEvidenceItems": {
@@ -83,16 +83,16 @@
          "items": {
             "anyOf": [
                {
-                  "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/StudyResult"
+                  "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/StudyResult"
                },
                {
-                  "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Statement"
+                  "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/Statement"
                },
                {
-                  "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/EvidenceLine"
+                  "$ref": "/ga4gh/schema/va-spec/1.0.0-msp.test/base/json/EvidenceLine"
                },
                {
-                  "$ref": "/ga4gh/schema/gkm-core/v1/json/iriReference"
+                  "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/iriReference"
                }
             ]
          },
@@ -109,7 +109,7 @@
       },
       "strengthOfEvidenceProvided": {
          "description": "The strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.",
-         "$ref": "/ga4gh/schema/gkm-core/v1/json/MappableConcept"
+         "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/MappableConcept"
       },
       "scoreOfEvidenceProvided": {
          "type": "number",
@@ -117,7 +117,7 @@
       },
       "evidenceOutcome": {
          "description": "A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.",
-         "$ref": "/ga4gh/schema/gkm-core/v1/json/MappableConcept"
+         "$ref": "/ga4gh/schema/gkm-core/1.0.0-msp.test/json/MappableConcept"
       }
    },
    "required": [
