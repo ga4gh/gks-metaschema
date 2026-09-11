@@ -35,6 +35,12 @@ Notes:
 - Abstract and concrete classes both store members under **`properties`** /
   **`required`**. `heritableProperties` / `heritableRequired` are no longer
   used.
+- **Empty `properties` / `required` are omitted.** When a class's merged
+  property set (or required set) is empty — e.g. an `allOf`-composed recipe
+  whose members live under `allOf`, or a class that requires none of its
+  properties — the processor emits no `properties: {}` / `required: []`. (Both
+  are valid Draft 2020-12 but pure noise on property-less/requirement-less
+  classes.)
 
 ## 2. Inheritance (`inherits`)
 
@@ -103,7 +109,18 @@ collapsed into a `oneOf` of their descendants.
 ## 6. References
 
 - `$refCurie` values are resolved against the schema's `namespaces` map into
-  `$ref`s.
+  `$ref`s. Resolution walks the **entire** class definition — top-level
+  `properties`, any class-level `allOf`/`anyOf`/`oneOf` composition, and
+  primitive/array-alias bodies (e.g. refs nested under `items` / `contains`).
+  It is **not** gated on a class being an abstract "container", so concrete
+  composed classes (the recipes/profiles) and primitive aliases resolve their
+  nested refs too (previously these leaked an unresolved `$refCurie` into the
+  emitted schema).
+- A resolved `$refCurie` is only well-formed if its `namespaces` mapping
+  targets a `#/$defs/` fragment (e.g. `../vrs/vrs.yaml#/$defs/`). A mapping that
+  omits the fragment yields a fragmentless, broken `$ref`; the processor does
+  **not** currently validate this, so it surfaces later (in `source2splitjs`)
+  rather than at resolve time.
 - A `$ref` that targets an **abstract class stays a direct `$ref`** — it is
   *not* expanded into a `oneOf` of concrete descendants.
 - Metaschema-only keywords (`inherits`, `abstract`, `protectedClassOf`,
@@ -142,34 +159,53 @@ Why the distinction matters:
   RST-scrubbed to Markdown, metaschema-only keywords removed).
 - `source2splitjs.split_defs_to_js(proc)` — one JSON file per class under
   `json/`, with cross-references rewritten to file paths.
-- `y2t.main(proc)` — one `.rst` file per class under `def/`. Abstract classes
-  are flagged with an **Abstract Class** notation, and `allOf`/`oneOf`/`anyOf`
-  composed classes render a composition summary (e.g. "defined as **all of**:
-  …") instead of an empty property table.
+- `y2t.main(proc)` — the `.rst` docs under `def/`. Highlights:
+  - Abstract classes are flagged with an **Abstract Class** notation.
+  - **`allOf`-composed** classes (recipes/profiles) render a **flattened
+    effective-property table**: the base class's properties overlaid with the
+    subclass's refinements, with refined properties marked and their **narrowed
+    type** shown (e.g. a `contains` constraint's specific member type), plus a
+    note naming the base(s) the class refines. `oneOf`/`anyOf` unions render a
+    "one of / any of the following" summary.
+  - Each class table is followed by **Used in:** (classes that reference it via
+    `$ref`/`$refCurie`) and **Subclasses:** (classes whose `inherits` resolves
+    to it) cross-reference lists.
+  - `y2t` is a **folder-level** build: it renders every class in a folder's
+    import closure (all `*-source.yaml` beside it plus their imports,
+    recursively) into that folder's `def/`, so the folder is self-contained and
+    its cross-reference lists are accurate *from that folder's perspective*.
 
-Imports are only pulled in as dependencies; a schema's own `json/` and `def/`
-artifacts are produced only when the scripts are run **on that schema's
-processor** (see the tests for examples).
+Imports are only pulled in as dependencies; a schema's own `json/` artifacts are
+produced only when the scripts are run **on that schema's processor** (see the
+tests for examples).
 
 ---
 
 ## Known limitations
 
-- **Bare, unresolvable `$ref`s in `recipes-source.yaml`.** The cat-vrs recipe
-  classes compose with `allOf: [ {$ref: CategoricalVariant}, … ]` using **bare**
+- **Bare local `$ref`s in `recipes-source.yaml`.** The cat-vrs recipe classes
+  compose with `allOf: [ {$ref: CategoricalVariant}, … ]` using **bare** local
   references (`$ref: CategoricalVariant`, `$ref: DefiningAlleleConstraint`, …)
-  rather than `#/$defs/CategoricalVariant` or a namespaced/URL form. The
-  processor emits them verbatim without error, but they do **not** resolve in a
-  JSON Schema validator. Consequently a full recipe **instance cannot be
-  validated end-to-end** yet. The `allOf` closure *mechanism* is proven
+  rather than `#/$defs/CategoricalVariant`. In the split per-class `json/`
+  artifacts these are rewritten to resolvable file paths (e.g.
+  `/ga4gh/schema/cat-vrs/1.x/json/CategoricalVariant`), but in the in-place
+  merged document (`for_js`) they remain bare and would not resolve in a
+  standalone validator. (The cross-schema `$refCurie` references that used to
+  leak unresolved are now resolved — see [§6](#6-references).) End-to-end
+  instance validation additionally depends on the referenced per-class files
+  being served at their `$id` paths. The `allOf` closure *mechanism* is proven
   behaviorally against a processor-generated synthetic class, and the real
   recipe classes are proven structurally to meet both closure preconditions
   (see [Testing](#testing)).
 - **`merge_imported()` fails on the recipes import graph.** Recipes import
   cat-vrs (which imports vrs + gkm-core) *and* vrs/gkm-core directly; the merge
   step asserts a single location per import name and raises on this diamond.
-- **`recipes-source.yaml` `namespaces` look inconsistent** (e.g.
-  `./gkm-core/gkm-core-source.yaml` rather than `../gkm-core/…`).
+- **No source-attribute validation.** The processor is a transform, not a
+  validator: unknown/legacy class-level keys (e.g. a leftover
+  `heritableProperties`, or a `namespaces` mapping missing its `#/$defs/`
+  fragment) pass through without a dedicated error and only surface downstream.
+  Targeted guards exist for specific removed patterns (`extends`, the covariance
+  rule, maturity ordering).
 - **Test scope.** Automated tests currently cover `gkm-core`, `vrs`,
   `cat-vrs`, `recipes`, and the `va-spec` schemas (`base/domain-entities`,
   `base/va-core`, and the `aac-2017` / `acmg-2015` / `ccv-2022` profiles).
@@ -207,3 +243,10 @@ Behaviors intentionally **removed / changed** during the migration:
 - Abstract classes briefly emitted `additionalProperties: true`; this was
   **removed** because it defeats `unevaluatedProperties: false` on composed
   classes.
+- `$refCurie` resolution was **ungated from `class_is_container`**: previously
+  only abstract "container" classes had their class-level composition refs
+  resolved, so concrete composed classes (recipes/profiles) and primitive/array
+  aliases leaked unresolved `$refCurie`. Resolution now walks the whole class
+  definition (see [§6](#6-references)).
+- Empty `properties: {}` / `required: []` are now **omitted** rather than
+  always emitted (see [§1](#1-class-model)).
