@@ -7,7 +7,6 @@ import pytest
 import yaml
 
 from ga4gh.gkm.metaschema.scripts.source2classes import main as s2c
-from ga4gh.gkm.metaschema.scripts.source2splitjs import split_defs_to_js
 from ga4gh.gkm.metaschema.scripts.y2t import main as y2t
 from ga4gh.gkm.metaschema.tools.source_proc import YamlSchemaProcessor
 
@@ -28,17 +27,11 @@ def test_se_not_passthrough():
     assert not processor.class_is_passthrough("SequenceExpression")
 
 
-@pytest.mark.skip(reason="Haplotype removed from the VRS model during the gkm-core/vrs migration")
 def test_class_is_subclass():
-    assert processor.class_is_subclass("Haplotype", "Variation")
-    assert not processor.class_is_subclass("Haplotype", "Location")
-
-
-@pytest.mark.skip(reason="gks-common fixtures removed; scoped to gkm-core/vrs for now")
-def test_yaml_create():
-    p = YamlSchemaProcessor(root / "data/gks-common/core-source.yaml")
-    p.js_yaml_dump(open(root / "data/gks-common/core.yaml", "w"))
-    assert True
+    # Allele inherits Variation (directly), so it is a subclass of Variation
+    # but not of the unrelated Location hierarchy.
+    assert processor.class_is_subclass("Allele", "Variation")
+    assert not processor.class_is_subclass("Allele", "Location")
 
 
 def test_yaml_target_match():
@@ -49,14 +42,6 @@ def test_yaml_target_match():
 def test_merged_create():
     p = YamlSchemaProcessor(root / "data/vrs/vrs-source.yaml")
     p.merge_imported()
-    assert True
-
-
-@pytest.mark.skip(reason="gnomAD fixtures removed; scoped to gkm-core/vrs for now")
-def test_split_create():
-    split_defs_to_js(processor)
-    p = YamlSchemaProcessor(root / "data/gnomAD/gnomad-caf-source.yaml")
-    split_defs_to_js(p)
     assert True
 
 
