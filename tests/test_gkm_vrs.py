@@ -95,7 +95,9 @@ def test_maturity_note_admonition(gkm_core_processor, recipes_processor, tmp_pat
     (Draft / Trial Use), colored via :class: (warning / note), whose body links
     to the repo's /appendices/maturity_model.html.
     """
-    link = "`Maturity Model </appendices/maturity_model.html>`_"
+    # The link is an RST substitution reference so downstream doc sites can
+    # configure the target via rst_prolog; the fragment only references it.
+    link = "See |maturity-model|."
 
     def rendered(proc, level):
         defs = proc.processed_schema[proc.schema_def_keyword]

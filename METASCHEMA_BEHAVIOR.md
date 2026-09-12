@@ -177,8 +177,18 @@ Why the distinction matters:
   - A **maturity note** (draft or trial use) is emitted as an admonition at the
     top of each class, **titled with the maturity level** (*Draft* / *Trial
     Use*) and colored via `:class:` (`warning` for draft, `note` for trial use,
-    so the colors differ). Its body links to the repo's
-    `/appendices/maturity_model.html`. Normative classes get no note.
+    so the colors differ). Normative classes get no note. Its body ends with
+    the RST **substitution reference** `|maturity-model|` rather than a
+    hardcoded link, so each downstream doc site controls the link target/text.
+    **The consuming Sphinx build must define the substitution** (otherwise the
+    build errors with "Undefined substitution referenced"), e.g. in `conf.py`:
+
+    ```python
+    rst_prolog = """
+    .. |maturity-model| replace:: `Maturity Model </appendices/maturity_model.html>`_
+    """
+    ```
+
   - Abstract classes are flagged with an **Abstract Class** notation.
   - **`allOf`-composed** classes (recipes/profiles) render a **flattened
     effective-property table**: the base class's properties overlaid with the

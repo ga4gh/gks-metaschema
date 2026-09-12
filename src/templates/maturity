@@ -1,4 +1,4 @@
 .. admonition:: {{ label }}
     :class: {{ info }}
 
-    May change{{ ' ' + modifier if modifier else '' }} in future releases. `Maturity Model </appendices/maturity_model.html>`_
+    May change{{ ' ' + modifier if modifier else '' }} in future releases. See |maturity-model|.
